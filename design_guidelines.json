@@ -1,0 +1,137 @@
+{
+  "project_name": "Taxi App (Passenger & Driver)",
+  "language": "Polish",
+  "theme_and_archetypes": {
+    "passenger_flow": {
+      "archetype": "Archetype 4 (Swiss & High-Contrast)",
+      "theme": "Light",
+      "rationale": "Authority, clarity, and function-first. High contrast ensures readability during quick, on-the-go interactions. White base with stark black elements and Signal Yellow accents."
+    },
+    "driver_flow": {
+      "archetype": "Archetype 2 (Performance Pro)",
+      "theme": "Dark",
+      "rationale": "High-visibility command center look. Reduces eye strain at night. Deep Obsidian base, Pure White text, Volt Green kinetic triggers for ride acceptance."
+    }
+  },
+  "typography": {
+    "headings": {
+      "family": "Work Sans, sans-serif",
+      "weight": "font-black to font-bold",
+      "spacing": "tracking-tight",
+      "rule": "Never use Inter for headings. Use high impact sans-serif."
+    },
+    "body": {
+      "family": "DM Sans, sans-serif",
+      "weight": "font-normal to font-medium",
+      "spacing": "tracking-normal"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl",
+      "h2": "text-2xl md:text-3xl",
+      "h3": "text-xl",
+      "body": "text-base",
+      "small": "text-sm",
+      "tiny": "text-xs tracking-[0.2em] uppercase"
+    }
+  },
+  "colors": {
+    "passenger": {
+      "base": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "text": "#0F0F0F",
+      "text_muted": "#525252",
+      "primary": "#FFD600",
+      "border": "#E5E5E5",
+      "button_bg": "#0F0F0F",
+      "button_text": "#FFFFFF"
+    },
+    "driver": {
+      "base": "#0A0A0A",
+      "surface": "#171717",
+      "text": "#FFFFFF",
+      "text_muted": "#A3A3A3",
+      "primary": "#00E676",
+      "danger": "#FF3B30",
+      "border": "#262626",
+      "button_bg": "#00E676",
+      "button_text": "#0A0A0A"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous spacing for Passenger (p-6, p-8) for approachability. Tactical dense spacing (p-4) for Driver.",
+    "passenger_sheets": "rounded-t-3xl border-t border-black/10 shadow-2xl",
+    "driver_panels": "rounded-t-xl border-t border-white/10 shadow-none",
+    "buttons": "h-14 w-full flex items-center justify-center font-bold text-lg rounded-xl"
+  },
+  "surfaces_and_micro_themes": {
+    "map_overlays": "Glassmorphism: bg-white/70 backdrop-blur-xl border-white/40 (Passenger) | bg-black/60 backdrop-blur-xl border-white/10 (Driver)",
+    "driver_action_card": "Neumorphism with 1px solid stroke (border-white/10) for tactical focus."
+  },
+  "screens": {
+    "role_selection": {
+      "title": "Wybierz swoją rolę",
+      "options": ["Pasażer", "Kierowca"],
+      "layout": "Full screen background image with gradient overlay (bg-black/50). Floating crystal glass cards for role selection."
+    },
+    "auth": {
+      "title": "Zaloguj się",
+      "button": "Zaloguj się przez Google",
+      "layout": "Minimalist centered layout."
+    },
+    "passenger_home": {
+      "search_bar": "Dokąd jedziemy?",
+      "action_button": "Zamów przejazd",
+      "map_elements": "Custom markers for available drivers. Floating action button (FAB) for centering map."
+    },
+    "passenger_tracking": {
+      "status": "Twój kierowca jest w drodze",
+      "eta": "Za 3 minuty",
+      "details": "Model Auta • WA 12345"
+    },
+    "driver_home": {
+      "status_offline": "Jesteś Offline",
+      "status_online": "Szukam przejazdów...",
+      "toggle": "Przejdź na Online",
+      "action_accept": "Akceptuj przejazd",
+      "action_reject": "Odrzuć"
+    },
+    "ride_history": {
+      "title": "Historia przejazdów",
+      "empty_state": "Brak historii przejazdów"
+    },
+    "rating": {
+      "title": "Oceń przejazd",
+      "button": "Wyślij ocenę"
+    }
+  },
+  "images": [
+    {
+      "url": "https://images.unsplash.com/photo-1763865454099-0a3566bdc030?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBjaXR5JTIwc3RyZWV0JTIwc3Vuc2V0fGVufDB8fHx8MTc3ODUxMzI1MHww&ixlib=rb-4.1.0&q=85",
+      "description": "Modern city street at sunset. Use as full-screen background for Role Selection and Login screens with bg-black/50 overlay.",
+      "category": "background"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1758598304096-61cf1a54b2d1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwyfHxwZXJzb24lMjB1c2luZyUyMHNtYXJ0cGhvbmUlMjBhcHB8ZW58MHx8fHwxNzc4NTEzMjUwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Person using a smartphone app. Use for Passenger Profile or onboarding screens.",
+      "category": "passenger_onboarding"
+    },
+    {
+      "url": "https://images.pexels.com/photos/5320413/pexels-photo-5320413.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Close up of a hand on steering wheel. Use for Driver Profile or onboarding screens.",
+      "category": "driver_onboarding"
+    }
+  ],
+  "accessibility_and_interactions": {
+    "test_ids": "MUST include data-testid on all buttons, inputs, map markers, and bottom sheet toggles (e.g., data-testid='role-passenger-btn').",
+    "contrast": "Ensure pure black/white contrast on Passenger mode and Volt Green/Black on Driver mode for readability.",
+    "animations": "Use smooth bottom sheet transitions. Map should animate to user location."
+  },
+  "instructions_to_main_agent": [
+    "This is an Expo React Native SDK 54 app. Do not use pure HTML components, use React Native components (`View`, `Text`, `TouchableOpacity`, `Modal`) styled with NativeWind (Tailwind).",
+    "Implement Map via `react-native-maps` pointing to OpenStreetMap. Use standard mapview but overlay our UI on top.",
+    "Use two distinct color themes: Light (Passenger) and Dark (Driver).",
+    "Ensure all text is strictly in Polish.",
+    "Never use placeholder images. Use the URLs provided in the `images` array.",
+    "Ensure generous padding is applied to interactive elements for touch target compliance (min 44x44 points)."
+  ]
+}
