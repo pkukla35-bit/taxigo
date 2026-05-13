@@ -101,3 +101,47 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Stwórz aplikację taxi dla pasażera i kierowcy z Google Auth, Mapbox, śledzeniem GPS, BLIK, PWA.
+  Ostatnia zmiana: dodać auto-wypełnianie pola "Skąd" lokalizacją GPS pasażera (jak w Uberze).
+
+frontend:
+  - task: "Passenger pickup auto-fill from GPS (Uber-style)"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/passenger/home.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: |
+            Verified via screenshot test (mobile viewport 390x844) on production preview URL with geolocation set to Krakow Rynek Główny (50.0617, 19.9373).
+            - useLiveLocation hook returned GPS fix
+            - reverseGeocode() from mapbox.ts converted lat/lng to Polish address
+            - pickup-input value confirmed: "Rynek Główny 3, 31-042 Kraków, województwo małopolskie, Polska"
+            - dest-input remains empty awaiting user input
+            - Mapbox map renders correctly with user-location marker
+            - autoPickupDone flag prevents re-fill once user edits
+            - activeField auto-switches to "dest" for one-tap UX (Uber-style)
+
+metadata:
+  created_by: "main_agent"
+  version: "1.1"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus: []
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: |
+        Verified passenger GPS auto-fill feature on production preview URL using playwright screenshot tool with mocked geolocation (Krakow center).
+        Auto-fill produced exact Polish reverse-geocoded address and switched focus to destination field.
+        Feature complete and ready for user verification.
