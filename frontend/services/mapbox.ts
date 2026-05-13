@@ -34,6 +34,25 @@ export type RouteResult = {
   coordinates: Array<[number, number]>; // [lng, lat]
 };
 
+// Reverse geocoding: convert lat/lng → human-readable Polish address
+export async function reverseGeocode(lat: number, lng: number): Promise<{ name: string; lat: number; lng: number } | null> {
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?language=pl&types=address,poi,place&limit=1&access_token=${TOKEN}`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const f = (data.features || [])[0];
+    if (!f) return null;
+    return {
+      name: f.place_name_pl || f.place_name,
+      lat: f.center[1],
+      lng: f.center[0],
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getRoute(pickup: { lat: number; lng: number }, dest: { lat: number; lng: number }): Promise<RouteResult | null> {
   const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dest.lng},${dest.lat}?geometries=geojson&overview=full&language=pl&access_token=${TOKEN}`;
   try {

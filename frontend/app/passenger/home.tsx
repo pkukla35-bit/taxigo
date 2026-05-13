@@ -4,7 +4,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import MapView from "../../components/MapView";
-import { searchAddress, getRoute, GeoSuggestion, RouteResult } from "../../services/mapbox";
+import { searchAddress, getRoute, reverseGeocode, GeoSuggestion, RouteResult } from "../../services/mapbox";
+import { useLiveLocation } from "../../hooks/useLiveLocation";
 
 type Place = { name: string; lat: number; lng: number };
 
@@ -21,7 +22,24 @@ export default function PassengerHome() {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [autoPickupDone, setAutoPickupDone] = useState(false);
   const debounceRef = useRef<any>(null);
+  const myLoc = useLiveLocation(true);
+
+  // Auto-fill pickup with current GPS location (only once on first GPS fix)
+  useEffect(() => {
+    if (autoPickupDone || pickup || !myLoc) return;
+    (async () => {
+      const addr = await reverseGeocode(myLoc.lat, myLoc.lng);
+      if (addr) {
+        setPickup({ name: addr.name, lat: addr.lat, lng: addr.lng });
+      } else {
+        setPickup({ name: "Twoja aktualna lokalizacja", lat: myLoc.lat, lng: myLoc.lng });
+      }
+      setAutoPickupDone(true);
+      setActiveField("dest"); // jump focus to destination
+    })();
+  }, [myLoc, pickup, autoPickupDone]);
 
   const loadActive = useCallback(async () => {
     const r = await authFetch("/api/rides/active");
