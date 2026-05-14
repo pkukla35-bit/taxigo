@@ -132,6 +132,26 @@ export default function ShareApp() {
           <Text style={styles.qrHint}>Zeskanuj aparatem telefonu</Text>
         </View>
 
+        <View style={styles.howCard} testID="how-to-card">
+          <Text style={styles.howTitle}>📲 Jak otworzyć?</Text>
+          <View style={styles.howStep}>
+            <View style={styles.howNum}><Text style={styles.howNumText}>1</Text></View>
+            <Text style={styles.howText}>Otwórz <Text style={styles.howBold}>Aparat</Text> w telefonie i zeskanuj kod QR powyżej</Text>
+          </View>
+          <View style={styles.howStep}>
+            <View style={styles.howNum}><Text style={styles.howNumText}>2</Text></View>
+            <Text style={styles.howText}>Naciśnij <Text style={styles.howBold}>powiadomienie</Text>, które pojawi się na ekranie</Text>
+          </View>
+          <View style={styles.howStep}>
+            <View style={styles.howNum}><Text style={styles.howNumText}>3</Text></View>
+            <Text style={styles.howText}>(Opcjonalnie) Zainstaluj jako aplikację – kliknij <Text style={styles.howBold}>„Pobierz aplikację”</Text> powyżej</Text>
+          </View>
+          <View style={styles.howNote}>
+            <Ionicons name="information-circle" size={16} color="#525252" />
+            <Text style={styles.howNoteText}>Aplikacja działa w przeglądarce – nie wymaga instalacji ze sklepu.</Text>
+          </View>
+        </View>
+
         <Text style={styles.urlLabel}>Link do aplikacji</Text>
         <View style={styles.urlBox}>
           <Ionicons name="link" size={16} color="#525252" />
@@ -171,6 +191,15 @@ const styles = StyleSheet.create({
   brandBadge: { marginTop: 14, paddingHorizontal: 18, paddingVertical: 6, backgroundColor: "#FFD600", borderRadius: 999 },
   brandBadgeText: { fontWeight: "900", color: "#0F0F0F", letterSpacing: 1 },
   qrHint: { color: "#525252", fontSize: 12, marginTop: 8, fontWeight: "600" },
+  howCard: { backgroundColor: "#FFFFFF", borderRadius: 18, padding: 18, marginTop: 18, borderWidth: 1, borderColor: "#E5E5E5", gap: 12 },
+  howTitle: { fontSize: 16, fontWeight: "900", color: "#0F0F0F", marginBottom: 2 },
+  howStep: { flexDirection: "row", alignItems: "center", gap: 12 },
+  howNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFD600", alignItems: "center", justifyContent: "center" },
+  howNumText: { color: "#0F0F0F", fontWeight: "900", fontSize: 14 },
+  howText: { flex: 1, color: "#0F0F0F", fontSize: 13, lineHeight: 18, fontWeight: "500" },
+  howBold: { fontWeight: "900" },
+  howNote: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F5F5" },
+  howNoteText: { flex: 1, color: "#525252", fontSize: 11, fontWeight: "600", lineHeight: 16 },
   urlLabel: { fontSize: 12, color: "#525252", fontWeight: "700", letterSpacing: 1.5, marginTop: 24, marginBottom: 8 },
   urlBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FFFFFF", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: "#E5E5E5" },
   urlText: { color: "#0F0F0F", fontWeight: "600", flex: 1, fontSize: 12 },
