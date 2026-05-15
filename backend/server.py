@@ -466,13 +466,27 @@ async def payment_status(ride_id: str, request: Request):
 
 
 app.include_router(api_router)
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+# CORS - czyta listę dozwolonych origins z env, fallback do "*"
+cors_origins_env = os.environ.get("CORS_ORIGINS", "*")
+if cors_origins_env == "*":
+    # Wildcard nie działa z credentials - regex pozwala każdemu HTTPS origin
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origin_regex=r"https?://.*",
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    allowed = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origins=allowed,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

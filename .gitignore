@@ -17,3 +17,4 @@ frontend/.env
 .vscode/
 test_reports/
 .emergent/
+memory/deployment_credentials.md
