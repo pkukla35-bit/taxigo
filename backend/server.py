@@ -467,6 +467,10 @@ async def payment_status(ride_id: str, request: Request):
 
 app.include_router(api_router)
 
+@app.get("/")
+async def health_root():
+    return {"status": "ok", "service": "TAXIGO API"}
+
 # CORS - czyta listę dozwolonych origins z env, fallback do "*"
 cors_origins_env = os.environ.get("CORS_ORIGINS", "*")
 if cors_origins_env == "*":
