@@ -18,3 +18,4 @@ frontend/.env
 test_reports/
 .emergent/
 memory/deployment_credentials.md
+memory/
