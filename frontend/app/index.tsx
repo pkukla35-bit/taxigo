@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Platform } f
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BG = "https://images.unsplash.com/photo-1763865454099-0a3566bdc030?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBjaXR5JTIwc3RyZWV0JTIwc3Vuc2V0fGVufDB8fHx8MTc3ODUxMzI1MHww&ixlib=rb-4.1.0&q=85";
@@ -10,6 +12,7 @@ const BG = "https://images.unsplash.com/photo-1763865454099-0a3566bdc030?crop=en
 export default function Index() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (loading) return;
@@ -26,16 +29,19 @@ export default function Index() {
   return (
     <ImageBackground source={{ uri: BG }} style={styles.bg} resizeMode="cover">
       <View style={styles.overlay}>
-        <View style={styles.header}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoBadgeText}>T</Text>
+        <View style={styles.topRow}>
+          <View style={styles.header}>
+            <View style={styles.logoBadge}>
+              <Text style={styles.logoBadgeText}>T</Text>
+            </View>
+            <Text style={styles.brand} testID="brand-title">TAXIGO</Text>
+            <Text style={styles.tagline}>{t("index.tagline")}</Text>
           </View>
-          <Text style={styles.brand} testID="brand-title">TAXIGO</Text>
-          <Text style={styles.tagline}>Twoja taksówka. Twój kierunek.</Text>
+          <LanguageSwitcher variant="dark" />
         </View>
 
         <View style={styles.cardsWrap}>
-          <Text style={styles.eyebrow}>WYBIERZ SWOJĄ ROLĘ</Text>
+          <Text style={styles.eyebrow}>{t("index.choose_role").toUpperCase()}</Text>
 
           <TouchableOpacity
             testID="role-passenger-btn"
@@ -47,8 +53,8 @@ export default function Index() {
               <Ionicons name="person" size={26} color="#0F0F0F" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitleDark}>Pasażer</Text>
-              <Text style={styles.cardSubDark}>Zamów przejazd i jedź gdzie chcesz</Text>
+              <Text style={styles.cardTitleDark}>{t("index.passenger")}</Text>
+              <Text style={styles.cardSubDark}>{t("index.passenger_desc")}</Text>
             </View>
             <Ionicons name="arrow-forward" size={22} color="#0F0F0F" />
           </TouchableOpacity>
@@ -63,8 +69,8 @@ export default function Index() {
               <Ionicons name="car-sport" size={26} color="#00E676" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitleLight}>Kierowca</Text>
-              <Text style={styles.cardSubLight}>Zarabiaj wożąc pasażerów</Text>
+              <Text style={styles.cardTitleLight}>{t("index.driver")}</Text>
+              <Text style={styles.cardSubLight}>{t("index.driver_desc")}</Text>
             </View>
             <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
           </TouchableOpacity>
@@ -75,7 +81,7 @@ export default function Index() {
             onPress={() => router.push("/share")}
           >
             <Ionicons name="download-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.shareBtnText}>Pobierz aplikację</Text>
+            <Text style={styles.shareBtnText}>{t("index.download_app")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -86,7 +92,8 @@ export default function Index() {
 const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: "#000" },
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 24, paddingTop: Platform.OS === "ios" ? 60 : 50, paddingBottom: 32, justifyContent: "space-between" },
-  header: { alignItems: "flex-start" },
+  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  header: { alignItems: "flex-start", flex: 1 },
   logoBadge: { width: 56, height: 56, borderRadius: 14, backgroundColor: "#FFD600", alignItems: "center", justifyContent: "center", marginBottom: 16 },
   logoBadgeText: { fontSize: 30, fontWeight: "900", color: "#0F0F0F" },
   brand: { fontSize: 44, fontWeight: "900", color: "#FFFFFF", letterSpacing: -1 },
