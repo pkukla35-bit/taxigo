@@ -8,7 +8,12 @@ type DeferredPrompt = { prompt: () => void; userChoice: Promise<{ outcome: "acce
 
 export default function ShareApp() {
   const router = useRouter();
-  const url = (process.env.EXPO_PUBLIC_BACKEND_URL as string) || "https://taxigo.app";
+  const url = (() => {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      return window.location.origin;
+    }
+    return (process.env.EXPO_PUBLIC_APP_URL as string) || "https://taxigo-iota.vercel.app";
+  })();
   const [deferredPrompt, setDeferredPrompt] = useState<DeferredPrompt>(null);
   const [installed, setInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
