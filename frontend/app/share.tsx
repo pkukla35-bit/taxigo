@@ -20,6 +20,7 @@ export default function ShareApp() {
   const [isAndroid, setIsAndroid] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
   const [showAndroidHelp, setShowAndroidHelp] = useState(false);
+  const [browserName, setBrowserName] = useState<string>("");
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -29,6 +30,19 @@ export default function ShareApp() {
     const android = /Android/i.test(ua);
     setIsIOS(iOS);
     setIsAndroid(android);
+
+    // Detect browser name
+    let name = "";
+    if (/CriOS/i.test(ua)) name = "Chrome iOS";
+    else if (/FxiOS/i.test(ua)) name = "Firefox iOS";
+    else if (/EdgiOS/i.test(ua)) name = "Edge iOS";
+    else if (iOS && /Safari/i.test(ua)) name = "Safari";
+    else if (/SamsungBrowser/i.test(ua)) name = "Samsung Internet";
+    else if (/Firefox/i.test(ua)) name = "Firefox";
+    else if (/Edg/i.test(ua)) name = "Edge";
+    else if (/Chrome/i.test(ua)) name = "Chrome";
+    else if (/Safari/i.test(ua)) name = "Safari";
+    setBrowserName(name);
 
     const isStandalone =
       window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -54,24 +68,29 @@ export default function ShareApp() {
       Alert.alert("TAXIGO", "Już używasz aplikacji mobilnej 🎉");
       return;
     }
+    // iOS - always manual (no PWA install API on iOS)
     if (isIOS) {
       setShowIOSHelp(true);
       setShowAndroidHelp(false);
       return;
     }
+    // Android - try native prompt first, but ALWAYS show instructions as backup
     if (deferredPrompt) {
       try {
         deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
         if (choice.outcome === "accepted") {
           setInstalled(true);
+        } else {
+          // User dismissed - show manual instructions
+          setShowAndroidHelp(true);
         }
         setDeferredPrompt(null);
       } catch (e) {
         setShowAndroidHelp(true);
       }
     } else {
-      // No prompt available - show manual instructions
+      // No prompt available - show manual instructions immediately
       setShowAndroidHelp(true);
       setShowIOSHelp(false);
     }
@@ -122,6 +141,12 @@ export default function ShareApp() {
         {showIOSHelp && (
           <View style={styles.iosHelp} testID="ios-help-box">
             <Text style={styles.iosHelpTitle}>📱 Jak zainstalować na iPhone</Text>
+            {browserName === "Chrome iOS" || browserName === "Firefox iOS" || browserName === "Edge iOS" ? (
+              <View style={styles.warningBox}>
+                <Ionicons name="warning" size={18} color="#FFD600" />
+                <Text style={styles.warningText}>Najpierw otwórz tę stronę w przeglądarce <Text style={{ fontWeight: "900" }}>Safari</Text> – tylko Safari obsługuje instalację aplikacji na iPhone.</Text>
+              </View>
+            ) : null}
             <View style={styles.iosStep}><Text style={styles.iosStepNum}>1.</Text><Text style={styles.iosStepText}>Otwórz tę stronę w przeglądarce <Text style={{ fontWeight: "900" }}>Safari</Text></Text></View>
             <View style={styles.iosStep}><Text style={styles.iosStepNum}>2.</Text><Text style={styles.iosStepText}>Naciśnij ikonę <Text style={{ fontWeight: "900" }}>Udostępnij</Text> (kwadrat ze strzałką ⬆️) na dole ekranu</Text></View>
             <View style={styles.iosStep}><Text style={styles.iosStepNum}>3.</Text><Text style={styles.iosStepText}>Wybierz <Text style={{ fontWeight: "900" }}>„Do ekranu początkowego”</Text></Text></View>
@@ -132,10 +157,16 @@ export default function ShareApp() {
         {showAndroidHelp && (
           <View style={styles.iosHelp} testID="android-help-box">
             <Text style={styles.iosHelpTitle}>🤖 Jak zainstalować na Androidzie</Text>
-            <View style={styles.iosStep}><Text style={styles.iosStepNum}>1.</Text><Text style={styles.iosStepText}>Otwórz tę stronę w przeglądarce <Text style={{ fontWeight: "900" }}>Chrome</Text></Text></View>
-            <View style={styles.iosStep}><Text style={styles.iosStepNum}>2.</Text><Text style={styles.iosStepText}>Kliknij <Text style={{ fontWeight: "900" }}>3 kropki ⋮</Text> w prawym górnym rogu Chrome</Text></View>
-            <View style={styles.iosStep}><Text style={styles.iosStepNum}>3.</Text><Text style={styles.iosStepText}>Wybierz <Text style={{ fontWeight: "900" }}>„Zainstaluj aplikację”</Text> lub <Text style={{ fontWeight: "900" }}>„Dodaj do ekranu głównego”</Text></Text></View>
-            <View style={styles.iosStep}><Text style={styles.iosStepNum}>4.</Text><Text style={styles.iosStepText}>Potwierdź <Text style={{ fontWeight: "900" }}>„Zainstaluj”</Text> – ikona TAXIGO pojawi się na ekranie głównym</Text></View>
+            {browserName === "Firefox" || browserName === "Samsung Internet" ? (
+              <View style={styles.warningBox}>
+                <Ionicons name="information-circle" size={18} color="#FFD600" />
+                <Text style={styles.warningText}>Dla najlepszego efektu polecamy <Text style={{ fontWeight: "900" }}>Google Chrome</Text>.</Text>
+              </View>
+            ) : null}
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>1.</Text><Text style={styles.iosStepText}>Kliknij <Text style={{ fontWeight: "900" }}>3 kropki ⋮</Text> w prawym górnym rogu przeglądarki</Text></View>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>2.</Text><Text style={styles.iosStepText}>Wybierz <Text style={{ fontWeight: "900" }}>„Zainstaluj aplikację”</Text> lub <Text style={{ fontWeight: "900" }}>„Dodaj do ekranu głównego”</Text></Text></View>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>3.</Text><Text style={styles.iosStepText}>Potwierdź <Text style={{ fontWeight: "900" }}>„Zainstaluj”</Text></Text></View>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>4.</Text><Text style={styles.iosStepText}>Ikona TAXIGO pojawi się na ekranie głównym 🎉</Text></View>
           </View>
         )}
 
@@ -206,6 +237,8 @@ const styles = StyleSheet.create({
   iosStep: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
   iosStepNum: { color: "#FFD600", fontWeight: "900", fontSize: 16, width: 22 },
   iosStepText: { flex: 1, color: "#0F0F0F", fontSize: 14, lineHeight: 20, fontWeight: "500" },
+  warningBox: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 12, backgroundColor: "#0F0F0F", marginBottom: 8 },
+  warningText: { flex: 1, color: "#FFFFFF", fontSize: 13, lineHeight: 18, fontWeight: "600" },
   orRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 24 },
   orLine: { flex: 1, height: 1, backgroundColor: "#E5E5E5" },
   orText: { color: "#A3A3A3", fontSize: 11, fontWeight: "800", letterSpacing: 2 },
