@@ -4,14 +4,11 @@ import type { PropsWithChildren } from "react";
 
 const SW_REGISTER_JS = `
 if ('serviceWorker' in navigator) {
-  // Unregister any existing service workers to avoid stale caches
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    regs.forEach(function(r){ r.unregister(); });
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(function(reg) { console.log('[TAXIGO] SW registered:', reg.scope); })
+      .catch(function(err) { console.warn('[TAXIGO] SW registration failed:', err); });
   });
-  // Clear caches as well
-  if (window.caches) {
-    caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); });
-  }
 }
 `;
 

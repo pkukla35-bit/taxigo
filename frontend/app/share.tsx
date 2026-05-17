@@ -17,14 +17,18 @@ export default function ShareApp() {
   const [deferredPrompt, setDeferredPrompt] = useState<DeferredPrompt>(null);
   const [installed, setInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
+  const [showAndroidHelp, setShowAndroidHelp] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
 
     const ua = window.navigator.userAgent || "";
     const iOS = /iPhone|iPad|iPod/i.test(ua) && !(window as any).MSStream;
+    const android = /Android/i.test(ua);
     setIsIOS(iOS);
+    setIsAndroid(android);
 
     const isStandalone =
       window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -52,20 +56,24 @@ export default function ShareApp() {
     }
     if (isIOS) {
       setShowIOSHelp(true);
+      setShowAndroidHelp(false);
       return;
     }
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        setInstalled(true);
+      try {
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          setInstalled(true);
+        }
+        setDeferredPrompt(null);
+      } catch (e) {
+        setShowAndroidHelp(true);
       }
-      setDeferredPrompt(null);
     } else {
-      Alert.alert(
-        "Instalacja",
-        "Twoja przeglądarka nie pokazała przycisku instalacji. Otwórz menu przeglądarki (⋮) i wybierz „Zainstaluj aplikację” lub „Dodaj do ekranu głównego”."
-      );
+      // No prompt available - show manual instructions
+      setShowAndroidHelp(true);
+      setShowIOSHelp(false);
     }
   };
 
@@ -118,6 +126,16 @@ export default function ShareApp() {
             <View style={styles.iosStep}><Text style={styles.iosStepNum}>2.</Text><Text style={styles.iosStepText}>Naciśnij ikonę <Text style={{ fontWeight: "900" }}>Udostępnij</Text> (kwadrat ze strzałką ⬆️) na dole ekranu</Text></View>
             <View style={styles.iosStep}><Text style={styles.iosStepNum}>3.</Text><Text style={styles.iosStepText}>Wybierz <Text style={{ fontWeight: "900" }}>„Do ekranu początkowego”</Text></Text></View>
             <View style={styles.iosStep}><Text style={styles.iosStepNum}>4.</Text><Text style={styles.iosStepText}>Kliknij <Text style={{ fontWeight: "900" }}>„Dodaj”</Text> – ikona TAXIGO pojawi się na ekranie głównym</Text></View>
+          </View>
+        )}
+
+        {showAndroidHelp && (
+          <View style={styles.iosHelp} testID="android-help-box">
+            <Text style={styles.iosHelpTitle}>🤖 Jak zainstalować na Androidzie</Text>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>1.</Text><Text style={styles.iosStepText}>Otwórz tę stronę w przeglądarce <Text style={{ fontWeight: "900" }}>Chrome</Text></Text></View>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>2.</Text><Text style={styles.iosStepText}>Kliknij <Text style={{ fontWeight: "900" }}>3 kropki ⋮</Text> w prawym górnym rogu Chrome</Text></View>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>3.</Text><Text style={styles.iosStepText}>Wybierz <Text style={{ fontWeight: "900" }}>„Zainstaluj aplikację”</Text> lub <Text style={{ fontWeight: "900" }}>„Dodaj do ekranu głównego”</Text></Text></View>
+            <View style={styles.iosStep}><Text style={styles.iosStepNum}>4.</Text><Text style={styles.iosStepText}>Potwierdź <Text style={{ fontWeight: "900" }}>„Zainstaluj”</Text> – ikona TAXIGO pojawi się na ekranie głównym</Text></View>
           </View>
         )}
 
