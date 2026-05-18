@@ -44,22 +44,6 @@ export default function Index() {
           <Text style={styles.eyebrow}>{t("index.choose_role").toUpperCase()}</Text>
 
           <TouchableOpacity
-            testID="trips-btn"
-            activeOpacity={0.85}
-            style={[styles.card, styles.cardTrips]}
-            onPress={() => router.push("/wycieczki" as any)}
-          >
-            <View style={styles.iconCircleTrips}>
-              <Ionicons name="map" size={26} color="#FFFFFF" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitleLight}>🚐 Wycieczki turystyczne</Text>
-              <Text style={styles.cardSubLight}>Pieniny • Słowacja • Zakopane + 2 więcej</Text>
-            </View>
-            <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
             testID="role-passenger-btn"
             activeOpacity={0.85}
             style={[styles.card, styles.cardPassenger]}
@@ -87,6 +71,22 @@ export default function Index() {
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitleLight}>{t("index.driver")}</Text>
               <Text style={styles.cardSubLight}>{t("index.driver_desc")}</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            testID="trips-btn"
+            activeOpacity={0.85}
+            style={[styles.card, styles.cardTrips]}
+            onPress={() => router.push("/wycieczki" as any)}
+          >
+            <View style={styles.iconCircleTrips}>
+              <Ionicons name="map" size={26} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitleLight}>🚐 Wycieczki turystyczne</Text>
+              <Text style={styles.cardSubLight}>Pieniny • Słowacja • Zakopane + 2 więcej</Text>
             </View>
             <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
           </TouchableOpacity>
