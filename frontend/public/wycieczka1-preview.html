@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Wycieczka 1 Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1c1c1e; line-height: 1.5; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; overflow: hidden; }
+  .hero { position: relative; height: 320px; background-size: cover; background-position: center; }
+  .hero::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.75) 100%); }
+  .hero-content { position: absolute; bottom: 20px; left: 20px; right: 20px; color: white; z-index: 2; }
+  .hero-badge { display: inline-block; background: #2E7D32; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+  .hero-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+  .hero-subtitle { font-size: 14px; opacity: 0.95; }
+  .header { padding: 20px; background: white; }
+  .price-row { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .price-label { font-size: 13px; color: #8e8e93; }
+  .price-value { font-size: 28px; font-weight: 700; color: #2E7D32; }
+  .price-unit { font-size: 14px; color: #8e8e93; font-weight: 400; }
+  .duration { display: inline-block; background: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+
+  .section { padding: 20px; border-bottom: 8px solid #f5f5f7; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 0 -20px; padding: 0 20px; }
+  .gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content:''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #e5e5ea; }
+  .step { position: relative; padding: 8px 0 16px; }
+  .step::before { content:''; position: absolute; left: -25px; top: 12px; width: 14px; height: 14px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #2E7D32; }
+  .step-time { font-size: 13px; color: #2E7D32; font-weight: 700; }
+  .step-title { font-size: 15px; font-weight: 600; margin: 2px 0; }
+  .step-desc { font-size: 13px; color: #6e6e73; }
+
+  .map-img { width: 100%; border-radius: 12px; }
+
+  .included { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+  .excluded { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; }
+  .list-row { padding: 4px 0; }
+
+  .cta-bar { position: sticky; bottom: 0; padding: 16px 20px; background: white; border-top: 1px solid #e5e5ea; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #2E7D32, #43a047); color: white; text-align: center; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; }
+
+  .lang-switch { position: absolute; top: 16px; right: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; backdrop-filter: blur(10px); }
+  .header-top { position: absolute; top: 16px; left: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #FFD700; backdrop-filter: blur(10px); }
+  .header-top span { color: #1c1c1e; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <div class="hero" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/bo8omojz__WODmwSyszXYHGkICPkZBVdUtOU7o71COs1MSAr71Eh-K5vM7pNs8XfANys9F9coqmsYaVQzKmB7DaXZ3ESRdqQnoneGy0Gw2iNEXV9-LLq5tqXliXlATwvROZQYRODnLvFgXHpz3hfb9iZf5p0_7HeeCfLzzsjTTMPxk5Na4fGL8Ep51mFYURjgb1EP85kQ.jpg');">
+      <div class="header-top">TAXI<span>GO</span> Trips</div>
+      <div class="lang-switch">🇵🇱 PL | EN</div>
+      <div class="hero-content">
+        <div class="hero-badge">🌟 BESTSELLER</div>
+        <div class="hero-title">Spokojny dzień z Krakowa</div>
+        <div class="hero-subtitle">Niedzica • Czorsztyn • Rejs po Jeziorze</div>
+      </div>
+    </div>
+
+    <!-- PRICE -->
+    <div class="price-row">
+      <div>
+        <div class="price-label">Cena od osoby</div>
+        <div class="price-value">350 zł<span class="price-unit"> /os</span></div>
+      </div>
+      <div class="duration">⏱️ ~12 godzin</div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="section">
+      <div class="section-title">📸 Galeria</div>
+      <div class="gallery">
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/d1l74zt9_M5rFJ58PPxAE6o6JMcfnCCX7sP0IbFm-7bC9G8AXpk2pMF1Zrw5QcP9Du_tUvnR1ZTFNECXlzFFXcY7BFslk5wkRlun_3zzv2h0j9TKqmG1k1HyRIttW0tAhIqghfbnqx8DuG3hE2PK0fMBuLWwp6Eh2zCt0QwSE7-dJU_vKku2W1594g4c-DyzUW2F6nhCd.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/i2bz3rsb_WHOl8Xs0zoTmpbpFbkVHqRqrUBSQi_u4NdQBD1nKxM174_s5273GGPykZPnJiNUB6j5bvCWv4kPLnsHgZV2OqJA6cBnWOCh56vmxkXiOn-Rq_qOGvhG0xSK68CU1ujgQ9RQzvCQJT7-PHfPPbJekzUISeiQpNYn3HqkCR-t1YTDd3UBLudkC60Lm4SZ-btXg.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dgsgto25_QeQSv9KXBIia2LEu0f34xtEL0xz58DxfMXnfUjo8aBNtUjwPnHtw_2CGxG2MGE55L9fp7AQFQ-lkowZS3fMg4fKDf2Ro-EUsNrwZ7r4t-Okhfdr9oc5KAW2ekNDlSFQdrOPIf6xQV2H3hzPN-NsrPmnsNrGnaMv9DxTiYI-Sv7O6XroUwmLyHN5jKdkwqwZ5.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/jut9xmva_nxsYuQekiqrQ6dpWsSoC3oGETGJSpr-OdjCfvAPIBvB8vOpWz3mNMmFhLg1-fxIl7tnBxM_Vyd8rJqplFXb0xGr3JcQIMMxMSeDk7KYjgFQ6k1EQMpE5o54NipT6TnF3DGWmg1-V8CvLHU-7_vo_dYFGyX_sbFIosgeSMkUSAkRMpzoNxv5z036pO2RbK5-c.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/1u4lylr3_fKcxwfwiG4eMDe8rfrx7J4b-rBcqNz9Cr5JPHTQqZWybIaSRBCS7Zvnz98PGp-lu8nRflpiOkvQ61xTqZfPxg0b8QtQAJDzzDLJSRz2W4CWEkzj9p-s3ChqXkPaiGB7z9J0to3RzHERd3GR9mfDgWANPHR5b2uQv05fIVBnuGCuad4CX4CF32Ze9MCfMLRaz.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ucr1r7co_Nqijir-7MxONvGH1PIB9UvrT4PENGJzMl003BZRmXxSWPk02pd_n4pdf9B73JQ2BitFSAQD7nR6iRr988mO3rpLrYaw-7WKcv_hXNMRYvffv56UOk10WTIRRwHQcqN_a1U355KfMMZocHJ5_S74467GOoGyuFJ4HUm4S2kdTqHKjpvgaJX84O-G_XS90ZWLq.jpg" />
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div class="section">
+      <div class="section-title">📅 Plan dnia</div>
+      <div class="timeline">
+        <div class="step">
+          <div class="step-time">08:00</div>
+          <div class="step-title">🚗 Wyjazd z Krakowa</div>
+          <div class="step-desc">Trasa: Kraków → Nowy Targ → Niedzica (~2.5h)</div>
+        </div>
+        <div class="step">
+          <div class="step-time">10:00</div>
+          <div class="step-title">🏰 Zamek w Niedzicy</div>
+          <div class="step-desc">Zamek Dunajec, komnaty, dziedziniec, legenda o skarbie Inków</div>
+        </div>
+        <div class="step">
+          <div class="step-time">11:45</div>
+          <div class="step-title">🌄 Zapora i punkt widokowy</div>
+          <div class="step-desc">Panorama jeziora i obu zamków — w pogodne dni Tatry!</div>
+        </div>
+        <div class="step">
+          <div class="step-time">12:30</div>
+          <div class="step-title">🚢 Rejs po Jeziorze Czorsztyńskim</div>
+          <div class="step-desc">Statek kołowy, 50 min relaksu na wodzie</div>
+        </div>
+        <div class="step">
+          <div class="step-time">13:30</div>
+          <div class="step-title">🍽️ Obiad w Karczmie Zadyma</div>
+          <div class="step-desc">Kwaśnica, pstrąg, placki po zbójnicku</div>
+        </div>
+        <div class="step">
+          <div class="step-time">15:15</div>
+          <div class="step-title">🏯 Ruiny Zamku w Czorsztynie</div>
+          <div class="step-desc">Klimatyczne ruiny, widok na Niedzicę przez okna</div>
+        </div>
+        <div class="step">
+          <div class="step-time">16:30</div>
+          <div class="step-title">🏖️ Plaża Zamajerz</div>
+          <div class="step-desc">Kawa, relaks nad wodą, SUP, kajaki</div>
+        </div>
+        <div class="step">
+          <div class="step-time">17:30</div>
+          <div class="step-title">🏠 Powrót do Krakowa (~19:30)</div>
+          <div class="step-desc">Spokojny powrót, odwóz pod hotel/adres</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="section">
+      <div class="section-title">🗺️ Trasa na mapie</div>
+      <img src="/trip1-map.png" class="map-img" alt="Mapa atrakcji" />
+    </div>
+
+    <!-- INCLUDED -->
+    <div class="section">
+      <div class="section-title">✅ Co w cenie (350 zł/os)</div>
+      <div class="included">
+        <div class="list-row">✅ Transport komfortowym samochodem</div>
+        <div class="list-row">✅ Kierowca-przewodnik (z opowieściami!)</div>
+        <div class="list-row">✅ Czekanie podczas zwiedzania</div>
+        <div class="list-row">✅ Pomoc w zakupie biletów atrakcji</div>
+        <div class="list-row">✅ Rekomendacje knajp i punktów widokowych</div>
+      </div>
+      <div class="excluded">
+        <div class="list-row">⚠️ Bilety do zamków (~30-50 zł)</div>
+        <div class="list-row">⚠️ Bilet na rejs (~30 zł)</div>
+        <div class="list-row">⚠️ Obiad w karczmie</div>
+        <div style="margin-top:8px; font-size:11px; opacity:0.85;">💡 Bilety atrakcji możesz dokupić w aplikacji w jednym checkout</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-bar">
+      <a href="#" class="cta-btn">📅 Zarezerwuj teraz — 350 zł/os</a>
+    </div>
+  </div>
+</body>
+</html>
