@@ -106,10 +106,10 @@ export default function WycieczkiIndex() {
 
 const WHY_FEATURES = [
   { icon: "🎯", name: "Małe, kameralne grupy", desc: "Maksymalnie 4 osoby — żadnych dużych autobusów." },
-  { icon: "🗣️", name: "Kierowca-przewodnik", desc: "Z opowieściami o miejscach, legendach i historii." },
+  { icon: "🚗", name: "Komfortowy kierowca", desc: "Doświadczony kierowca lokalnie, znający trasy i okolice." },
   { icon: "📍", name: "Odbiór z hotelu", desc: "Wskazujesz adres w Krakowie — odbieramy pod sam hotel." },
-  { icon: "🎫", name: "Bilety w jednym checkout", desc: "Płacisz transport + atrakcje w aplikacji." },
-  { icon: "💳", name: "Płatność BLIK / Karta", desc: "Stripe + BLIK — szybko, też w EUR dla zagranicznych gości." },
+  { icon: "🎫", name: "Pomoc z biletami", desc: "Doradzimy gdzie kupić bilety wstępu i rejs." },
+  { icon: "💵", name: "Płatność gotówką lub negocjacja", desc: "Płacisz u kierowcy w dniu wycieczki — bez prowizji. Możesz też negocjować cenę." },
 ];
 
 const styles = StyleSheet.create({
