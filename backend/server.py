@@ -119,6 +119,9 @@ class TripReservationCreate(BaseModel):
     price_per_person: float = Field(ge=0)
     total_price: float = Field(ge=0)
     notes: Optional[str] = Field(default="", max_length=500)
+    payment_method: Literal["cash", "negotiate"] = "cash"
+    proposed_price: Optional[float] = Field(default=None, ge=0)
+    negotiation_note: Optional[str] = Field(default="", max_length=500)
 
 
 class TripReservationUpdate(BaseModel):

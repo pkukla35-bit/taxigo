@@ -48,6 +48,10 @@ export default function TripReservation() {
   const [email, setEmail] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Negocjacja ceny
+  const [negotiateOpen, setNegotiateOpen] = useState(false);
+  const [proposedPrice, setProposedPrice] = useState("");
+  const [negotiationNote, setNegotiationNote] = useState("");
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -117,7 +121,7 @@ export default function TripReservation() {
     return null;
   };
 
-  const submit = async () => {
+  const submit = async (paymentMethod: "cash" | "negotiate") => {
     const err = validate();
     if (err) {
       if (Platform.OS === "web") {
@@ -126,6 +130,18 @@ export default function TripReservation() {
         Alert.alert("Uzupełnij dane", err);
       }
       return;
+    }
+    // walidacja negocjacji
+    let proposed: number | null = null;
+    if (paymentMethod === "negotiate") {
+      const p = parseFloat(proposedPrice.replace(",", "."));
+      if (!proposedPrice || isNaN(p) || p <= 0) {
+        const msg = "Wpisz proponowaną cenę (większą od 0)";
+        if (Platform.OS === "web") window.alert(msg);
+        else Alert.alert("Brakuje ceny", msg);
+        return;
+      }
+      proposed = p;
     }
     setSubmitting(true);
     try {
@@ -144,6 +160,9 @@ export default function TripReservation() {
           price_per_person: trip.price,
           total_price: totalPrice,
           notes: "",
+          payment_method: paymentMethod,
+          proposed_price: proposed,
+          negotiation_note: paymentMethod === "negotiate" ? negotiationNote.trim() : "",
         }),
       });
       const data = await res.json();
@@ -162,6 +181,8 @@ export default function TripReservation() {
           date: selectedDate,
           people: String(people),
           total: String(totalPrice),
+          payment: paymentMethod,
+          proposed: proposed != null ? String(proposed) : "",
         },
       });
     } catch (e: any) {
@@ -306,21 +327,84 @@ export default function TripReservation() {
         </ScrollView>
 
         <SafeAreaView edges={["bottom"]} style={s.ctaBar}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[s.ctaBtn, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1 }]}
-            onPress={submit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                <Text style={s.ctaBtnText}>Zarezerwuj — {totalPrice} zł</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          {negotiateOpen && (
+            <View style={[s.negoBox, { borderColor: trip.accent, backgroundColor: trip.bgAccent }]}>
+              <View style={s.negoHeader}>
+                <Ionicons name="chatbubbles" size={18} color={trip.accent} />
+                <Text style={[s.negoTitle, { color: trip.accent }]}>💬 Negocjuj cenę</Text>
+                <TouchableOpacity onPress={() => setNegotiateOpen(false)} style={{ padding: 4 }}>
+                  <Ionicons name="close" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+              <Text style={s.negoHint}>Cena standardowa: {totalPrice} zł ({trip.price} zł × {people} os).
+                {"\n"}Wpisz cenę, którą proponujesz — skontaktujemy się aby ustalić szczegóły.
+              </Text>
+              <View style={s.negoRow}>
+                <TextInput
+                  style={s.negoInput}
+                  placeholder="np. 280"
+                  placeholderTextColor="#9aa0a6"
+                  keyboardType="numeric"
+                  value={proposedPrice}
+                  onChangeText={setProposedPrice}
+                />
+                <Text style={s.negoCurrency}>zł</Text>
+              </View>
+              <TextInput
+                style={[s.negoInput, { height: 60, marginTop: 8, textAlignVertical: "top" }]}
+                placeholder="Opcjonalna notatka (np. studenci, grupa, stały klient)..."
+                placeholderTextColor="#9aa0a6"
+                value={negotiationNote}
+                onChangeText={setNegotiationNote}
+                multiline
+              />
+              <TouchableOpacity
+                style={[s.negoSubmit, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1 }]}
+                onPress={() => submit("negotiate")}
+                disabled={submitting}
+                activeOpacity={0.85}
+              >
+                {submitting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="send" size={16} color="#fff" />
+                    <Text style={s.negoSubmitText}>Wyślij propozycję {proposedPrice ? `— ${proposedPrice} zł` : ""}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={s.ctaRow}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={[s.ctaBtn, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1, flex: 1.4 }]}
+              onPress={() => submit("cash")}
+              disabled={submitting}
+              testID="reserve-cash-btn"
+            >
+              {submitting && !negotiateOpen ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="cash" size={18} color="#fff" />
+                  <Text style={s.ctaBtnText} numberOfLines={1}>Gotówka — {totalPrice} zł</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={[s.ctaSecondary, negotiateOpen && { backgroundColor: trip.accent }]}
+              onPress={() => setNegotiateOpen((o) => !o)}
+              disabled={submitting}
+              testID="negotiate-btn"
+            >
+              <Ionicons name="chatbubbles-outline" size={18} color={negotiateOpen ? "#fff" : trip.accent} />
+              <Text style={[s.ctaSecondaryText, { color: negotiateOpen ? "#fff" : trip.accent }]}>Negocjuj</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={s.ctaHint}>💵 Płatność gotówką u kierowcy w dniu wycieczki</Text>
         </SafeAreaView>
       </KeyboardAvoidingView>
     </View>
@@ -364,6 +448,20 @@ const s = StyleSheet.create({
   summaryTotalVal: { fontSize: 22, fontWeight: "800" },
   summaryNote: { fontSize: 11, color: "#8e8e93", marginTop: 12, lineHeight: 16 },
   ctaBar: { position: "absolute", left: 0, right: 0, bottom: 0, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#e5e5ea", padding: 14 },
+  ctaRow: { flexDirection: "row", gap: 8 },
   ctaBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16, borderRadius: 14 },
   ctaBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  ctaSecondary: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 16, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5, borderColor: "#2E7D32", backgroundColor: "#fff" },
+  ctaSecondaryText: { fontSize: 14, fontWeight: "700" },
+  ctaHint: { fontSize: 11, color: "#8e8e93", textAlign: "center", marginTop: 8 },
+  // negotiate box
+  negoBox: { borderWidth: 1.5, borderRadius: 14, padding: 14, marginBottom: 10 },
+  negoHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  negoTitle: { fontSize: 15, fontWeight: "800", flex: 1 },
+  negoHint: { fontSize: 12, color: "#555", marginBottom: 10, lineHeight: 17 },
+  negoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  negoInput: { flex: 1, borderWidth: 1, borderColor: "#d1d1d6", backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: 16, fontWeight: "700", color: "#1c1c1e" },
+  negoCurrency: { fontSize: 16, fontWeight: "700", color: "#1c1c1e" },
+  negoSubmit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 13, borderRadius: 12, marginTop: 10 },
+  negoSubmitText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 });

@@ -44,6 +44,9 @@ type Reservation = {
   total_price: number;
   status: "pending" | "confirmed" | "cancelled" | "completed";
   created_at: string;
+  payment_method?: "cash" | "negotiate";
+  proposed_price?: number | null;
+  negotiation_note?: string;
 };
 
 type BlockedDate = { trip_slug: string; date: string; reason?: string };
@@ -297,6 +300,30 @@ export default function AdminPanel() {
                   </View>
                   <StatusBadge status={r.status} />
                 </View>
+                {r.payment_method === "negotiate" && r.proposed_price != null ? (
+                  <View style={s.negoCard}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <Ionicons name="chatbubbles" size={14} color="#856404" />
+                      <Text style={s.negoCardTitle}>💬 KLIENT NEGOCJUJE CENĘ</Text>
+                    </View>
+                    <View style={s.negoCardRow}>
+                      <Text style={s.negoCardLabel}>Standardowa:</Text>
+                      <Text style={s.negoCardOrig}>{r.total_price} zł</Text>
+                    </View>
+                    <View style={s.negoCardRow}>
+                      <Text style={s.negoCardLabel}>Propozycja:</Text>
+                      <Text style={s.negoCardProposed}>{r.proposed_price} zł</Text>
+                    </View>
+                    {r.negotiation_note ? (
+                      <Text style={s.negoCardNote}>📝 „{r.negotiation_note}"</Text>
+                    ) : null}
+                  </View>
+                ) : (
+                  <View style={s.paymentChip}>
+                    <Ionicons name="cash" size={12} color="#155724" />
+                    <Text style={s.paymentChipText}>Gotówka przy odbiorze</Text>
+                  </View>
+                )}
                 <View style={s.resBody}>
                   <Row icon="calendar" label="Data" value={r.date} />
                   <Row icon="people" label="Osoby" value={String(r.people)} />
@@ -438,6 +465,15 @@ const s = StyleSheet.create({
   emptyText: { fontSize: 14, color: "#8e8e93" },
 
   resCard: { backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: "#eee" },
+  negoCard: { backgroundColor: "#fff3cd", borderWidth: 1, borderColor: "#ffe082", borderRadius: 10, padding: 10, marginBottom: 10 },
+  negoCardTitle: { fontSize: 11, fontWeight: "800", color: "#856404", letterSpacing: 0.5 },
+  negoCardRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 2 },
+  negoCardLabel: { fontSize: 12, color: "#856404" },
+  negoCardOrig: { fontSize: 12, color: "#999", textDecorationLine: "line-through" },
+  negoCardProposed: { fontSize: 15, fontWeight: "800", color: "#c0392b" },
+  negoCardNote: { fontSize: 12, fontStyle: "italic", color: "#856404", marginTop: 6, lineHeight: 16 },
+  paymentChip: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#d4edda", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: "flex-start", marginBottom: 10 },
+  paymentChipText: { fontSize: 11, color: "#155724", fontWeight: "600" },
   resHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   resTitle: { fontSize: 15, fontWeight: "700", color: "#1c1c1e" },
   resId: { fontSize: 10, color: "#999", marginTop: 1 },
