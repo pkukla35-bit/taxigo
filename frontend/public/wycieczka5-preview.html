@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Wycieczka 5: Zakopane + Kasprowy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1c1c1e; line-height: 1.5; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; overflow: hidden; }
+  .hero { position: relative; height: 360px; background-size: cover; background-position: center; }
+  .hero::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.8) 100%); }
+  .hero-content { position: absolute; bottom: 24px; left: 20px; right: 20px; color: white; z-index: 2; }
+  .hero-badge { display: inline-block; background: linear-gradient(135deg, #d35400, #e67e22); color: white; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .hero-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); line-height: 1.2; }
+  .hero-subtitle { font-size: 14px; opacity: 0.95; }
+  .price-row { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .price-label { font-size: 13px; color: #8e8e93; }
+  .price-value { font-size: 28px; font-weight: 700; color: #d35400; }
+  .price-unit { font-size: 14px; color: #8e8e93; font-weight: 400; }
+  .duration { display: inline-block; background: #fde6d3; color: #d35400; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+  .section { padding: 20px; border-bottom: 8px solid #f5f5f7; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .section-subtitle { font-size: 13px; color: #6e6e73; margin-bottom: 14px; margin-top: -8px; }
+  .attraction { margin-bottom: 24px; }
+  .attraction-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1c1c1e; }
+  .attraction-desc { font-size: 13px; color: #6e6e73; margin-bottom: 10px; }
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+  .gallery.two-col { grid-template-columns: repeat(2, 1fr); }
+  .gallery.two-col img { height: 130px; }
+  .collage { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 110px 110px 110px; gap: 4px; }
+  .collage img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .collage .big { grid-row: span 2; height: 224px; }
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content:''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #e5e5ea; }
+  .step { position: relative; padding: 8px 0 16px; }
+  .step::before { content:''; position: absolute; left: -25px; top: 12px; width: 14px; height: 14px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #d35400; }
+  .step-time { font-size: 13px; color: #d35400; font-weight: 700; }
+  .step-title { font-size: 15px; font-weight: 600; margin: 2px 0; }
+  .step-desc { font-size: 13px; color: #6e6e73; }
+  .map-img { width: 100%; border-radius: 12px; }
+  .included { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+  .excluded { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; }
+  .list-row { padding: 4px 0; }
+  .cta-bar { position: sticky; bottom: 0; padding: 16px 20px; background: white; border-top: 1px solid #e5e5ea; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #d35400, #e67e22); color: white; text-align: center; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; }
+  .lang-switch { position: absolute; top: 16px; right: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .header-top { position: absolute; top: 16px; left: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #FFD700; }
+  .header-top span { color: #1c1c1e; }
+  .flag-banner { position: absolute; top: 60px; left: 16px; z-index: 10; background: linear-gradient(180deg, #fff 50%, #dc143c 50%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dm10vjl1_PKMfrd5SWiGV7ThIl4UjFl1r5rvTjefPP2OJvmSbvIqpbvUBcsZhM0CTZFPVXzVae0P1HfdWgkshaJQreiiFr8k7w_nULvmuSPH955k3uuxXorLvKd7t-jqyX-36G5eLLkvIfQIOjWGszDuENhWEdm-vD56bqALS0olEDLuB5yt1AV8TlngMQMxwJaK-K52k.jpg');">
+      <div class="header-top">TAXI<span>GO</span> Trips</div>
+      <div class="lang-switch">🇵🇱 PL | EN</div>
+      <div class="flag-banner">🇵🇱 POLSKA</div>
+      <div class="hero-content">
+        <div class="hero-badge">🏔️ KLASYK</div>
+        <div class="hero-title">Zakopane + Kasprowy Wierch z Krakowa</div>
+        <div class="hero-subtitle">Krupówki • Gubałówka • Karczma • Kasprowy 1985m</div>
+      </div>
+    </div>
+
+    <div class="price-row">
+      <div>
+        <div class="price-label">Cena od osoby</div>
+        <div class="price-value">350 zł<span class="price-unit"> /os</span></div>
+      </div>
+      <div class="duration">⏱️ ~12 godzin</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🌟 4 must-see Zakopanego</div>
+      <div class="section-subtitle">Klasyk turystyczny — zobaczcie wszystko w jeden dzień</div>
+
+      <div class="attraction">
+        <div class="attraction-title">🛍️ 1. Spacer po Krupówkach</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;">Najbardziej znany deptak w Polsce:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>góralskie sklepy i oscypki</li>
+            <li>regionalne karczmy</li>
+            <li>widoki na Tatry między uliczkami</li>
+          </ul>
+          <p style="font-style:italic; color:#1c1c1e;">☕ Idealny moment na kawę, śniadanie i spokojny spacer. ⏱️ ~1h</p>
+        </div>
+        <div class="gallery">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/wy90snog_JoyifS8Q3gmEITWHoV_2uLzzv57n3Q7CJUmpcaeKWbHlrvxWeBM7FxJTsDY3kdQGU1prNXXLbeATIllexRGD7qBh3do93eMpcpM_PG_27zoD4TJqGAP2sXIhDCyPYL5lWHq0BETCSsBajixKRyJvrQNBgotJwYkory60YKZFweAde_9hGi4yU5Q19n8pgQV7.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/fqdihjcr_aBnMjw_SGzJ8UelrG7MLDh3J97GdJzLO1GGn8GtvFB1Hx_eW4bSDCs47djqawHNDNkcheEC41iPDr5Y51WnLsktShwk2u66SrvvRdJxP241n_wn4KoehSEd94op_V1m-PBrjXYwUeEu06Gtq7YzUVomZdkbL-nZrSSaQNpDjPGPK2ArXCAbs6S2ULhgaEUOV.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/34uj9hu6_HHTnSgCGcEFTbPldMPTRIySyKTbdDlc4qN3qVHdb0tejTohnAwYyheX6Tng-4iuJHcN1c2_N11ppOY3zMe_LRyNB7UWRhYFMcTZd6lqfuxTz46Xs-rnc713isSheWsz0Tf_2cjhwxxA4ZFGUSUsOv2ldrgQ2Bf3JCVxOaw9R_GU17YxS121arik7pFBNfOCp.jpg" />
+        </div>
+      </div>
+
+      <div class="attraction">
+        <div class="attraction-title">🚞 2. Gubałówka</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;">Wjazd kolejką linowo-terenową. Na górze:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>panorama Tatr</li>
+            <li>punkty widokowe i drewniane tarasy</li>
+            <li>regionalne stragany i restauracje</li>
+          </ul>
+          <p style="font-style:italic; color:#1c1c1e;">📸 Jedno z najlepszych miejsc na zdjęcia w Zakopanem. ⏱️ ~1.5h</p>
+        </div>
+        <div class="gallery two-col">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/kbrhxmv0_YwV5vZWljpiVUW2qYcI5nYxkxl-8YVC_Vi7nG8d_P0sk-kf3w7E93NgvTiwKcS3LuDxC27Vr4jeH-VcxJYS6Q_RiBCKBiHiQ8-BqLck3ALrgVEH87TyTzDaOY5A_71xqhpMj7El8XdeEkmKuhP6aTWyLaIHDuVEbeOreljrPOdUx3C5zN54FcXe3qwPjWItT.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dm10vjl1_PKMfrd5SWiGV7ThIl4UjFl1r5rvTjefPP2OJvmSbvIqpbvUBcsZhM0CTZFPVXzVae0P1HfdWgkshaJQreiiFr8k7w_nULvmuSPH955k3uuxXorLvKd7t-jqyX-36G5eLLkvIfQIOjWGszDuENhWEdm-vD56bqALS0olEDLuB5yt1AV8TlngMQMxwJaK-K52k.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ea4s6qjy_NqgXfh4Ns5k1_xWTGloIj4kLGm4wo1coggUNgUXw9IKTNKQOBPLKVGuSQMViBlETfbARamdimmnq4Uoy8ngJZAX_LAa9FNUMq0Es-I97XNpwQTnaLGF2zkaNmCED8NB-k06HDoQxpxR8fy1aAEWnJ12l5axCs5Ay1t5ZXFsIMbaxYcnnyhI-nt8XAL_rx0U3.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/urmviuj3_inukccIyrFWknaDoWwRk3qTaH0AylXh-8ks_EgK3a03iJHcBEOjzLwYdNbicauNIMBcG57fRP1Ykcsbj8ocvLlLthzlmVcnoVghRemY01eHnwcALJtae2OHjHkiXBEP0FKbSGIaVdtKzy1CygkK2ZyKIcrWYEStBlgY6wnsH-3mOs6FQNH_arQFCXzlubt04.jpg" />
+        </div>
+      </div>
+
+      <div class="attraction">
+        <div class="attraction-title">🍽️ 3. Regionalny obiad — Karczma Po Zbóju</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;"><b>Polecane miejsce.</b> Warto spróbować:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>kwaśnicy</li>
+            <li>moskoli</li>
+            <li>oscypka z żurawiną</li>
+            <li>placków po góralsku</li>
+          </ul>
+          <p style="font-style:italic; color:#1c1c1e;">🎻 Często grają górale na żywo. ⏱️ ~1-1.5h</p>
+        </div>
+        <div class="collage">
+          <img class="big" src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/zr322qm9_OAGkpf9bn6RUbn8Cen49izqD4zwgIfrvw-CpMO5DAWS8kafBAUj0wXFRpvZ6tky6AG1eYrA02ghjbiOIWDuX1DaqBxLkcRVaozogcvsAlwe5obKv-Q4_dInR2hb4jik7UVDZ6bwHKg5OK_ThI3qI6WQyOfPC_59dJCOw8tbNoF39I1q90MnjlgazP9ZPrVrN.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/7bxtprdy_ytiqWfoHF2tuJZW8L0onIKO9_cHZ6WOlsqEoZO8jWjEaUejpZJp_svKIso1ZY5BnRm72YRDdsyvT4SLUzZGyR4595bQuByDCx_96ru5Ilsu6me2cXTHQ4B_T9TZH3_H4mafn2x30RR_1x7sST4bT5ZNlop5K2HM7fz6Iq39ME6JuIxBmSggSY6QWW-iNHGJ7.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/xg6y4zpz_c04Rs6bCIa5K6-DN0TQbVVwQlt0cZgHD4zMQsQ7Q8EBNDTunwh5osoQlh5nz4xkdGbLib7fozOq-qMLBixDveVL_XTqOcPTlGccG9fYaya4PzpPayt5ULTdpNC2Mj-EDVU2QSy6Qw8KhA91swetn5E1CW3mJ0CIbRidT8wKmJ_C_QwgAM5PQMREsCxu5IG50.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/kztto5jz_F9YP2hsBpTKqzyrb59cMmi9EVqzfoiXTwPp3ErSRIkK77lAqJAb6PVDjGPqNS-C01PXV_jog8tAlopDLwSsc2FmcW7jBSsLn-P_z_KfU_MeIwDiCfHs8jrLHx5-JQm6huRJ1OjM2nbMyMBqwA2nkNElHSYP0sO2JWmuwMWU8oSiWB5jlfTMxS_Tl7qzHHJfU.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ruiw735f_R_1Pl483FRXKC9aIRJbzEdtI_tm4z7e15tcNp_rxlD8hl8fntpC5gjzijsEBUMFCGu8n-NjOenOSV6xtB7VmfQBBKhsAc2ZJMF7nFyTbzgu_gaE9R7iv-yKISdjSRA78QYCO5cOeSaU3eQS_TjtTzCG_oWVa4R0cEM64fLfVp4D-L8NwYXoNAHm0sK5H6XhG.jpg" />
+        </div>
+      </div>
+
+      <div class="attraction">
+        <div class="attraction-title">🚡 4. Kasprowy Wierch — 1985 m n.p.m.</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;">Wjazd kolejką z Kuźnic. Najwyższy punkt wycieczki:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>spektakularne panoramy Tatr</li>
+            <li>wysokogórski klimat</li>
+            <li>możliwość krótkiego spaceru granią</li>
+          </ul>
+          <p style="background:#fde6d3; padding:8px 10px; border-radius:8px; font-size:12px; color:#d35400;">
+            🌟 Przy dobrej pogodzie widoki są <b>absolutnie wyjątkowe</b>. ⏱️ ~2-3h
+          </p>
+        </div>
+        <div class="gallery two-col">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/t2r6z7ee_-ISoV5MKNej-vm5N98XoEjNm_U-3kkzHixrTEgwMRz8Y1i5LKEeKNSxTncWXBPcXJHSonJleJXuZ8A_WCHFzFWvwj16A1FcTFEvrPyTf4fcfRnAuVtKLuCJzqR8A0qqvCmOqLkjtgxsv8v6vjohuIcvfH70b26lYBz6jqXNmsSuw8sYbt2RIY5BSwQZycmBe.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2ex177xi_HiFZm8GYzW0d-RDpBSxJ7pa3aioSNkoz4n6lv68f97k5PEB--LW84q2ZgxgZymprEBuSBLRRg_AyT6OzbFk386QGDBEO7LUv2sF2xmWuouStVRCOWQKclexRw12beant3kjE5qANpa87AvWMIkLx1lI56k4SFXGK5_8UqXtNICIdsWmnyHGh2q3weFS9YCww.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/lq9an5ig_DtvWmkUCqHuO0xE97n1Hp7RBhNWdSWQBVOpePyrGyaUucXt-XztNVMYjPqOg7Zy3mI7ZSDEe9-rmRBr6QLUTAMMFRktNmTilEfVuPxUZ6AsrFYrfCn-V9n6DMy9ZNk6D6A8WTlk-3JKmmssulcD2mgJo0BEZ4uqLvTjvaHtzKUf9VdPK13XmxwoEOQzkIF-H.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/yf3xvbh8_qUnwHB3dsd6eBtnlyLeWIf9bbdttKH2xfqQS-5pXfXN5UkXdKfBVn_PgOfqCLOpa7QVX0PwejYziwDf9Hs5B1ndebyecMaxT6_t40SlBKmmbjsfAmghrGHJVmO6C1LmEI-KZGdh_QULfLt_b4rozuY7vSRN743g0L-Xsr1HLcll2o5sVoigkAZuGjhpVgZOo.jpg" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📅 Plan dnia</div>
+      <div class="timeline">
+        <div class="step"><div class="step-time">07:00</div><div class="step-title">🚗 Wyjazd z Krakowa</div><div class="step-desc">Trasa: Kraków → Zakopianka → Zakopane (~2-2.5h). Najładniejsze widoki za Nowym Targiem!</div></div>
+        <div class="step"><div class="step-time">09:00</div><div class="step-title">🛍️ Spacer po Krupówkach</div><div class="step-desc">Deptak, oscypki, kawa, klimat. ~1h</div></div>
+        <div class="step"><div class="step-time">10:30</div><div class="step-title">🚞 Gubałówka</div><div class="step-desc">Kolejka linowo-terenowa, panorama Tatr, stragany. ~1.5h</div></div>
+        <div class="step"><div class="step-time">12:00</div><div class="step-title">🍽️ Obiad w Karczmie Po Zbóju</div><div class="step-desc">Kwaśnica, moskole, oscypek z żurawiną, placki po góralsku. ~1-1.5h</div></div>
+        <div class="step"><div class="step-time">14:00</div><div class="step-title">🚡 Kasprowy Wierch</div><div class="step-desc">Kolejka z Kuźnic, panorama z 1985 m! Spacer granią. ~2-3h</div></div>
+        <div class="step"><div class="step-time">17:00</div><div class="step-title">🏠 Powrót do Krakowa</div><div class="step-desc">Przyjazd ~19:30-20:00</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🗺️ Trasa na mapie</div>
+      <img src="/trip5-map.png" class="map-img" alt="Mapa Zakopane" />
+      <div style="margin-top:10px;font-size:12px;color:#8e8e93;">
+        🔴 1. Krupówki &nbsp; 🔵 2. Gubałówka &nbsp; 🟠 3. Karczma &nbsp; 🟣 4. Kasprowy Wierch
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">✅ Co w cenie (350 zł/os)</div>
+      <div class="included">
+        <div class="list-row">✅ Transport tam i z powrotem</div>
+        <div class="list-row">✅ Kierowca-przewodnik</div>
+        <div class="list-row">✅ Czekanie podczas zwiedzania</div>
+        <div class="list-row">✅ Pomoc w zakupie biletów atrakcji</div>
+        <div class="list-row">✅ Rezerwacja stolika w karczmie</div>
+      </div>
+      <div class="excluded">
+        <div class="list-row">⚠️ Kolejka na Gubałówkę (~28 zł/os)</div>
+        <div class="list-row">⚠️ Kolejka na Kasprowy Wierch (~109 zł/os, 2-strony)</div>
+        <div class="list-row">⚠️ Wstęp do TPN (~9 zł/os)</div>
+        <div class="list-row">⚠️ Obiad w karczmie</div>
+        <div style="margin-top:8px; font-size:11px; opacity:0.85;">💡 Bilety atrakcji możesz dokupić w aplikacji w jednym checkout</div>
+      </div>
+    </div>
+
+    <div class="cta-bar">
+      <a href="#" class="cta-btn">📅 Zarezerwuj teraz — 350 zł/os</a>
+    </div>
+  </div>
+</body>
+</html>
