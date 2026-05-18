@@ -104,7 +104,49 @@
 
 user_problem_statement: |
   Stwórz aplikację taxi dla pasażera i kierowcy z Google Auth, Mapbox, śledzeniem GPS, BLIK, PWA.
-  Ostatnia zmiana: dodać auto-wypełnianie pola "Skąd" lokalizacją GPS pasażera (jak w Uberze).
+  Aktualne zadanie: Implementacja modułu rezerwacji wycieczek z kalendarzem i panelem admina.
+  - Klient (bez logowania) wybiera datę, liczbę osób, podaje dane kontaktowe i adres odbioru
+  - Rezerwacja zapisywana jako "pending" - kontakt manualny
+  - Admin (PIN) ma panel: lista rezerwacji + blokowanie dat w kalendarzu
+
+backend:
+  - task: "Trip reservations CRUD + admin auth (PIN)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Dodano nowe endpointy w /app/backend/server.py:
+            - POST /api/trips/reservations (publiczny, bez auth) - tworzy rezerwację, waliduje datę (przyszłość, nie zablokowana)
+            - GET /api/trips/reservations (admin via X-Admin-Passcode header) - lista wszystkich
+            - PATCH /api/trips/reservations/{id} (admin) - zmiana statusu pending/confirmed/cancelled/completed
+            - DELETE /api/trips/reservations/{id} (admin) - usuwa
+            - GET /api/trips/blocked-dates/{trip_slug} (publiczny) - daty zablokowane (przyjmuje slug LUB "all")
+            - POST /api/trips/blocked-dates (admin) - blokuje datę
+            - DELETE /api/trips/blocked-dates/{trip_slug}/{date} (admin) - odblokowuje
+            - POST /api/trips/admin/verify (publiczny) - weryfikacja PIN-u
+            ADMIN_PASSCODE="taxigo2025" w /app/backend/.env
+            Nowe kolekcje MongoDB: trip_reservations, trip_blocked_dates
+            Smoke test: curl /api/trips/blocked-dates/pieniny zwrócił [], admin/verify zwrócił {ok:true}.
+        - working: true
+          agent: "testing"
+          comment: |
+            Comprehensive backend testing executed via /app/backend_test.py against the production URL.
+            ALL 31 test cases PASSED, including:
+            - POST /api/trips/reservations: happy path returns reservation_id starting with res_ and status='pending'; past date -> 400 'Nie można rezerwować w przeszłości'; invalid date 'abc' -> 400 'Nieprawidłowy format daty'; missing required fields -> 422; people=0 and people=21 -> 422; reservation for slug-blocked date -> 400 'Wybrana data jest niedostępna'; reservation for 'all'-scoped blocked date -> 400 (edge case verified).
+            - GET /api/trips/reservations: no header -> 401, wrong passcode -> 401, correct admin -> 200 list (created reservation found in list).
+            - PATCH /api/trips/reservations/{id}: no header -> 401, admin status=confirmed -> 200 (persisted), invalid status -> 422 (Pydantic Literal), non-existing id -> 404.
+            - DELETE /api/trips/reservations/{id}: no header -> 401, admin -> 200 {"ok":true}, non-existing -> 404.
+            - GET /api/trips/blocked-dates/{slug}: public, returns list and correctly includes both slug-specific AND 'all'-scoped blocks.
+            - POST /api/trips/blocked-dates: no header -> 401, wrong header -> 401, invalid date 'not-a-date' -> 400, correct admin -> 200 {"ok":true}, slug='all' supported.
+            - DELETE /api/trips/blocked-dates/{slug}/{date}: no header -> 401, admin -> 200 {"ok":true,"deleted":1}.
+            - POST /api/trips/admin/verify: correct passcode -> 200 {"ok":true}, wrong/missing -> 401.
+            All test data cleaned up after the run. No critical issues. ADMIN_PASSCODE validation, blocked-date enforcement, and 'all' scoping work as documented.
 
 frontend:
   - task: "Passenger pickup auto-fill from GPS (Uber-style)"
@@ -117,31 +159,79 @@ frontend:
     status_history:
         - working: true
           agent: "main"
+          comment: "Verified previously."
+
+  - task: "Trip reservation flow (calendar + form)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/wycieczki/[slug]/rezerwacja.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
           comment: |
-            Verified via screenshot test (mobile viewport 390x844) on production preview URL with geolocation set to Krakow Rynek Główny (50.0617, 19.9373).
-            - useLiveLocation hook returned GPS fix
-            - reverseGeocode() from mapbox.ts converted lat/lng to Polish address
-            - pickup-input value confirmed: "Rynek Główny 3, 31-042 Kraków, województwo małopolskie, Polska"
-            - dest-input remains empty awaiting user input
-            - Mapbox map renders correctly with user-location marker
-            - autoPickupDone flag prevents re-fill once user edits
-            - activeField auto-switches to "dest" for one-tap UX (Uber-style)
+            Nowy ekran /wycieczki/[slug]/rezerwacja z react-native-calendars (lokalizacja PL).
+            Pobiera blocked-dates z API, podświetla je na czerwono z przekreśleniem.
+            Formularz: data, liczba osób (1-maxPeople), imię, telefon, email, adres odbioru.
+            Live podsumowanie: cena/osoba × osoby = total. Sticky CTA z totalem.
+            Po wysłaniu replace -> /wycieczki/rezerwacja-sukces z nr rezerwacji.
+
+  - task: "Trip admin panel (PIN + reservations + blocked dates)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/wycieczki/admin.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Nowy ekran /wycieczki/admin z PIN-login (zapisywany w AsyncStorage dla wygody).
+            Dwa taby: 📋 Rezerwacje (potwierdź/anuluj/zakończ/usuń) i 🚫 Blokady dat (kalendarz + chipy do wyboru wycieczki).
+            Dostęp przez ikonę ⚙️ w prawym górnym rogu /wycieczki.
+            PIN: taxigo2025 (z backend/.env).
 
 metadata:
   created_by: "main_agent"
-  version: "1.1"
-  test_sequence: 1
+  version: "1.2"
+  test_sequence: 2
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Trip reservations CRUD + admin auth (PIN)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+    - agent: "testing"
+      message: |
+        Backend trip-reservations module fully tested via /app/backend_test.py.
+        Result: 31/31 test cases PASSED against production URL (https://mobility-platform-130.preview.emergentagent.com/api).
+        Covered: happy path, past date, invalid date format, missing required fields, people out of range,
+        slug-blocked & 'all'-blocked date rejection, admin auth (no/wrong/correct passcode) for list/PATCH/DELETE,
+        non-existent id -> 404, invalid status -> 422, block-date invalid date -> 400, blocked-dates GET includes
+        both slug-specific and 'all'-scoped entries, unblock works.
+        Test data cleaned up post-run (DB clean).
+        No critical issues. Task is working end-to-end.
     - agent: "main"
       message: |
-        Verified passenger GPS auto-fill feature on production preview URL using playwright screenshot tool with mocked geolocation (Krakow center).
-        Auto-fill produced exact Polish reverse-geocoded address and switched focus to destination field.
-        Feature complete and ready for user verification.
+        Zaimplementowałem moduł rezerwacji wycieczek (kalendarz + formularz + panel admina).
+        Backend: 8 nowych endpointów (3 publiczne, 5 chronionych X-Admin-Passcode). ADMIN_PASSCODE=taxigo2025.
+        Frontend: 3 nowe ekrany (rezerwacja, sukces, admin).
+        Proszę o testy backendu skupione na:
+        1. POST /api/trips/reservations - happy path (przyszła data, nieziablokowana, poprawne dane)
+        2. POST /api/trips/reservations - walidacja (data w przeszłości, brakujące pola, email/telefon za krótkie)
+        3. POST /api/trips/reservations - rezerwacja w zablokowanej dacie powinna zwrócić 400
+        4. Admin endpoints bez PIN-u -> 401
+        5. Admin endpoints z błędnym PIN-em -> 401
+        6. Admin endpoints z prawidłowym PIN-em (X-Admin-Passcode: taxigo2025) -> 200
+        7. POST /api/trips/blocked-dates -> blokuje datę -> potem POST /api/trips/reservations dla tej daty -> 400
+        8. PATCH /api/trips/reservations/{id} -> zmiana statusu
+        9. DELETE /api/trips/reservations/{id} -> usuwa
+        10. GET /api/trips/blocked-dates/{slug} -> publiczny endpoint, zwraca też "all"-blokady
+        Pliki: /app/backend/server.py linie ~498-608. Modele linie ~99-138.

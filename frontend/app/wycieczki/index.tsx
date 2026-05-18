@@ -31,7 +31,9 @@ export default function WycieczkiIndex() {
               <View style={styles.brandPill}>
                 <Text style={styles.brandPillText}>TAXI<Text style={{ color: "#1c1c1e" }}>GO</Text> Trips</Text>
               </View>
-              <View style={{ width: 38 }} />
+              <TouchableOpacity onPress={() => router.push("/wycieczki/admin" as any)} style={styles.backBtn} testID="open-admin">
+                <Ionicons name="settings-outline" size={20} color="#fff" />
+              </TouchableOpacity>
             </View>
           </SafeAreaView>
           <View style={styles.heroContent}>

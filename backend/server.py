@@ -106,6 +106,37 @@ class BlikPayPayload(BaseModel):
     blik_code: str = Field(min_length=6, max_length=6)
 
 
+# ============== TRIP RESERVATIONS MODELS ==============
+class TripReservationCreate(BaseModel):
+    trip_slug: str
+    trip_name: str
+    date: str  # YYYY-MM-DD
+    people: int = Field(ge=1, le=20)
+    name: str = Field(min_length=2, max_length=100)
+    phone: str = Field(min_length=6, max_length=30)
+    email: str = Field(min_length=5, max_length=100)
+    pickup_address: str = Field(min_length=2, max_length=300)
+    price_per_person: float = Field(ge=0)
+    total_price: float = Field(ge=0)
+    notes: Optional[str] = Field(default="", max_length=500)
+
+
+class TripReservationUpdate(BaseModel):
+    status: Literal["pending", "confirmed", "cancelled", "completed"]
+
+
+class BlockedDatePayload(BaseModel):
+    trip_slug: str  # "all" lub konkretny slug
+    date: str  # YYYY-MM-DD
+    reason: Optional[str] = ""
+
+
+def check_admin(passcode: Optional[str]) -> None:
+    expected = os.environ.get("ADMIN_PASSCODE", "")
+    if not expected or not passcode or passcode != expected:
+        raise HTTPException(status_code=401, detail="Nieprawidłowy kod admina")
+
+
 # ============== PUSH NOTIFICATIONS ==============
 async def send_push(tokens: List[str], title: str, body: str, data: dict = None):
     """Send a push notification via Expo Push API to a list of tokens."""
@@ -465,7 +496,120 @@ async def payment_status(ride_id: str, request: Request):
     return {"status": ride.get("payment_status", "unpaid"), "payment_status": ride.get("payment_status", "unpaid")}
 
 
+# ============== TRIP RESERVATIONS ENDPOINTS ==============
+@api_router.post("/trips/reservations")
+async def create_trip_reservation(payload: TripReservationCreate):
+    """Tworzy rezerwację wycieczki (publiczna, bez logowania)."""
+    # sprawdź czy data nie jest zablokowana
+    blocked = await db.trip_blocked_dates.find_one({
+        "$or": [
+            {"trip_slug": payload.trip_slug, "date": payload.date},
+            {"trip_slug": "all", "date": payload.date},
+        ]
+    })
+    if blocked:
+        raise HTTPException(status_code=400, detail="Wybrana data jest niedostępna")
+    # sprawdź czy data jest w przyszłości
+    try:
+        chosen = datetime.strptime(payload.date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy format daty")
+    today = datetime.now(timezone.utc).date()
+    if chosen < today:
+        raise HTTPException(status_code=400, detail="Nie można rezerwować w przeszłości")
+
+    reservation_id = f"res_{uuid.uuid4().hex[:10]}"
+    doc = {
+        "reservation_id": reservation_id,
+        **payload.dict(),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db.trip_reservations.insert_one(doc.copy())
+    doc.pop("_id", None)
+    logger.info(f"📅 Nowa rezerwacja {reservation_id}: {payload.trip_name} • {payload.date} • {payload.people} os • {payload.name}")
+    return doc
+
+
+@api_router.get("/trips/reservations")
+async def list_trip_reservations(x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Lista wszystkich rezerwacji (panel admina)."""
+    check_admin(x_admin_passcode)
+    cursor = db.trip_reservations.find({}, {"_id": 0}).sort("created_at", -1)
+    items = await cursor.to_list(500)
+    return items
+
+
+@api_router.patch("/trips/reservations/{reservation_id}")
+async def update_trip_reservation(reservation_id: str, payload: TripReservationUpdate, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    check_admin(x_admin_passcode)
+    result = await db.trip_reservations.update_one(
+        {"reservation_id": reservation_id},
+        {"$set": {"status": payload.status, "updated_at": datetime.now(timezone.utc)}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Rezerwacja nie znaleziona")
+    doc = await db.trip_reservations.find_one({"reservation_id": reservation_id}, {"_id": 0})
+    return doc
+
+
+@api_router.delete("/trips/reservations/{reservation_id}")
+async def delete_trip_reservation(reservation_id: str, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    check_admin(x_admin_passcode)
+    result = await db.trip_reservations.delete_one({"reservation_id": reservation_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Rezerwacja nie znaleziona")
+    return {"ok": True}
+
+
+@api_router.get("/trips/blocked-dates/{trip_slug}")
+async def list_blocked_dates(trip_slug: str):
+    """Lista zablokowanych dat dla wycieczki (publiczna - dla kalendarza)."""
+    cursor = db.trip_blocked_dates.find(
+        {"$or": [{"trip_slug": trip_slug}, {"trip_slug": "all"}]},
+        {"_id": 0}
+    )
+    items = await cursor.to_list(1000)
+    return items
+
+
+@api_router.post("/trips/blocked-dates")
+async def block_date(payload: BlockedDatePayload, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    check_admin(x_admin_passcode)
+    try:
+        datetime.strptime(payload.date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy format daty (YYYY-MM-DD)")
+    await db.trip_blocked_dates.update_one(
+        {"trip_slug": payload.trip_slug, "date": payload.date},
+        {"$set": {
+            "trip_slug": payload.trip_slug,
+            "date": payload.date,
+            "reason": payload.reason or "",
+            "created_at": datetime.now(timezone.utc),
+        }},
+        upsert=True,
+    )
+    return {"ok": True, "trip_slug": payload.trip_slug, "date": payload.date}
+
+
+@api_router.delete("/trips/blocked-dates/{trip_slug}/{date}")
+async def unblock_date(trip_slug: str, date: str, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    check_admin(x_admin_passcode)
+    result = await db.trip_blocked_dates.delete_one({"trip_slug": trip_slug, "date": date})
+    return {"ok": True, "deleted": result.deleted_count}
+
+
+@api_router.post("/trips/admin/verify")
+async def verify_admin(payload: dict):
+    """Weryfikacja PIN-u admina (bez zwracania danych wrażliwych)."""
+    passcode = (payload or {}).get("passcode")
+    check_admin(passcode)
+    return {"ok": True}
+
+
 app.include_router(api_router)
+
 
 @app.get("/")
 async def health_root():

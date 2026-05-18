@@ -23,11 +23,7 @@ export default function TripDetail() {
   }
 
   const handleReserve = () => {
-    Alert.alert(
-      "🚧 Wkrótce dostępne",
-      `Rezerwacja "${trip.title}" za ${trip.price} zł/os.\n\nKalendarz dostępności, miejsce odbioru i płatność Stripe BLIK będą dostępne w kolejnej aktualizacji.`,
-      [{ text: "OK", style: "default" }]
-    );
+    router.push(`/wycieczki/${trip.slug}/rezerwacja` as any);
   };
 
   return (

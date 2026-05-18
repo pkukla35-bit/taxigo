@@ -5,6 +5,9 @@ export default function WycieczkiLayout() {
     <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="[slug]" />
+      <Stack.Screen name="[slug]/rezerwacja" />
+      <Stack.Screen name="rezerwacja-sukces" />
+      <Stack.Screen name="admin" />
     </Stack>
   );
 }
