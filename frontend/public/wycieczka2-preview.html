@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Wycieczka 2: Spływ Dunajcem</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1c1c1e; line-height: 1.5; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; overflow: hidden; }
+  .hero { position: relative; height: 320px; background-size: cover; background-position: center; }
+  .hero::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.78) 100%); }
+  .hero-content { position: absolute; bottom: 20px; left: 20px; right: 20px; color: white; z-index: 2; }
+  .hero-badge { display: inline-block; background: #1976D2; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+  .hero-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+  .hero-subtitle { font-size: 14px; opacity: 0.95; }
+  .price-row { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .price-label { font-size: 13px; color: #8e8e93; }
+  .price-value { font-size: 28px; font-weight: 700; color: #2E7D32; }
+  .price-unit { font-size: 14px; color: #8e8e93; font-weight: 400; }
+  .duration { display: inline-block; background: #e3f2fd; color: #1565c0; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+
+  .section { padding: 20px; border-bottom: 8px solid #f5f5f7; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content:''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #e5e5ea; }
+  .step { position: relative; padding: 8px 0 16px; }
+  .step::before { content:''; position: absolute; left: -25px; top: 12px; width: 14px; height: 14px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #1976D2; }
+  .step-time { font-size: 13px; color: #1976D2; font-weight: 700; }
+  .step-title { font-size: 15px; font-weight: 600; margin: 2px 0; }
+  .step-desc { font-size: 13px; color: #6e6e73; }
+
+  .map-img { width: 100%; border-radius: 12px; }
+
+  .included { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+  .excluded { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; }
+  .list-row { padding: 4px 0; }
+
+  .cta-bar { position: sticky; bottom: 0; padding: 16px 20px; background: white; border-top: 1px solid #e5e5ea; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #1976D2, #2196F3); color: white; text-align: center; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; }
+
+  .lang-switch { position: absolute; top: 16px; right: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .header-top { position: absolute; top: 16px; left: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #FFD700; }
+  .header-top span { color: #1c1c1e; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <div class="hero" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ohfdd51n_OlnaMJzYyc94aAr5cQNoWavXnSVAzs1js3YMPxg88lOUNdwOKKdMDDpzZmcIwGVM0K-TBmF95XcfP7t2UKhSty-6LDX7ATbaLJ8iH5UldSLAhCZ9MsaPCfki09DUs0EUSihFMY1FWSC_NghV0EuQhdZynRpPAF5jpPGd8xHAiYXFh-MxtT1gXO2M-xr8OhgN.jpg');">
+      <div class="header-top">TAXI<span>GO</span> Trips</div>
+      <div class="lang-switch">🇵🇱 PL | EN</div>
+      <div class="hero-content">
+        <div class="hero-badge">🛶 PRZYGODA</div>
+        <div class="hero-title">Spływ Dunajcem z Krakowa</div>
+        <div class="hero-subtitle">Pieniny • Szczawnica • Palenica • Wąwóz Homole</div>
+      </div>
+    </div>
+
+    <!-- PRICE -->
+    <div class="price-row">
+      <div>
+        <div class="price-label">Cena od osoby</div>
+        <div class="price-value">350 zł<span class="price-unit"> /os</span></div>
+      </div>
+      <div class="duration">⏱️ ~12 godzin</div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="section">
+      <div class="section-title">📸 Galeria</div>
+      <div class="gallery">
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/s4gjyt4w_R2KCTT21uJKsPy9T97IjEvJPNaCMahYZaphI98lwI01xK1C-4kfVwL4ipkdAjsm0MICsNgZ1ABoV50rdQtB3T6FUntJhZ0uP2QGcKF0KBbVOOp0u1IyY-m6IqhDfD67tfCk3bBBc8fK0VPSjhdhlcaWfnRsTvROxcB-CSGfRwtK-NFzYFh-WsH_0NhfAteW2.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2mi92ztn_QUmIsxuA5lytTAb4xt6ab5exOLH9JUpxJ4uLuMZmSxXfv1o0iMB6Q0AFiqk5FqNrCn2TuTIHPejhEq-OGnUIJAFiavpJazub97waeMYXvUR8Mkjl5nxNsI1frwCCabavCp5lIZw3g2zbC0_O5oZSMLMMIIVU700vkilw702YRA_66y2fTNs0LEtnJFUbI7qV.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/akepg4re_Aq-pNwwnn9eUfcSB3jGluypnr4S0Rrfy5cy5uHdmxGdZxn5YDI_c-rJM1ormxbQv5vLviZUSNvLcLs3TdoSMh-r333ai7dTvqRCi33GJ-IC_M_hu6hX8tpbpHn5dWNJHIwN95lu2vAzb4o_jKN_0niuEF9g6eu3caiCbyZ7QFDdh1ZSJ7BIkF_Y45KD8K6fL.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/61f1lfen_FJWYzel5YTKp9BXO8Pu5OYyBpCv3GZO7VlhH6WALNAmYhibr6JJkQ0yxRWEHH3NO2g_vtUKGIruYBKquxdOqD_k1s1VufFsaNtY9l8hEw5Yx2VntpXStEfR35iIe51rmZdTdvy82BClCWrF8bYINJKYvI6ILMwdq-ln1vX50jfkubs8epPSqUuDTRCqTp1b8.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/s096rp3a_5PU78NICs35w4_pQV1VvJIsXB8WoSXF4sOWYt1C1w8V8uHXU5WSY87X7a3uzCyH_i3GCiE6PKyvGeolktmU6plo3-xCXW_md2rJz1yvSQyH10o7t6_y-CeBRaygJwQWDUHdX1_AQyuYIjRLThkHZy3eRAX-zIWnUf3OfLG-sw1ujn5JInVVZFRWtFKNaPoRA.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/uhi8253y_9vUNOriRqE_ZsmUOBRMuYWPiwxR-GmfJ0spR1ZPndUoEqTLBvyoWzDayOzUzyNZwAO5T01E-EnSdS_OoJa3v67w6WYCPoGMj2nkPZBrdo8KG_N2TxUSPEs98nZzNzzXVe9QRa7tUcxrBmyU2i-FmncbsTzy3UB93BumLKBZaOuIfvItMvVz9HZLwqZHx0o8u.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/yokmuour_AVbqJwYOIM-vUeF7_0TljbfT48Hta7yByfRMkWkHUrZbnoLsKc_YtRejpuscryljOcM54980ON27WoRctvTwV7mQ5q9qELBKupcURfSS2UqvU9UwHzuf2ZI0bQATjZKVhaVIZs6syWX9dRT2waHTQfwUh7vDnVHEvJSckS9-TmessgRH9J89zVLVDaTEYmoD.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/gg75qbw8_ZzbsVeCikxI2jeplO5dYnVaFPRvFyLXrTVzzTVu9Rpqc65rY9A4JkY9pgU7e2emwxogJr7ZoiXVOzPDb603uduXcsmEq9TSh1SKnVkIiVBZM0pn4R07L9Rne8iT7afUtououf08Qv3rQoFGyNxIi9ZwqNge__6verEazcP4kOqDi1ooyl1mn-zMQRNI05D5m.jpg" />
+        <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/s5qbif45_71e097a3-95af-4b9c-976c-99fc120c58cc.png" />
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div class="section">
+      <div class="section-title">📅 Plan dnia</div>
+      <div class="timeline">
+        <div class="step">
+          <div class="step-time">07:00</div>
+          <div class="step-title">🚗 Wyjazd z Krakowa</div>
+          <div class="step-desc">Kraków → Nowy Targ → Sromowce Wyżne-Kąty (~2.5-3h)</div>
+        </div>
+        <div class="step">
+          <div class="step-time">10:00</div>
+          <div class="step-title">🛶 Start spływu Dunajcem</div>
+          <div class="step-desc">Przystań Sromowce Wyżne-Kąty. Tradycyjna tratwa flisaków w góralskich strojach</div>
+        </div>
+        <div class="step">
+          <div class="step-time">12:30</div>
+          <div class="step-title">🛶 Meta w Szczawnicy</div>
+          <div class="step-desc">~2.5h na wodzie przez Pieniński Park Narodowy, Trzy Korony i Sokolicę</div>
+        </div>
+        <div class="step">
+          <div class="step-time">12:45</div>
+          <div class="step-title">🍽️ Obiad w Szczawnicy</div>
+          <div class="step-desc">Zabytkowy Plac Dietla, knajpki na deptaku, wody mineralne</div>
+        </div>
+        <div class="step">
+          <div class="step-time">14:00</div>
+          <div class="step-title">🚡 Kolejka krzesełkowa na Palenicę</div>
+          <div class="step-desc">722 m n.p.m. — panorama Pienin i ośnieżonych Tatr!</div>
+        </div>
+        <div class="step">
+          <div class="step-time">15:15</div>
+          <div class="step-title">🏞️ Wąwóz Homole (Jaworki)</div>
+          <div class="step-desc">Spacer drewnianymi kładkami nad strumieniem. ~1h relaksu w cieniu skał</div>
+        </div>
+        <div class="step">
+          <div class="step-time">17:00</div>
+          <div class="step-title">🏠 Powrót do Krakowa (~19:30)</div>
+          <div class="step-desc">Odwóz pod hotel/adres</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="section">
+      <div class="section-title">🗺️ Trasa na mapie</div>
+      <img src="/trip2-map.png" class="map-img" alt="Mapa atrakcji" />
+      <div style="margin-top:10px;font-size:12px;color:#8e8e93;">
+        🔴 1. Start spływu (Sromowce-Kąty) &nbsp; 🔵 2. Szczawnica &nbsp; 🟠 3. Palenica &nbsp; 🟣 4. Wąwóz Homole
+      </div>
+    </div>
+
+    <!-- INCLUDED -->
+    <div class="section">
+      <div class="section-title">✅ Co w cenie (350 zł/os)</div>
+      <div class="included">
+        <div class="list-row">✅ Transport tam i z powrotem</div>
+        <div class="list-row">✅ Kierowca-przewodnik (z opowieściami!)</div>
+        <div class="list-row">✅ Czekanie podczas zwiedzania</div>
+        <div class="list-row">✅ Pomoc w zakupie biletów atrakcji</div>
+        <div class="list-row">✅ Transfer z mety spływu z powrotem</div>
+      </div>
+      <div class="excluded">
+        <div class="list-row">⚠️ Spływ Dunajcem (~90-100 zł/os)</div>
+        <div class="list-row">⚠️ Kolejka na Palenicę (~30 zł/os, w 2 strony)</div>
+        <div class="list-row">⚠️ Wstęp do Wąwozu Homole (~5-10 zł)</div>
+        <div class="list-row">⚠️ Obiad w Szczawnicy</div>
+        <div style="margin-top:8px; font-size:11px; opacity:0.85;">💡 Bilety atrakcji możesz dokupić w aplikacji w jednym checkout</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-bar">
+      <a href="#" class="cta-btn">📅 Zarezerwuj teraz — 350 zł/os</a>
+    </div>
+  </div>
+</body>
+</html>
