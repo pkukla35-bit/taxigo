@@ -84,7 +84,7 @@ export const TRIPS: Trip[] = [
     climateList: ["malownicze panoramy", "klimat zamków i jeziora", "relaks nad wodą", "regionalna kuchnia"],
     climateHighlight: "Najpiękniej: maj-październik",
     included: ["Transport prywatny Toyotą Prius (tam i z powrotem)", "Kierowca", "Czekanie podczas zwiedzania", "Pomoc w zakupie biletów", "Rekomendacje knajp"],
-    excluded: ["Bilety do zamków (~30-50 zł)", "Bilet na rejs (~30 zł)", "Obiad w karczmie"],
+    excluded: ["Bilety do zamków (~30-50 zł)", "Bilet na rejs (~30 zł)", "Obiad w karczmie (we własnym zakresie)"],
     ctaNote: "💡 Bilety atrakcji możesz dokupić w aplikacji",
   },
   // 2. DUNAJEC
@@ -133,7 +133,7 @@ export const TRIPS: Trip[] = [
     climateList: ["spływ górską rzeką", "drewniane mostki i kładki", "alpejski klimat Szczawnicy", "wąwozy i skały"],
     climateHighlight: "Najpiękniej: maj-wrzesień (sezon spływów)",
     included: ["Transport prywatny Toyotą Prius (tam i z powrotem)", "Kierowca", "Pomoc w zakupie biletów", "Transfer z mety spływu"],
-    excluded: ["Spływ Dunajcem (~90-100 zł/os)", "Kolejka na Palenicę (~30 zł)", "Wstęp do Homole (~5-10 zł)", "Obiad"],
+    excluded: ["Spływ Dunajcem (~90-100 zł/os)", "Kolejka na Palenicę (~30 zł)", "Wstęp do Homole (~5-10 zł)", "Obiad (we własnym zakresie)"],
     ctaNote: "💡 Bilety atrakcji w jednym checkout",
   },
   // 3. SLOWACJA - NUMBER ONE
@@ -176,7 +176,7 @@ export const TRIPS: Trip[] = [
     climateList: ["spokojne widoki", "góry bez dużego wysiłku", "miejsca instagramowe", "naturę i relaks"],
     climateHighlight: "Najpiękniej: czerwiec-październik, szczególnie jesienią",
     included: ["Transport prywatny Toyotą Prius tam i z powrotem (Polska→Słowacja)", "Kierowca", "Czekanie podczas zwiedzania", "Pomoc w zakupie biletów", "Przekroczenie granicy + opłaty drogowe"],
-    excluded: ["Bilet online do Jaskini Demianowskiej (~10 €/os)", "Chodnik w Koronach (~22 €/os)", "Obiad w Strbskim"],
+    excluded: ["Bilet online do Jaskini Demianowskiej (~10 €/os)", "Chodnik w Koronach (~22 €/os)", "Obiad w Strbskim (we własnym zakresie)"],
     ctaNote: "💡 Bilety atrakcji w jednym checkout (EUR/PLN)",
   },
   // 4. WODOSPADY
@@ -221,7 +221,7 @@ export const TRIPS: Trip[] = [
     climateList: ["górskie potoki", "drewniane mostki", "lasy i wodospady", "tatrzańskie panoramy"],
     climateHighlight: "Najpiękniej: czerwiec-październik. Wiosna = duża woda",
     included: ["Transport prywatny Toyotą Prius tam i z powrotem (Polska→Słowacja)", "Kierowca", "Pomoc w zakupie biletów", "Przekroczenie granicy + opłaty drogowe"],
-    excluded: ["Bilet na kolejkę Smokowiec → Hrebienok (~10 €/os)", "Wstęp do TPN słowackiego (~5 €/os)", "Obiad"],
+    excluded: ["Bilet na kolejkę Smokowiec → Hrebienok (~10 €/os)", "Wstęp do TPN słowackiego (~5 €/os)", "Obiad (we własnym zakresie)"],
     ctaNote: "💡 Bilety atrakcji w jednym checkout (EUR/PLN)",
   },
   // 5. ZAKOPANE
@@ -272,7 +272,7 @@ export const TRIPS: Trip[] = [
     climateList: ["Tatry bez długiego trekkingu", "relaks i widoki", "klimatyczne zdjęcia", "atmosfera Zakopanego"],
     climateHighlight: "Najpiękniej: czerwiec-październik (jesień = obłędne kolory!)",
     included: ["Transport prywatny Toyotą Prius (tam i z powrotem)", "Kierowca", "Czekanie podczas zwiedzania", "Pomoc w zakupie biletów", "Rezerwacja stolika w karczmie"],
-    excluded: ["Kolejka na Gubałówkę (~28 zł)", "Kolejka na Kasprowy (~109 zł)", "Wstęp do TPN (~9 zł)", "Obiad"],
+    excluded: ["Kolejka na Gubałówkę (~28 zł)", "Kolejka na Kasprowy (~109 zł)", "Wstęp do TPN (~9 zł)", "Obiad (we własnym zakresie)"],
     ctaNote: "💡 Bilety atrakcji w jednym checkout",
   },
 ];
