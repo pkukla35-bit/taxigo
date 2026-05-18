@@ -67,6 +67,15 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📸 Galeria ({trip.gallery.length} zdjęć)</Text>
+          <View style={styles.gallery}>
+            {trip.gallery.map((url, i) => (
+              <Image key={i} source={{ uri: url }} style={styles.galleryImg} />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>📅 Plan dnia</Text>
           <View style={styles.timeline}>
             <View style={[styles.timelineLine, { backgroundColor: "#e5e5ea" }]} />
@@ -156,6 +165,8 @@ const styles = StyleSheet.create({
   stepDesc: { fontSize: 13, color: "#6e6e73" },
   mapImage: { width: "100%", height: 220, borderRadius: 12 },
   mapLegend: { marginTop: 10, fontSize: 11, color: "#8e8e93", textAlign: "center" },
+  gallery: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
+  galleryImg: { width: "32.5%", aspectRatio: 1, borderRadius: 8 },
   climateSubtitle: { fontSize: 13, color: "#1c1c1e", marginBottom: 12, lineHeight: 18 },
   climateItem: { fontSize: 13, color: "#6e6e73", marginVertical: 2, lineHeight: 19 },
   climateHighlight: { padding: 12, borderRadius: 10, marginTop: 14 },

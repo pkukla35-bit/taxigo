@@ -17,6 +17,7 @@ export type TimelineStep = {
 
 export type Trip = {
   slug: string;
+  gallery: string[];
   badge: string;
   badgeColors: [string, string]; // gradient
   flag: "PL" | "SK";
@@ -45,6 +46,15 @@ export const TRIPS: Trip[] = [
   // 1. PIENINY
   {
     slug: "pieniny",
+    gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/1u4lylr3_fKcxwfwiG4eMDe8rfrx7J4b-rBcqNz9Cr5JPHTQqZWybIaSRBCS7Zvnz98PGp-lu8nRflpiOkvQ61xTqZfPxg0b8QtQAJDzzDLJSRz2W4CWEkzj9p-s3ChqXkPaiGB7z9J0to3RzHERd3GR9mfDgWANPHR5b2uQv05fIVBnuGCuad4CX4CF32Ze9MCfMLRaz.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/bo8omojz__WODmwSyszXYHGkICPkZBVdUtOU7o71COs1MSAr71Eh-K5vM7pNs8XfANys9F9coqmsYaVQzKmB7DaXZ3ESRdqQnoneGy0Gw2iNEXV9-LLq5tqXliXlATwvROZQYRODnLvFgXHpz3hfb9iZf5p0_7HeeCfLzzsjTTMPxk5Na4fGL8Ep51mFYURjgb1EP85kQ.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/d1l74zt9_M5rFJ58PPxAE6o6JMcfnCCX7sP0IbFm-7bC9G8AXpk2pMF1Zrw5QcP9Du_tUvnR1ZTFNECXlzFFXcY7BFslk5wkRlun_3zzv2h0j9TKqmG1k1HyRIttW0tAhIqghfbnqx8DuG3hE2PK0fMBuLWwp6Eh2zCt0QwSE7-dJU_vKku2W1594g4c-DyzUW2F6nhCd.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dgsgto25_QeQSv9KXBIia2LEu0f34xtEL0xz58DxfMXnfUjo8aBNtUjwPnHtw_2CGxG2MGE55L9fp7AQFQ-lkowZS3fMg4fKDf2Ro-EUsNrwZ7r4t-Okhfdr9oc5KAW2ekNDlSFQdrOPIf6xQV2H3hzPN-NsrPmnsNrGnaMv9DxTiYI-Sv7O6XroUwmLyHN5jKdkwqwZ5.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/i2bz3rsb_WHOl8Xs0zoTmpbpFbkVHqRqrUBSQi_u4NdQBD1nKxM174_s5273GGPykZPnJiNUB6j5bvCWv4kPLnsHgZV2OqJA6cBnWOCh56vmxkXiOn-Rq_qOGvhG0xSK68CU1ujgQ9RQzvCQJT7-PHfPPbJekzUISeiQpNYn3HqkCR-t1YTDd3UBLudkC60Lm4SZ-btXg.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/jut9xmva_nxsYuQekiqrQ6dpWsSoC3oGETGJSpr-OdjCfvAPIBvB8vOpWz3mNMmFhLg1-fxIl7tnBxM_Vyd8rJqplFXb0xGr3JcQIMMxMSeDk7KYjgFQ6k1EQMpE5o54NipT6TnF3DGWmg1-V8CvLHU-7_vo_dYFGyX_sbFIosgeSMkUSAkRMpzoNxv5z036pO2RbK5-c.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ucr1r7co_Nqijir-7MxONvGH1PIB9UvrT4PENGJzMl003BZRmXxSWPk02pd_n4pdf9B73JQ2BitFSAQD7nR6iRr988mO3rpLrYaw-7WKcv_hXNMRYvffv56UOk10WTIRRwHQcqN_a1U355KfMMZocHJ5_S74467GOoGyuFJ4HUm4S2kdTqHKjpvgaJX84O-G_XS90ZWLq.jpg"
+    ],
     badge: "🌟 BESTSELLER",
     badgeColors: ["#2E7D32", "#43a047"],
     flag: "PL",
@@ -80,6 +90,21 @@ export const TRIPS: Trip[] = [
   // 2. DUNAJEC
   {
     slug: "dunajec",
+    gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2mi92ztn_QUmIsxuA5lytTAb4xt6ab5exOLH9JUpxJ4uLuMZmSxXfv1o0iMB6Q0AFiqk5FqNrCn2TuTIHPejhEq-OGnUIJAFiavpJazub97waeMYXvUR8Mkjl5nxNsI1frwCCabavCp5lIZw3g2zbC0_O5oZSMLMMIIVU700vkilw702YRA_66y2fTNs0LEtnJFUbI7qV.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/3vw9nkxw_WbrLcz0A-g0f9PF2pvBUGbFRYaMAzmls65UYS0o733ksfD4dDc9T5xVsuZ5aJQGDcrtSA5PbQzSYKTQOyDoINUVKmtuVbHy10rxi4cMAkkdl63BgcpOs1zq0kxFVAESiIeDle0XM-poR5DGq9oDMXVUtcdMCtnVMaye8k3j8APP7T564kKCeRg_lnkL5u0HJ.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/61f1lfen_FJWYzel5YTKp9BXO8Pu5OYyBpCv3GZO7VlhH6WALNAmYhibr6JJkQ0yxRWEHH3NO2g_vtUKGIruYBKquxdOqD_k1s1VufFsaNtY9l8hEw5Yx2VntpXStEfR35iIe51rmZdTdvy82BClCWrF8bYINJKYvI6ILMwdq-ln1vX50jfkubs8epPSqUuDTRCqTp1b8.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/6okmh5b4_xhtN78_dE1Hq3CUB1JwyozHZem_g8kpEWh_JMonxbwshAZnSpmOXBWqB63YlDCCt-f0QOYcsQzYviN7DQjed5gpiAMYMW5Q-lqxUfImP6bhXhXvwyvjgwAPJZx6MS_ON8f_z_1Z6aeqmFGzTreKCfSenBgokxDkMqZDLlH4vuTY8q4GigcltUWwXVFZgLxAo.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/akepg4re_Aq-pNwwnn9eUfcSB3jGluypnr4S0Rrfy5cy5uHdmxGdZxn5YDI_c-rJM1ormxbQv5vLviZUSNvLcLs3TdoSMh-r333ai7dTvqRCi33GJ-IC_M_hu6hX8tpbpHn5dWNJHIwN95lu2vAzb4o_jKN_0niuEF9g6eu3caiCbyZ7QFDdh1ZSJ7BIkF_Y45KD8K6fL.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/drd65q22_F6Y6yIxFBki1CVlxij_TpilpU5CDVZfx5cBMFeGSW2W_vOPEyFUPNUYeuLuNo9oz_CNzeBnu3wc_3eb-IaB67XJz2VtmJJUjpKkNlTP1ViVwQI7YV8NlnO1qFl3-iPLs-Zvgj51iNuC2wkt1XyWqgIK77PO1_1nlMTALLYZu-KnEJu_YRkWcyVJGKsf56YId.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/gg75qbw8_ZzbsVeCikxI2jeplO5dYnVaFPRvFyLXrTVzzTVu9Rpqc65rY9A4JkY9pgU7e2emwxogJr7ZoiXVOzPDb603uduXcsmEq9TSh1SKnVkIiVBZM0pn4R07L9Rne8iT7afUtououf08Qv3rQoFGyNxIi9ZwqNge__6verEazcP4kOqDi1ooyl1mn-zMQRNI05D5m.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ohfdd51n_OlnaMJzYyc94aAr5cQNoWavXnSVAzs1js3YMPxg88lOUNdwOKKdMDDpzZmcIwGVM0K-TBmF95XcfP7t2UKhSty-6LDX7ATbaLJ8iH5UldSLAhCZ9MsaPCfki09DUs0EUSihFMY1FWSC_NghV0EuQhdZynRpPAF5jpPGd8xHAiYXFh-MxtT1gXO2M-xr8OhgN.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/pu8mhy6q_oGqs6K7PIF5DnIm5KBDwSDh8uyxJR-WXeb-YZYt1Y13WpHZ2IoHQDQAf3NhOZRad0nohJsoiPdMennf8UABwWd-9dGbeFKhSoPCEokNMcqETEc8JJepYWjvaenR_9b4egmMPtaDM1Cs_bN14m7cwHSXSwVAleXpbyhZvBuLvE4BqzWoc99-YC8vMuMsxF4az.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/s096rp3a_5PU78NICs35w4_pQV1VvJIsXB8WoSXF4sOWYt1C1w8V8uHXU5WSY87X7a3uzCyH_i3GCiE6PKyvGeolktmU6plo3-xCXW_md2rJz1yvSQyH10o7t6_y-CeBRaygJwQWDUHdX1_AQyuYIjRLThkHZy3eRAX-zIWnUf3OfLG-sw1ujn5JInVVZFRWtFKNaPoRA.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/s4gjyt4w_R2KCTT21uJKsPy9T97IjEvJPNaCMahYZaphI98lwI01xK1C-4kfVwL4ipkdAjsm0MICsNgZ1ABoV50rdQtB3T6FUntJhZ0uP2QGcKF0KBbVOOp0u1IyY-m6IqhDfD67tfCk3bBBc8fK0VPSjhdhlcaWfnRsTvROxcB-CSGfRwtK-NFzYFh-WsH_0NhfAteW2.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/uhi8253y_9vUNOriRqE_ZsmUOBRMuYWPiwxR-GmfJ0spR1ZPndUoEqTLBvyoWzDayOzUzyNZwAO5T01E-EnSdS_OoJa3v67w6WYCPoGMj2nkPZBrdo8KG_N2TxUSPEs98nZzNzzXVe9QRa7tUcxrBmyU2i-FmncbsTzy3UB93BumLKBZaOuIfvItMvVz9HZLwqZHx0o8u.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/yokmuour_AVbqJwYOIM-vUeF7_0TljbfT48Hta7yByfRMkWkHUrZbnoLsKc_YtRejpuscryljOcM54980ON27WoRctvTwV7mQ5q9qELBKupcURfSS2UqvU9UwHzuf2ZI0bQATjZKVhaVIZs6syWX9dRT2waHTQfwUh7vDnVHEvJSckS9-TmessgRH9J89zVLVDaTEYmoD.jpg"
+    ],
     badge: "🛶 PRZYGODA",
     badgeColors: ["#1976D2", "#2196F3"],
     flag: "PL",
@@ -114,6 +139,17 @@ export const TRIPS: Trip[] = [
   // 3. SLOWACJA - NUMBER ONE
   {
     slug: "slowacja",
+    gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2ovjtjx6_6HUCNODBDZIGduBSipcjYp_PWSiDFWqArPuSJJ5mlaSvVqnH2_Ttyd5NaO5GQCGJintiFnaKP1v5peTsnW5E62lC_Iq532fynzMQLnifA1Cmu5_9jdHSEIcRYUSbgu6CAs22ik-A9oz1c4Ogsk3HmNwHFAjPdIlvdGUcgw3OOPFC9lJmGxT5ktwPLJQtBOaL.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/6o7h3j23_v1RgJ22UbvYnCS13yBkEobhVFNtAlCNCvPfRmW_XUvCI5kq-nkYyifdGB8tERck8gzdzlb6jkOCZz4aFsxanE87MHTR6WFVF2NXI9aYEwPQgpJhVi08ZSK9_xsM8e_Dy0WhJgE9JSmDG7_xJ8e-rECYPykWz4RdjGw79S1NFlChgB1B47mzPCnkmEZV-6ufW.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/9leo4djy__eOOqpsAnbiiFGl6Odsii9pj37ffqVw8rMWaXfBade0LH8DnP6JV3WRDQD14TA4gt7BnNxZNm9Rzldt9oZnvKl5kiRJ2tbcr_BI3JrCyx3roMfG6ieXCEzG7GLrOTvQjIT7o-vVvTZsaDL5FWbfAv_7VGSEY7z7-qkeApfGUhqeAOZ_TLYs26QurNNu3howf.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/czbcqrne_bge0CPmKP_BOpGmeah85P4oQFGREKnXZjj4vMjHPY8Rr9CWNTUmtOcAErzMpkAvucXU24ZXvQqhm0ONZVcqpbT7h9BZBkKL63Krb8iz-02PoEHHnrjhcra-huXoOq6Z77SKxpV18TgMUSTp7iu3DlimmnwFJvqVkcR5tWEL40jIzAyml8xOJa5W4bFDikE8m.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/d7mii732_hgUQbJUgf82qc5hQ9aipsp1wTeAqnu7odfQ05P57w-9sqc-iY4kOBlN--vZtStdQFhIFyKOAfMHAAqs3z4dr36u9ZZrHqytG7KesWjGE1guyWxLkj7J2T2a1hgDXeG5JEY3HhNX_vtioBh8bREJ2hfQagB_bmO_p8-Q0KlETTpzHUU9h2W2j1iwVLVj70jAs.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/e70bwt5z_6A53yfgI2kEXLdA5xYg-l56yAKjPhx6k9p3665fqOAkykCjeS_8xQmq-DHb7qtp8RcToCrbqme2c5SA5-3XHYwg--ChWbD2C4p-_KjABkq1yv-j3Wq93wLH5Z_3ktIatJYH2zxKzCHOd0GKRgRg5Yj-UlSu8hPTLTzy7IaY72MUIu97V0SPk68y52h3gRr0U.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/pjig3jqs_m9FJswvNg-HWKTW-a-fb68AZUm3OZNYXv_l89-Sh1rcMy6ApMO_9WZG9gd1hSqNQQAv8d9LkuNVmO86FgC7AigevmfjjW2foVIcuS4-h1S3P8cHe33XkEDext16TiYShwawQ3JqLMKyAEkqRcCsrwKCK8d2MZl8fizDokx8eYPfgeEA6SwtDq6HClE-qJ5tg.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/x75tqz02_gTM2rX4VypWwTN1wttwhxghnvsG5zz6xxKXN88vs5ZcJBf3uIWcses1V9WirduLJuAqXvrFv8Djjs3pMsyJsrZ6fQC3lZfgCO9jrHysKWh-ExvrA9pWo85MlpgxuAhm4IbfEbYXWLx8kZ5kxPG8e0GkLXdP79BzUsp_eJk7gknwBZgNJ7a_w_IZoEOV4dAim.jpg"
+    ],
     badge: "⭐ NUMBER ONE",
     badgeColors: ["#c0392b", "#e67e22"],
     flag: "SK",
@@ -146,6 +182,18 @@ export const TRIPS: Trip[] = [
   // 4. WODOSPADY
   {
     slug: "wodospady",
+    gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/0awpxjeq_YDgtz1MwDLu510YDaSSnNObqR6Y98m0oi2q8VrxOm-OaWBGP0banUTN3qLDnD0cK2Xa81B5EZEsTP-196B0CUH6XFqYx_Y3m85tnonCnBAWH5L4guCSb-xOoAEH5hhVAnVrZ4omM3O9BTBgrAn-IeQ7Vr2Qj02Mo2i3czM5fdUGz-vFIYt4bOyg5ze-UZFSX.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/74rza2dt_an9hI86bcI08W9TxXVT-rkdaOxRcIZ_YuqZOu8h_SLMoKZfD91dH2UX_tvLtFpa0hE4TK56zpOa3-ZqmDDaQWbyXBK2NxfkUYyetPjjEv3vYke-Szo3sbMv4d_Sgz8FT3dzQ373QgZWOIKxIG05sySZfShu0eJpJCyZEawllG5VFsTUFhJXgI7nt4PzzS80A.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/8pcf4hw8_v8ADiO7ZUMNxq_Qp-LeQvz2Gi6W4SKkxceer1z_YwXnOMgZB_6IBld01y4_7N76PqaRCslQ3HbGlQiqbWy_kErbilKtks1w7ZBCMZrh1gnghQ9AIYQk1_x4ffDO5R3_dIdHkdSxrRDwiDz5jxZNUpvaj88UK-TdSPt2QyJUtE000rCFKgy5hE66xvc0JRDkK.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/gw8ghmnb_ZwggXDohOcj6LbymCO6MLICBQPtdChOPmtyIuLYHkb5Tb_M6jn_xCt_dzBLCM_WGONcWYd3xW8b82KUS8PE0jCgx_HiGrDA-44T_jN0861iidc_7Fx7AryIVoMvAjaNhEEDzvFSHxWD6laMbjNywnn_M_N22A01EtFllUuL65HlfRKmsOFxI6lrrcncCOcMp.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m2kzz5fq_Iqx3XzA99LBj2kOqJW3qQHEPNeIv9EgcYTAKtnBIDMsHKBdP_3uVk5u5Ok2si87gW8ssQTgcOdD1gzVhtE9URQtakqpjdvKO4cLFQCayj0CgG0fPSn-tvK-1qdI7AR_rHxstPLrVmERcmPZU1NDEHMI7MVcldvwSAtnmCRm2oUFEWrzvkXHQBjk8-fuMFPJG.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/omkq8nwq_XfNwtCgJ4MGAmgq9ak4-6VdHZAoECkYOsEkD8ArpyE4e0gKk1y7E1P_g0HKAS-zhyKMGDQKj8_tKkg2YvJ5nhp67Jn8OsRJ06Ywq-pv-v1m3rIiwrvmwz4GOhkORqHpmT6IUoFGiPltooTJfADs8M9p_fa1YkqqfyEQb_RTBH4NB-RRKASxYQxO0j1E-WYJL.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/oti77lpv_5BAeqjSzsltg4qDCpmiITGqw4fon_St44F_2iYTR7jTpSrrsTchcpEIYnR7GL3DZHZA6wNZ9OmH_sI7-boldrFSdYFgdrurIQEw420BkAQkyajB-d32S4zUU2iKPwCu_4nfA09qV_YZaB_2_d41Jt5U-ZUgV5xmDcWh80D2zt46hfc6qC4HDorZxBNPDHxUl.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/r1t7110v_4U37K0_nmm1_zhPw0TKapyBCDB2NSy25gx4f7BdT3-Sigb6ak9f4epoxCB2XSc8ygv5k0OA5_EBpIt8jdb_MHhwB2WInictp5GKENIbc3_X62mv5DbcAjjfpGU1YEhozRFVY556rB430LZQXHOpp1s6sSb6-htzZBPT0pPUb4aNyUi8OoaW18yRGud7haD_p.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/tn57fqd3_Illfi6vsITgHgQGr_s7DqmzfLLZj_kEeQZVbJIfmo30bZ_WUrZ1Xnblwbu7C604foba5G59xNen_1NToqejoVl-VwZzXnoraUqoh8e1LAD6tz8RgsFfLVzd9jk0foxrA0LgxJSO96vyUs9tAsfb-UJoyPhgkhcuqQ01w8mm4wDn4UWMM-mA0ByZfd6NbvH3B.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/yg16addc_sJ4vje2ya3U-HcBh8mLdyeKyjjgDeIbY49F8pDkD-gBgsqur034E2J3LmXB5TbtXW4L-0mWAPTAoc18c3B7lAQInuquoU1QB1OnVyho7V9JqxaUbiL_Yz7UZDdcuIf-pxNVVuY20rvBnAlmzf2D1XunoIshnsVV1hhNcvKEtzPKJ7fu_LPB0HHel1fEjd2nb.jpg"
+    ],
     badge: "💧 ORYGINAŁ",
     badgeColors: ["#0d7377", "#14b8a6"],
     flag: "SK",
@@ -179,6 +227,24 @@ export const TRIPS: Trip[] = [
   // 5. ZAKOPANE
   {
     slug: "zakopane",
+    gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2ex177xi_HiFZm8GYzW0d-RDpBSxJ7pa3aioSNkoz4n6lv68f97k5PEB--LW84q2ZgxgZymprEBuSBLRRg_AyT6OzbFk386QGDBEO7LUv2sF2xmWuouStVRCOWQKclexRw12beant3kjE5qANpa87AvWMIkLx1lI56k4SFXGK5_8UqXtNICIdsWmnyHGh2q3weFS9YCww.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/34uj9hu6_HHTnSgCGcEFTbPldMPTRIySyKTbdDlc4qN3qVHdb0tejTohnAwYyheX6Tng-4iuJHcN1c2_N11ppOY3zMe_LRyNB7UWRhYFMcTZd6lqfuxTz46Xs-rnc713isSheWsz0Tf_2cjhwxxA4ZFGUSUsOv2ldrgQ2Bf3JCVxOaw9R_GU17YxS121arik7pFBNfOCp.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/7bxtprdy_ytiqWfoHF2tuJZW8L0onIKO9_cHZ6WOlsqEoZO8jWjEaUejpZJp_svKIso1ZY5BnRm72YRDdsyvT4SLUzZGyR4595bQuByDCx_96ru5Ilsu6me2cXTHQ4B_T9TZH3_H4mafn2x30RR_1x7sST4bT5ZNlop5K2HM7fz6Iq39ME6JuIxBmSggSY6QWW-iNHGJ7.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dm10vjl1_PKMfrd5SWiGV7ThIl4UjFl1r5rvTjefPP2OJvmSbvIqpbvUBcsZhM0CTZFPVXzVae0P1HfdWgkshaJQreiiFr8k7w_nULvmuSPH955k3uuxXorLvKd7t-jqyX-36G5eLLkvIfQIOjWGszDuENhWEdm-vD56bqALS0olEDLuB5yt1AV8TlngMQMxwJaK-K52k.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ea4s6qjy_NqgXfh4Ns5k1_xWTGloIj4kLGm4wo1coggUNgUXw9IKTNKQOBPLKVGuSQMViBlETfbARamdimmnq4Uoy8ngJZAX_LAa9FNUMq0Es-I97XNpwQTnaLGF2zkaNmCED8NB-k06HDoQxpxR8fy1aAEWnJ12l5axCs5Ay1t5ZXFsIMbaxYcnnyhI-nt8XAL_rx0U3.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/fqdihjcr_aBnMjw_SGzJ8UelrG7MLDh3J97GdJzLO1GGn8GtvFB1Hx_eW4bSDCs47djqawHNDNkcheEC41iPDr5Y51WnLsktShwk2u66SrvvRdJxP241n_wn4KoehSEd94op_V1m-PBrjXYwUeEu06Gtq7YzUVomZdkbL-nZrSSaQNpDjPGPK2ArXCAbs6S2ULhgaEUOV.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/kbrhxmv0_YwV5vZWljpiVUW2qYcI5nYxkxl-8YVC_Vi7nG8d_P0sk-kf3w7E93NgvTiwKcS3LuDxC27Vr4jeH-VcxJYS6Q_RiBCKBiHiQ8-BqLck3ALrgVEH87TyTzDaOY5A_71xqhpMj7El8XdeEkmKuhP6aTWyLaIHDuVEbeOreljrPOdUx3C5zN54FcXe3qwPjWItT.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/kztto5jz_F9YP2hsBpTKqzyrb59cMmi9EVqzfoiXTwPp3ErSRIkK77lAqJAb6PVDjGPqNS-C01PXV_jog8tAlopDLwSsc2FmcW7jBSsLn-P_z_KfU_MeIwDiCfHs8jrLHx5-JQm6huRJ1OjM2nbMyMBqwA2nkNElHSYP0sO2JWmuwMWU8oSiWB5jlfTMxS_Tl7qzHHJfU.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/lq9an5ig_DtvWmkUCqHuO0xE97n1Hp7RBhNWdSWQBVOpePyrGyaUucXt-XztNVMYjPqOg7Zy3mI7ZSDEe9-rmRBr6QLUTAMMFRktNmTilEfVuPxUZ6AsrFYrfCn-V9n6DMy9ZNk6D6A8WTlk-3JKmmssulcD2mgJo0BEZ4uqLvTjvaHtzKUf9VdPK13XmxwoEOQzkIF-H.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ruiw735f_R_1Pl483FRXKC9aIRJbzEdtI_tm4z7e15tcNp_rxlD8hl8fntpC5gjzijsEBUMFCGu8n-NjOenOSV6xtB7VmfQBBKhsAc2ZJMF7nFyTbzgu_gaE9R7iv-yKISdjSRA78QYCO5cOeSaU3eQS_TjtTzCG_oWVa4R0cEM64fLfVp4D-L8NwYXoNAHm0sK5H6XhG.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/t2r6z7ee_-ISoV5MKNej-vm5N98XoEjNm_U-3kkzHixrTEgwMRz8Y1i5LKEeKNSxTncWXBPcXJHSonJleJXuZ8A_WCHFzFWvwj16A1FcTFEvrPyTf4fcfRnAuVtKLuCJzqR8A0qqvCmOqLkjtgxsv8v6vjohuIcvfH70b26lYBz6jqXNmsSuw8sYbt2RIY5BSwQZycmBe.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/urmviuj3_inukccIyrFWknaDoWwRk3qTaH0AylXh-8ks_EgK3a03iJHcBEOjzLwYdNbicauNIMBcG57fRP1Ykcsbj8ocvLlLthzlmVcnoVghRemY01eHnwcALJtae2OHjHkiXBEP0FKbSGIaVdtKzy1CygkK2ZyKIcrWYEStBlgY6wnsH-3mOs6FQNH_arQFCXzlubt04.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/wy90snog_JoyifS8Q3gmEITWHoV_2uLzzv57n3Q7CJUmpcaeKWbHlrvxWeBM7FxJTsDY3kdQGU1prNXXLbeATIllexRGD7qBh3do93eMpcpM_PG_27zoD4TJqGAP2sXIhDCyPYL5lWHq0BETCSsBajixKRyJvrQNBgotJwYkory60YKZFweAde_9hGi4yU5Q19n8pgQV7.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/xg6y4zpz_c04Rs6bCIa5K6-DN0TQbVVwQlt0cZgHD4zMQsQ7Q8EBNDTunwh5osoQlh5nz4xkdGbLib7fozOq-qMLBixDveVL_XTqOcPTlGccG9fYaya4PzpPayt5ULTdpNC2Mj-EDVU2QSy6Qw8KhA91swetn5E1CW3mJ0CIbRidT8wKmJ_C_QwgAM5PQMREsCxu5IG50.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/yf3xvbh8_qUnwHB3dsd6eBtnlyLeWIf9bbdttKH2xfqQS-5pXfXN5UkXdKfBVn_PgOfqCLOpa7QVX0PwejYziwDf9Hs5B1ndebyecMaxT6_t40SlBKmmbjsfAmghrGHJVmO6C1LmEI-KZGdh_QULfLt_b4rozuY7vSRN743g0L-Xsr1HLcll2o5sVoigkAZuGjhpVgZOo.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/zr322qm9_OAGkpf9bn6RUbn8Cen49izqD4zwgIfrvw-CpMO5DAWS8kafBAUj0wXFRpvZ6tky6AG1eYrA02ghjbiOIWDuX1DaqBxLkcRVaozogcvsAlwe5obKv-Q4_dInR2hb4jik7UVDZ6bwHKg5OK_ThI3qI6WQyOfPC_59dJCOw8tbNoF39I1q90MnjlgazP9ZPrVrN.jpg"
+    ],
     badge: "🏔️ KLASYK",
     badgeColors: ["#d35400", "#e67e22"],
     flag: "PL",
