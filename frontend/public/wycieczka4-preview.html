@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Wycieczka 4: Wodospady Studeneckie</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1c1c1e; line-height: 1.5; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; overflow: hidden; }
+  .hero { position: relative; height: 360px; background-size: cover; background-position: center; }
+  .hero::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.8) 100%); }
+  .hero-content { position: absolute; bottom: 24px; left: 20px; right: 20px; color: white; z-index: 2; }
+  .hero-badge { display: inline-block; background: linear-gradient(135deg, #0d7377, #14b8a6); color: white; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .hero-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); line-height: 1.2; }
+  .hero-subtitle { font-size: 14px; opacity: 0.95; }
+  .price-row { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .price-label { font-size: 13px; color: #8e8e93; }
+  .price-value { font-size: 28px; font-weight: 700; color: #0d7377; }
+  .price-unit { font-size: 14px; color: #8e8e93; font-weight: 400; }
+  .duration { display: inline-block; background: #d1f2eb; color: #0d7377; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+
+  .section { padding: 20px; border-bottom: 8px solid #f5f5f7; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .section-subtitle { font-size: 13px; color: #6e6e73; margin-bottom: 14px; margin-top: -8px; }
+
+  .attraction { margin-bottom: 24px; }
+  .attraction-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1c1c1e; }
+  .attraction-desc { font-size: 13px; color: #6e6e73; margin-bottom: 10px; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+  .gallery.two-col { grid-template-columns: repeat(2, 1fr); }
+  .gallery.two-col img { height: 130px; }
+
+  .collage { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 110px 110px 110px; gap: 4px; }
+  .collage img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .collage .big { grid-row: span 2; height: 224px; }
+
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content:''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #e5e5ea; }
+  .step { position: relative; padding: 8px 0 16px; }
+  .step::before { content:''; position: absolute; left: -25px; top: 12px; width: 14px; height: 14px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #0d7377; }
+  .step-time { font-size: 13px; color: #0d7377; font-weight: 700; }
+  .step-title { font-size: 15px; font-weight: 600; margin: 2px 0; }
+  .step-desc { font-size: 13px; color: #6e6e73; }
+
+  .map-img { width: 100%; border-radius: 12px; }
+
+  .included { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+  .excluded { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; }
+  .list-row { padding: 4px 0; }
+
+  .cta-bar { position: sticky; bottom: 0; padding: 16px 20px; background: white; border-top: 1px solid #e5e5ea; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #0d7377, #14b8a6); color: white; text-align: center; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; }
+
+  .lang-switch { position: absolute; top: 16px; right: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .header-top { position: absolute; top: 16px; left: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #FFD700; }
+  .header-top span { color: #1c1c1e; }
+  .flag-banner { position: absolute; top: 60px; left: 16px; z-index: 10; background: linear-gradient(90deg, #fff 33%, #034ea2 33% 66%, #ee1c25 66%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <div class="hero" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/8pcf4hw8_v8ADiO7ZUMNxq_Qp-LeQvz2Gi6W4SKkxceer1z_YwXnOMgZB_6IBld01y4_7N76PqaRCslQ3HbGlQiqbWy_kErbilKtks1w7ZBCMZrh1gnghQ9AIYQk1_x4ffDO5R3_dIdHkdSxrRDwiDz5jxZNUpvaj88UK-TdSPt2QyJUtE000rCFKgy5hE66xvc0JRDkK.jpg');">
+      <div class="header-top">TAXI<span>GO</span> Trips</div>
+      <div class="lang-switch">🇵🇱 PL | EN</div>
+      <div class="flag-banner">🇸🇰 SŁOWACJA</div>
+      <div class="hero-content">
+        <div class="hero-badge">💧 ORYGINAŁ</div>
+        <div class="hero-title">Wodospady Studeneckie z Krakowa</div>
+        <div class="hero-subtitle">Stary Smokowiec • Hrebienok • Wodospady Tatr</div>
+      </div>
+    </div>
+
+    <!-- PRICE -->
+    <div class="price-row">
+      <div>
+        <div class="price-label">Cena od osoby</div>
+        <div class="price-value">350 zł<span class="price-unit"> /os</span></div>
+      </div>
+      <div class="duration">⏱️ ~12 godzin</div>
+    </div>
+
+    <!-- ATTRACTIONS -->
+    <div class="section">
+      <div class="section-title">🌟 3 niezapomniane miejsca</div>
+      <div class="section-subtitle">Tatry słowackie w spokojnym tempie</div>
+
+      <!-- 1. Stary Smokowiec -->
+      <div class="attraction">
+        <div class="attraction-title">🏘️ 1. Stary Smokowiec (Starý Smokovec)</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;">Klimatyczny tatrzański kurort:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>kawiarnie i drewniane pensjonaty</li>
+            <li>piękne widoki na Tatry</li>
+            <li>zabytkowy Grandhotel Praha</li>
+          </ul>
+          <p style="font-style:italic; color:#1c1c1e;">Tutaj zaczyna się wycieczka piesza ⛰️</p>
+        </div>
+        <div class="gallery two-col">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/oti77lpv_5BAeqjSzsltg4qDCpmiITGqw4fon_St44F_2iYTR7jTpSrrsTchcpEIYnR7GL3DZHZA6wNZ9OmH_sI7-boldrFSdYFgdrurIQEw420BkAQkyajB-d32S4zUU2iKPwCu_4nfA09qV_YZaB_2_d41Jt5U-ZUgV5xmDcWh80D2zt46hfc6qC4HDorZxBNPDHxUl.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/r1t7110v_4U37K0_nmm1_zhPw0TKapyBCDB2NSy25gx4f7BdT3-Sigb6ak9f4epoxCB2XSc8ygv5k0OA5_EBpIt8jdb_MHhwB2WInictp5GKENIbc3_X62mv5DbcAjjfpGU1YEhozRFVY556rB430LZQXHOpp1s6sSb6-htzZBPT0pPUb4aNyUi8OoaW18yRGud7haD_p.jpg" />
+        </div>
+      </div>
+
+      <!-- 2. Hrebienok -->
+      <div class="attraction">
+        <div class="attraction-title">🚆 2. Wyjazd kolejką na Hrebienok</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;">Krótki wyjazd kolejką szynową pozwala:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>zaoszczędzić siły</li>
+            <li>szybciej wejść w najpiękniejszą część Tatr</li>
+          </ul>
+          <p style="margin-bottom:6px;"><b>Na górze (1285 m n.p.m.):</b></p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>restauracje i schronisko</li>
+            <li>punkty widokowe</li>
+            <li>klimatyczny napis "HREBIENOK" z niedźwiedzi 🐻</li>
+          </ul>
+        </div>
+        <div class="gallery">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/omkq8nwq_XfNwtCgJ4MGAmgq9ak4-6VdHZAoECkYOsEkD8ArpyE4e0gKk1y7E1P_g0HKAS-zhyKMGDQKj8_tKkg2YvJ5nhp67Jn8OsRJ06Ywq-pv-v1m3rIiwrvmwz4GOhkORqHpmT6IUoFGiPltooTJfADs8M9p_fa1YkqqfyEQb_RTBH4NB-RRKASxYQxO0j1E-WYJL.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/yg16addc_sJ4vje2ya3U-HcBh8mLdyeKyjjgDeIbY49F8pDkD-gBgsqur034E2J3LmXB5TbtXW4L-0mWAPTAoc18c3B7lAQInuquoU1QB1OnVyho7V9JqxaUbiL_Yz7UZDdcuIf-pxNVVuY20rvBnAlmzf2D1XunoIshnsVV1hhNcvKEtzPKJ7fu_LPB0HHel1fEjd2nb.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/74rza2dt_an9hI86bcI08W9TxXVT-rkdaOxRcIZ_YuqZOu8h_SLMoKZfD91dH2UX_tvLtFpa0hE4TK56zpOa3-ZqmDDaQWbyXBK2NxfkUYyetPjjEv3vYke-Szo3sbMv4d_Sgz8FT3dzQ373QgZWOIKxIG05sySZfShu0eJpJCyZEawllG5VFsTUFhJXgI7nt4PzzS80A.jpg" />
+        </div>
+      </div>
+
+      <!-- 3. Wodospady - KOLAŻ -->
+      <div class="attraction">
+        <div class="attraction-title">💧 3. Wodospady Studeneckie (Studenovské vodopády)</div>
+        <div class="attraction-desc">
+          <p style="margin-bottom:8px;">Najbardziej klimatyczna część wycieczki. Szlak prowadzi:</p>
+          <ul style="margin: 0 0 10px 18px; padding:0;">
+            <li>przez las</li>
+            <li>obok potoku</li>
+            <li>po drewnianych mostkach</li>
+            <li>wśród skał i wodospadów</li>
+          </ul>
+          <p style="margin-bottom:8px;"><b>Atmosfera bardzo spokojna:</b> słychać tylko wodę i las, dużo miejsc na odpoczynek i zdjęcia.</p>
+          <p style="background:#d1f2eb; padding:8px 10px; border-radius:8px; font-size:12px; color:#0d7377;">
+            ✅ Trasa <b>łatwa i przyjemna</b> — dobra nawet dla mniej doświadczonych osób
+          </p>
+        </div>
+        <div class="collage">
+          <img class="big" src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/8pcf4hw8_v8ADiO7ZUMNxq_Qp-LeQvz2Gi6W4SKkxceer1z_YwXnOMgZB_6IBld01y4_7N76PqaRCslQ3HbGlQiqbWy_kErbilKtks1w7ZBCMZrh1gnghQ9AIYQk1_x4ffDO5R3_dIdHkdSxrRDwiDz5jxZNUpvaj88UK-TdSPt2QyJUtE000rCFKgy5hE66xvc0JRDkK.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/tn57fqd3_Illfi6vsITgHgQGr_s7DqmzfLLZj_kEeQZVbJIfmo30bZ_WUrZ1Xnblwbu7C604foba5G59xNen_1NToqejoVl-VwZzXnoraUqoh8e1LAD6tz8RgsFfLVzd9jk0foxrA0LgxJSO96vyUs9tAsfb-UJoyPhgkhcuqQ01w8mm4wDn4UWMM-mA0ByZfd6NbvH3B.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/gw8ghmnb_ZwggXDohOcj6LbymCO6MLICBQPtdChOPmtyIuLYHkb5Tb_M6jn_xCt_dzBLCM_WGONcWYd3xW8b82KUS8PE0jCgx_HiGrDA-44T_jN0861iidc_7Fx7AryIVoMvAjaNhEEDzvFSHxWD6laMbjNywnn_M_N22A01EtFllUuL65HlfRKmsOFxI6lrrcncCOcMp.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m2kzz5fq_Iqx3XzA99LBj2kOqJW3qQHEPNeIv9EgcYTAKtnBIDMsHKBdP_3uVk5u5Ok2si87gW8ssQTgcOdD1gzVhtE9URQtakqpjdvKO4cLFQCayj0CgG0fPSn-tvK-1qdI7AR_rHxstPLrVmERcmPZU1NDEHMI7MVcldvwSAtnmCRm2oUFEWrzvkXHQBjk8-fuMFPJG.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/0awpxjeq_YDgtz1MwDLu510YDaSSnNObqR6Y98m0oi2q8VrxOm-OaWBGP0banUTN3qLDnD0cK2Xa81B5EZEsTP-196B0CUH6XFqYx_Y3m85tnonCnBAWH5L4guCSb-xOoAEH5hhVAnVrZ4omM3O9BTBgrAn-IeQ7Vr2Qj02Mo2i3czM5fdUGz-vFIYt4bOyg5ze-UZFSX.jpg" />
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div class="section">
+      <div class="section-title">📅 Plan dnia</div>
+      <div class="timeline">
+        <div class="step">
+          <div class="step-time">05:30</div>
+          <div class="step-title">🚗 Wyjazd z Krakowa</div>
+          <div class="step-desc">Trasa: Kraków → Zakopane → <b>Łysa Polana</b> → Stary Smokowiec</div>
+        </div>
+        <div class="step">
+          <div class="step-time">08:30</div>
+          <div class="step-title">🏘️ Stary Smokowiec</div>
+          <div class="step-desc">Spacer po kurorcie, kawa z widokiem na Tatry. ~45 min</div>
+        </div>
+        <div class="step">
+          <div class="step-time">09:30</div>
+          <div class="step-title">🚆 Kolejka szynowa na Hrebienok</div>
+          <div class="step-desc">Krótki przejazd. Na górze: punkty widokowe, schronisko</div>
+        </div>
+        <div class="step">
+          <div class="step-time">10:00</div>
+          <div class="step-title">💧 Wodospady Studeneckie</div>
+          <div class="step-desc">Spacer przez las, drewniane mostki, wodospady. Pętla ~2.5-3h</div>
+        </div>
+        <div class="step">
+          <div class="step-time">13:30</div>
+          <div class="step-title">🍽️ Obiad w Smokowcu lub Hrebienku</div>
+          <div class="step-desc">Góralska karczma, regionalne smaki</div>
+        </div>
+        <div class="step">
+          <div class="step-time">15:30</div>
+          <div class="step-title">🏠 Powrót do Krakowa</div>
+          <div class="step-desc">Przyjazd ~18:30-19:30. Odwóz pod hotel/adres</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="section">
+      <div class="section-title">🗺️ Trasa na mapie</div>
+      <img src="/trip4-map.png" class="map-img" alt="Mapa Tatry" />
+      <div style="margin-top:10px;font-size:12px;color:#8e8e93;">
+        🔴 1. Stary Smokowiec &nbsp; 🔵 2. Hrebienok &nbsp; 🟢 3. Wodospady Studeneckie
+      </div>
+    </div>
+
+    <!-- KLIMAT -->
+    <div class="section">
+      <div class="section-title">✨ Klimat tej wycieczki</div>
+      <p style="margin-bottom:10px;font-size:14px;">Połączenie:</p>
+      <ul style="margin: 0 0 14px 18px; padding:0; font-size:14px;">
+        <li>górskich potoków</li>
+        <li>drewnianych mostków</li>
+        <li>lasów i wodospadów</li>
+        <li>tatrzańskich panoram</li>
+      </ul>
+      <div style="background:linear-gradient(135deg, #d1f2eb, #a3e4d7); padding:12px; border-radius:10px; font-size:13px; color:#0d7377;">
+        🍂 <b>Najpiękniej:</b> czerwiec-październik. Wiosna = duża woda 💦
+      </div>
+    </div>
+
+    <!-- INCLUDED -->
+    <div class="section">
+      <div class="section-title">✅ Co w cenie (350 zł/os)</div>
+      <div class="included">
+        <div class="list-row">✅ Transport tam i z powrotem (Polska→Słowacja)</div>
+        <div class="list-row">✅ Kierowca-przewodnik</div>
+        <div class="list-row">✅ Czekanie podczas zwiedzania</div>
+        <div class="list-row">✅ Pomoc w zakupie biletów</div>
+        <div class="list-row">✅ Przekroczenie granicy + opłaty drogowe</div>
+      </div>
+      <div class="excluded">
+        <div class="list-row">⚠️ Bilet na kolejkę Smokowiec → Hrebienok (~10 €/os)</div>
+        <div class="list-row">⚠️ Wstęp do Tatrzańskiego Parku Narodowego (~5 €/os)</div>
+        <div class="list-row">⚠️ Obiad w Smokowcu/Hrebienku</div>
+        <div style="margin-top:8px; font-size:11px; opacity:0.85;">💡 Bilety atrakcji możesz dokupić w aplikacji w jednym checkout (też w EUR/PLN)</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-bar">
+      <a href="#" class="cta-btn">📅 Zarezerwuj teraz — 350 zł/os</a>
+    </div>
+  </div>
+</body>
+</html>
