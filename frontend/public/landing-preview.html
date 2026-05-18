@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Strona główna</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  body { background: #fafafa; color: #1c1c1e; line-height: 1.5; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; }
+
+  /* HERO */
+  .hero {
+    position: relative; height: 320px; overflow: hidden;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
+  .hero-bg { position: absolute; inset: 0; opacity: 0.45;
+    background-image: url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg');
+    background-size: cover; background-position: center; }
+  .hero-content { position: relative; z-index: 2; padding: 60px 24px 0; color: white; }
+  .hero-brand { font-size: 14px; font-weight: 700; letter-spacing: 1px; opacity: 0.9; }
+  .hero-brand span { color: #FFD700; }
+  .hero-title { font-size: 32px; font-weight: 800; line-height: 1.15; margin: 12px 0 8px; }
+  .hero-subtitle { font-size: 14px; opacity: 0.95; margin-bottom: 18px; }
+  .hero-cta { display: inline-block; background: #FFD700; color: #1c1c1e; padding: 10px 22px; border-radius: 30px; font-size: 14px; font-weight: 700; text-decoration: none; }
+  .lang-switch { position: absolute; top: 16px; right: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+  /* STATS */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 20px; gap: 8px; background: #fff; border-bottom: 8px solid #f5f5f7; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 800; color: #2E7D32; }
+  .stat-label { font-size: 11px; color: #8e8e93; }
+
+  /* SECTION */
+  .section { padding: 20px; }
+  .section-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .section-subtitle { font-size: 13px; color: #6e6e73; margin-bottom: 16px; }
+
+  /* TRIP CARD */
+  .trips { display: flex; flex-direction: column; gap: 16px; }
+  .trip-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); position: relative; }
+  .trip-card-img { position: relative; height: 200px; background-size: cover; background-position: center; }
+  .trip-card-img::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.6) 100%); }
+  .trip-badge { position: absolute; top: 12px; left: 12px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: white; z-index: 2; }
+  .flag-mini { position: absolute; top: 12px; right: 12px; z-index: 2; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; color: white; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); }
+  .trip-card-title { position: absolute; bottom: 16px; left: 16px; right: 16px; color: white; z-index: 2; }
+  .trip-card-title h3 { font-size: 18px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  .trip-card-title p { font-size: 12px; opacity: 0.95; }
+  .trip-card-body { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .trip-info { display: flex; gap: 12px; font-size: 12px; color: #6e6e73; }
+  .trip-info span { display: flex; align-items: center; gap: 4px; }
+  .trip-price { font-size: 18px; font-weight: 800; color: #2E7D32; }
+  .trip-price small { font-size: 11px; color: #8e8e93; font-weight: 500; }
+
+  /* WHY US */
+  .why-us { background: linear-gradient(135deg, #2E7D32 0%, #43a047 100%); color: white; padding: 24px 20px; }
+  .why-us h2 { font-size: 22px; font-weight: 800; margin-bottom: 16px; }
+  .feature { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+  .feature-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .feature-text h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .feature-text p { font-size: 12px; opacity: 0.9; }
+
+  /* CTA */
+  .cta-section { padding: 24px 20px; text-align: center; background: white; }
+  .cta-section h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .cta-section p { font-size: 13px; color: #6e6e73; margin-bottom: 16px; }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #2E7D32, #43a047); color: white; text-align: center; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 14px rgba(46,125,50,0.4); }
+
+  /* FOOTER */
+  .footer { padding: 24px 20px; background: #1a1a2e; color: white; text-align: center; font-size: 12px; }
+  .footer-brand { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .footer-brand span { color: #FFD700; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-bg"></div>
+      <div class="lang-switch">🇵🇱 PL | EN</div>
+      <div class="hero-content">
+        <div class="hero-brand">TAXI<span>GO</span> Trips</div>
+        <h1 class="hero-title">Twoja przygoda<br/>zaczyna się<br/>w Krakowie</h1>
+        <p class="hero-subtitle">Premium wycieczki do najpiękniejszych miejsc Polski i Słowacji</p>
+        <a href="#trips" class="hero-cta">📅 Zobacz wycieczki ›</a>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">5</div>
+        <div class="stat-label">UNIKALNYCH WYCIECZEK</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">2</div>
+        <div class="stat-label">KRAJE 🇵🇱 🇸🇰</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">PERSONALNIE</div>
+      </div>
+    </div>
+
+    <!-- TRIPS -->
+    <div class="section" id="trips">
+      <h2 class="section-title">🌟 Nasze wycieczki</h2>
+      <p class="section-subtitle">5 starannie zaplanowanych jednodniowych przygód</p>
+
+      <div class="trips">
+        <!-- Trip 3 - Słowacja NUMBER ONE -->
+        <div class="trip-card">
+          <div class="trip-card-img" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg');">
+            <div class="trip-badge" style="background:linear-gradient(135deg,#c0392b,#e67e22);">⭐ NUMBER ONE</div>
+            <div class="flag-mini">🇸🇰 SK</div>
+            <div class="trip-card-title">
+              <h3>Najpiękniejsza Słowacja</h3>
+              <p>Bachledova • Strbskie Pleso • Jaskinia Lodowa</p>
+            </div>
+          </div>
+          <div class="trip-card-body">
+            <div class="trip-info">
+              <span>⏱️ ~16h</span>
+              <span>📍 3 miejsca</span>
+            </div>
+            <div class="trip-price">380 zł<small> /os</small></div>
+          </div>
+        </div>
+
+        <!-- Trip 4 - Wodospady ORYGINAŁ -->
+        <div class="trip-card">
+          <div class="trip-card-img" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/8pcf4hw8_v8ADiO7ZUMNxq_Qp-LeQvz2Gi6W4SKkxceer1z_YwXnOMgZB_6IBld01y4_7N76PqaRCslQ3HbGlQiqbWy_kErbilKtks1w7ZBCMZrh1gnghQ9AIYQk1_x4ffDO5R3_dIdHkdSxrRDwiDz5jxZNUpvaj88UK-TdSPt2QyJUtE000rCFKgy5hE66xvc0JRDkK.jpg');">
+            <div class="trip-badge" style="background:linear-gradient(135deg,#0d7377,#14b8a6);">💧 ORYGINAŁ</div>
+            <div class="flag-mini">🇸🇰 SK</div>
+            <div class="trip-card-title">
+              <h3>Wodospady Studeneckie</h3>
+              <p>Stary Smokowiec • Hrebienok • Wodospady Tatr</p>
+            </div>
+          </div>
+          <div class="trip-card-body">
+            <div class="trip-info">
+              <span>⏱️ ~12h</span>
+              <span>📍 3 miejsca</span>
+            </div>
+            <div class="trip-price">350 zł<small> /os</small></div>
+          </div>
+        </div>
+
+        <!-- Trip 5 - Zakopane KLASYK -->
+        <div class="trip-card">
+          <div class="trip-card-img" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dm10vjl1_PKMfrd5SWiGV7ThIl4UjFl1r5rvTjefPP2OJvmSbvIqpbvUBcsZhM0CTZFPVXzVae0P1HfdWgkshaJQreiiFr8k7w_nULvmuSPH955k3uuxXorLvKd7t-jqyX-36G5eLLkvIfQIOjWGszDuENhWEdm-vD56bqALS0olEDLuB5yt1AV8TlngMQMxwJaK-K52k.jpg');">
+            <div class="trip-badge" style="background:linear-gradient(135deg,#d35400,#e67e22);">🏔️ KLASYK</div>
+            <div class="flag-mini">🇵🇱 PL</div>
+            <div class="trip-card-title">
+              <h3>Zakopane + Kasprowy Wierch</h3>
+              <p>Krupówki • Gubałówka • Karczma • Kasprowy 1985m</p>
+            </div>
+          </div>
+          <div class="trip-card-body">
+            <div class="trip-info">
+              <span>⏱️ ~12h</span>
+              <span>📍 4 miejsca</span>
+            </div>
+            <div class="trip-price">350 zł<small> /os</small></div>
+          </div>
+        </div>
+
+        <!-- Trip 2 - Dunajec PRZYGODA -->
+        <div class="trip-card">
+          <div class="trip-card-img" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ohfdd51n_OlnaMJzYyc94aAr5cQNoWavXnSVAzs1js3YMPxg88lOUNdwOKKdMDDpzZmcIwGVM0K-TBmF95XcfP7t2UKhSty-6LDX7ATbaLJ8iH5UldSLAhCZ9MsaPCfki09DUs0EUSihFMY1FWSC_NghV0EuQhdZynRpPAF5jpPGd8xHAiYXFh-MxtT1gXO2M-xr8OhgN.jpg');">
+            <div class="trip-badge" style="background:linear-gradient(135deg,#1976D2,#2196F3);">🛶 PRZYGODA</div>
+            <div class="flag-mini">🇵🇱 PL</div>
+            <div class="trip-card-title">
+              <h3>Spływ Dunajcem</h3>
+              <p>Pieniny • Szczawnica • Palenica • Wąwóz Homole</p>
+            </div>
+          </div>
+          <div class="trip-card-body">
+            <div class="trip-info">
+              <span>⏱️ ~12h</span>
+              <span>📍 4 miejsca</span>
+            </div>
+            <div class="trip-price">350 zł<small> /os</small></div>
+          </div>
+        </div>
+
+        <!-- Trip 1 - Pieniny BESTSELLER -->
+        <div class="trip-card">
+          <div class="trip-card-img" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/bo8omojz__WODmwSyszXYHGkICPkZBVdUtOU7o71COs1MSAr71Eh-K5vM7pNs8XfANys9F9coqmsYaVQzKmB7DaXZ3ESRdqQnoneGy0Gw2iNEXV9-LLq5tqXliXlATwvROZQYRODnLvFgXHpz3hfb9iZf5p0_7HeeCfLzzsjTTMPxk5Na4fGL8Ep51mFYURjgb1EP85kQ.jpg');">
+            <div class="trip-badge" style="background:linear-gradient(135deg,#2E7D32,#43a047);">🌟 BESTSELLER</div>
+            <div class="flag-mini">🇵🇱 PL</div>
+            <div class="trip-card-title">
+              <h3>Wycieczka w Pieniny</h3>
+              <p>Niedzica • Czorsztyn • Rejs • Plaża Zamajerz</p>
+            </div>
+          </div>
+          <div class="trip-card-body">
+            <div class="trip-info">
+              <span>⏱️ ~12h</span>
+              <span>📍 5 miejsc</span>
+            </div>
+            <div class="trip-price">350 zł<small> /os</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHY US -->
+    <div class="why-us">
+      <h2>Dlaczego TAXIGO Trips?</h2>
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-text">
+          <h4>Małe, kameralne grupy</h4>
+          <p>Maksymalnie 4 osoby — żadnych dużych autobusów. Spersonalizowane podejście.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🗣️</div>
+        <div class="feature-text">
+          <h4>Kierowca-przewodnik</h4>
+          <p>Z opowieściami o miejscach, legendach i historii regionu.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📍</div>
+        <div class="feature-text">
+          <h4>Odbiór z hotelu</h4>
+          <p>Wskazujesz adres w Krakowie — odbieramy pod sam hotel/mieszkanie.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎫</div>
+        <div class="feature-text">
+          <h4>Bilety w jednym checkout</h4>
+          <p>Płacisz transport + atrakcje w aplikacji — bez stania w kolejkach.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💳</div>
+        <div class="feature-text">
+          <h4>Płatność BLIK / Karta</h4>
+          <p>Stripe + BLIK — szybko, bezpiecznie, też w EUR dla zagranicznych gości.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <h2>Gotowy na przygodę?</h2>
+      <p>Wybierz wycieczkę i zarezerwuj termin online — w 2 minuty.</p>
+      <a href="#trips" class="cta-btn">📅 Zarezerwuj online ›</a>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-brand">TAXI<span>GO</span> Trips</div>
+      <div>🚐 Kraków → Polska 🇵🇱 + Słowacja 🇸🇰</div>
+      <div style="margin-top:10px; opacity:0.6;">© 2026 TAXIGO Trips</div>
+    </div>
+  </div>
+</body>
+</html>
