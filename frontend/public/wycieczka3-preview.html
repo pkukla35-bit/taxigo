@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Wycieczka 3: Najpiękniejsza Słowacja</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1c1c1e; line-height: 1.5; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; overflow: hidden; }
+  .hero { position: relative; height: 360px; background-size: cover; background-position: center; }
+  .hero::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.8) 100%); }
+  .hero-content { position: absolute; bottom: 24px; left: 20px; right: 20px; color: white; z-index: 2; }
+  .hero-badge { display: inline-block; background: linear-gradient(135deg, #c0392b, #e67e22); color: white; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .hero-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); line-height: 1.2; }
+  .hero-subtitle { font-size: 14px; opacity: 0.95; }
+  .price-row { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .price-label { font-size: 13px; color: #8e8e93; }
+  .price-value { font-size: 28px; font-weight: 700; color: #c0392b; }
+  .price-unit { font-size: 14px; color: #8e8e93; font-weight: 400; }
+  .duration { display: inline-block; background: #fde2e2; color: #c0392b; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+
+  .section { padding: 20px; border-bottom: 8px solid #f5f5f7; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .section-subtitle { font-size: 13px; color: #6e6e73; margin-bottom: 14px; margin-top: -8px; }
+
+  .attraction { margin-bottom: 24px; }
+  .attraction-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1c1c1e; }
+  .attraction-desc { font-size: 13px; color: #6e6e73; margin-bottom: 10px; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+
+  .collage { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 110px 110px 110px; gap: 4px; }
+  .collage img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .collage .big { grid-row: span 2; height: 224px; }
+
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content:''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #e5e5ea; }
+  .step { position: relative; padding: 8px 0 16px; }
+  .step::before { content:''; position: absolute; left: -25px; top: 12px; width: 14px; height: 14px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #c0392b; }
+  .step-time { font-size: 13px; color: #c0392b; font-weight: 700; }
+  .step-title { font-size: 15px; font-weight: 600; margin: 2px 0; }
+  .step-desc { font-size: 13px; color: #6e6e73; }
+
+  .map-img { width: 100%; border-radius: 12px; }
+
+  .included { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+  .excluded { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; }
+  .list-row { padding: 4px 0; }
+
+  .cta-bar { position: sticky; bottom: 0; padding: 16px 20px; background: white; border-top: 1px solid #e5e5ea; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #c0392b, #e67e22); color: white; text-align: center; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; }
+
+  .lang-switch { position: absolute; top: 16px; right: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .header-top { position: absolute; top: 16px; left: 16px; z-index: 10; background: rgba(255,255,255,0.95); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #FFD700; }
+  .header-top span { color: #1c1c1e; }
+
+  .flag-banner { position: absolute; top: 60px; left: 16px; z-index: 10; background: linear-gradient(90deg, #fff 33%, #034ea2 33% 66%, #ee1c25 66%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- HERO -->
+    <div class="hero" style="background-image:url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg');">
+      <div class="header-top">TAXI<span>GO</span> Trips</div>
+      <div class="lang-switch">🇵🇱 PL | EN</div>
+      <div class="flag-banner">🇸🇰 SŁOWACJA</div>
+      <div class="hero-content">
+        <div class="hero-badge">⭐ NUMBER ONE ⭐</div>
+        <div class="hero-title">Najpiękniejsza Słowacja z Krakowa</div>
+        <div class="hero-subtitle">Bachledova • Strbskie Pleso • Jaskinia Demianowska</div>
+      </div>
+    </div>
+
+    <!-- PRICE -->
+    <div class="price-row">
+      <div>
+        <div class="price-label">Cena od osoby</div>
+        <div class="price-value">350 zł<span class="price-unit"> /os</span></div>
+      </div>
+      <div class="duration">⏱️ ~14 godzin</div>
+    </div>
+
+    <!-- 3 ATTRACTIONS -->
+    <div class="section">
+      <div class="section-title">🌟 3 niezapomniane atrakcje</div>
+      <div class="section-subtitle">Trzy zupełnie różne miejsca w jednym dniu</div>
+
+      <!-- 1. Bachledova -->
+      <div class="attraction">
+        <div class="attraction-title">⛰️ 1. Bachledova Dolina + Chodnik w Koronach Drzew</div>
+        <div class="attraction-desc">Granitowa grania Wysokich Tatr i kultowa drewniana wieża widokowa z toboganem zjazdowym. Panorama na Tatry Bielskie!</div>
+        <div class="gallery">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/e70bwt5z_6A53yfgI2kEXLdA5xYg-l56yAKjPhx6k9p3665fqOAkykCjeS_8xQmq-DHb7qtp8RcToCrbqme2c5SA5-3XHYwg--ChWbD2C4p-_KjABkq1yv-j3Wq93wLH5Z_3ktIatJYH2zxKzCHOd0GKRgRg5Yj-UlSu8hPTLTzy7IaY72MUIu97V0SPk68y52h3gRr0U.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/czbcqrne_bge0CPmKP_BOpGmeah85P4oQFGREKnXZjj4vMjHPY8Rr9CWNTUmtOcAErzMpkAvucXU24ZXvQqhm0ONZVcqpbT7h9BZBkKL63Krb8iz-02PoEHHnrjhcra-huXoOq6Z77SKxpV18TgMUSTp7iu3DlimmnwFJvqVkcR5tWEL40jIzAyml8xOJa5W4bFDikE8m.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg" />
+        </div>
+      </div>
+
+      <!-- 2. Strbskie Pleso -->
+      <div class="attraction">
+        <div class="attraction-title">💎 2. Strbskie Pleso — perła Tatr</div>
+        <div class="attraction-desc">Lazurowe jezioro w sercu Wysokich Tatr. Promenada wokół, łódki, hotel-pensjonat, doskonałe widoki na granitowe szczyty.</div>
+        <div class="gallery">
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/6o7h3j23_v1RgJ22UbvYnCS13yBkEobhVFNtAlCNCvPfRmW_XUvCI5kq-nkYyifdGB8tERck8gzdzlb6jkOCZz4aFsxanE87MHTR6WFVF2NXI9aYEwPQgpJhVi08ZSK9_xsM8e_Dy0WhJgE9JSmDG7_xJ8e-rECYPykWz4RdjGw79S1NFlChgB1B47mzPCnkmEZV-6ufW.jpg" />
+        </div>
+      </div>
+
+      <!-- 3. Jaskinia Demianowska - KOLAŻ -->
+      <div class="attraction">
+        <div class="attraction-title">❄️ 3. Jaskinia Demianowska — największa w Europie</div>
+        <div class="attraction-desc">Najsłynniejsza lodowa jaskinia Europy. Gigantyczne lodowe filary, kolumny i wodospady, drewniane kładki przez krainę lodu. Magiczne.</div>
+        <div class="collage">
+          <img class="big" src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/9leo4djy__eOOqpsAnbiiFGl6Odsii9pj37ffqVw8rMWaXfBade0LH8DnP6JV3WRDQD14TA4gt7BnNxZNm9Rzldt9oZnvKl5kiRJ2tbcr_BI3JrCyx3roMfG6ieXCEzG7GLrOTvQjIT7o-vVvTZsaDL5FWbfAv_7VGSEY7z7-qkeApfGUhqeAOZ_TLYs26QurNNu3howf.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/x75tqz02_gTM2rX4VypWwTN1wttwhxghnvsG5zz6xxKXN88vs5ZcJBf3uIWcses1V9WirduLJuAqXvrFv8Djjs3pMsyJsrZ6fQC3lZfgCO9jrHysKWh-ExvrA9pWo85MlpgxuAhm4IbfEbYXWLx8kZ5kxPG8e0GkLXdP79BzUsp_eJk7gknwBZgNJ7a_w_IZoEOV4dAim.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/pjig3jqs_m9FJswvNg-HWKTW-a-fb68AZUm3OZNYXv_l89-Sh1rcMy6ApMO_9WZG9gd1hSqNQQAv8d9LkuNVmO86FgC7AigevmfjjW2foVIcuS4-h1S3P8cHe33XkEDext16TiYShwawQ3JqLMKyAEkqRcCsrwKCK8d2MZl8fizDokx8eYPfgeEA6SwtDq6HClE-qJ5tg.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/d7mii732_hgUQbJUgf82qc5hQ9aipsp1wTeAqnu7odfQ05P57w-9sqc-iY4kOBlN--vZtStdQFhIFyKOAfMHAAqs3z4dr36u9ZZrHqytG7KesWjGE1guyWxLkj7J2T2a1hgDXeG5JEY3HhNX_vtioBh8bREJ2hfQagB_bmO_p8-Q0KlETTpzHUU9h2W2j1iwVLVj70jAs.jpg" />
+          <img src="https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2ovjtjx6_6HUCNODBDZIGduBSipcjYp_PWSiDFWqArPuSJJ5mlaSvVqnH2_Ttyd5NaO5GQCGJintiFnaKP1v5peTsnW5E62lC_Iq532fynzMQLnifA1Cmu5_9jdHSEIcRYUSbgu6CAs22ik-A9oz1c4Ogsk3HmNwHFAjPdIlvdGUcgw3OOPFC9lJmGxT5ktwPLJQtBOaL.jpg" />
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div class="section">
+      <div class="section-title">📅 Plan dnia</div>
+      <div class="timeline">
+        <div class="step">
+          <div class="step-time">05:30</div>
+          <div class="step-title">🚗 Wyjazd z Krakowa</div>
+          <div class="step-desc">Wczesny start. Granica słowacka → Ždiar (~2.5h)</div>
+        </div>
+        <div class="step">
+          <div class="step-time">08:30</div>
+          <div class="step-title">⛰️ Bachledova Dolina</div>
+          <div class="step-desc">Kolejka + Chodnik w Koronach Drzew + tobogan. Panorama Tatr Bielskich. ~2.5h</div>
+        </div>
+        <div class="step">
+          <div class="step-time">11:30</div>
+          <div class="step-title">💎 Strbskie Pleso</div>
+          <div class="step-desc">Spacer wokół jeziora, obiad z widokiem na Tatry. ~2h</div>
+        </div>
+        <div class="step">
+          <div class="step-time">14:30</div>
+          <div class="step-title">❄️ Jaskinia Demianowska Lodowa</div>
+          <div class="step-desc">Największa lodowa jaskinia Europy. Trasa zwiedzania ~45 min + dojście. Łącznie ~2h</div>
+        </div>
+        <div class="step">
+          <div class="step-time">17:00</div>
+          <div class="step-title">🏠 Powrót do Krakowa</div>
+          <div class="step-desc">Przyjazd ~20:30-21:30. Odwóz pod hotel/adres</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="section">
+      <div class="section-title">🗺️ Trasa na mapie</div>
+      <img src="/trip3-map.png" class="map-img" alt="Mapa Słowacja" />
+      <div style="margin-top:10px;font-size:12px;color:#8e8e93;">
+        🔴 1. Bachledova Dolina &nbsp; 🔵 2. Strbskie Pleso &nbsp; 🟣 3. Jaskinia Demianowska
+      </div>
+    </div>
+
+    <!-- INCLUDED -->
+    <div class="section">
+      <div class="section-title">✅ Co w cenie (350 zł/os)</div>
+      <div class="included">
+        <div class="list-row">✅ Transport tam i z powrotem (Polska→Słowacja)</div>
+        <div class="list-row">✅ Kierowca-przewodnik</div>
+        <div class="list-row">✅ Czekanie podczas zwiedzania</div>
+        <div class="list-row">✅ Pomoc w zakupie biletów atrakcji</div>
+        <div class="list-row">✅ Przekroczenie granicy + opłaty drogowe</div>
+      </div>
+      <div class="excluded">
+        <div class="list-row">⚠️ Bilet Chodnik w Koronach (~22 €/os)</div>
+        <div class="list-row">⚠️ Bilet Jaskinia Demianowska (~10 €/os)</div>
+        <div class="list-row">⚠️ Obiad w Strbskim Plesie</div>
+        <div style="margin-top:8px; font-size:11px; opacity:0.85;">💡 Bilety atrakcji możesz dokupić w aplikacji w jednym checkout (też w EUR/PLN)</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-bar">
+      <a href="#" class="cta-btn">📅 Zarezerwuj teraz — 350 zł/os</a>
+    </div>
+  </div>
+</body>
+</html>
