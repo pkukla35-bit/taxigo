@@ -119,7 +119,7 @@ class TripReservationCreate(BaseModel):
     price_per_person: float = Field(ge=0)
     total_price: float = Field(ge=0)
     notes: Optional[str] = Field(default="", max_length=500)
-    payment_method: Literal["cash", "negotiate"] = "cash"
+    payment_method: Literal["cash", "negotiate", "blik", "card"] = "cash"
     proposed_price: Optional[float] = Field(default=None, ge=0)
     negotiation_note: Optional[str] = Field(default="", max_length=500)
 
@@ -132,6 +132,17 @@ class BlockedDatePayload(BaseModel):
     trip_slug: str  # "all" lub konkretny slug
     date: str  # YYYY-MM-DD
     reason: Optional[str] = ""
+
+
+class TripBlikPayload(BaseModel):
+    reservation_id: str
+    blik_code: str = Field(min_length=6, max_length=6)
+
+
+class TripCheckoutPayload(BaseModel):
+    reservation_id: str
+    success_url: str
+    cancel_url: str
 
 
 def check_admin(passcode: Optional[str]) -> None:
@@ -609,6 +620,129 @@ async def verify_admin(payload: dict):
     passcode = (payload or {}).get("passcode")
     check_admin(passcode)
     return {"ok": True}
+
+
+# ============== TRIP STRIPE PAYMENTS (BLIK + CARD) ==============
+@api_router.post("/trips/payment/blik")
+async def trip_blik_pay(payload: TripBlikPayload):
+    """Tworzy i potwierdza Stripe Payment Intent BLIK dla rezerwacji wycieczki."""
+    res = await db.trip_reservations.find_one({"reservation_id": payload.reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Rezerwacja nie znaleziona")
+    if res.get("payment_status") == "succeeded":
+        raise HTTPException(status_code=400, detail="Rezerwacja jest już opłacona")
+    if not stripe.api_key:
+        raise HTTPException(status_code=500, detail="Stripe nie jest skonfigurowane")
+
+    amount_grosze = int(round(float(res["total_price"]) * 100))
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=amount_grosze,
+            currency="pln",
+            payment_method_types=["blik"],
+            description=f"TAXIGO Wycieczka: {res['trip_name']} ({payload.reservation_id})",
+            metadata={"reservation_id": payload.reservation_id, "trip_slug": res["trip_slug"], "type": "trip"},
+        )
+        intent = stripe.PaymentIntent.confirm(
+            intent.id,
+            payment_method_data={"type": "blik"},
+            payment_method_options={"blik": {"code": payload.blik_code}},
+        )
+        await db.trip_reservations.update_one(
+            {"reservation_id": payload.reservation_id},
+            {"$set": {
+                "payment_status": intent.status,
+                "stripe_intent_id": intent.id,
+                "payment_method": "blik",
+                "status": "confirmed" if intent.status == "succeeded" else res.get("status", "pending"),
+                "paid_at": datetime.now(timezone.utc) if intent.status == "succeeded" else None,
+            }},
+        )
+        return {"status": intent.status, "intent_id": intent.id}
+    except stripe.error.StripeError as e:
+        msg = str(getattr(e, "user_message", None) or e)
+        raise HTTPException(status_code=400, detail=msg)
+
+
+@api_router.post("/trips/payment/checkout")
+async def trip_card_checkout(payload: TripCheckoutPayload):
+    """Tworzy Stripe Checkout Session (karta) dla rezerwacji - returns URL do przekierowania."""
+    res = await db.trip_reservations.find_one({"reservation_id": payload.reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Rezerwacja nie znaleziona")
+    if res.get("payment_status") == "succeeded":
+        raise HTTPException(status_code=400, detail="Rezerwacja jest już opłacona")
+    if not stripe.api_key:
+        raise HTTPException(status_code=500, detail="Stripe nie jest skonfigurowane")
+
+    amount_grosze = int(round(float(res["total_price"]) * 100))
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            payment_method_types=["card", "blik"],
+            line_items=[{
+                "price_data": {
+                    "currency": "pln",
+                    "product_data": {
+                        "name": f"TAXIGO Wycieczka: {res['trip_name']}",
+                        "description": f"Data: {res['date']} • {res['people']} os. • Odbiór: {res['pickup_address'][:80]}",
+                    },
+                    "unit_amount": amount_grosze,
+                },
+                "quantity": 1,
+            }],
+            success_url=payload.success_url + ("?" if "?" not in payload.success_url else "&") + "session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=payload.cancel_url,
+            customer_email=res.get("email"),
+            metadata={"reservation_id": payload.reservation_id, "trip_slug": res["trip_slug"], "type": "trip"},
+        )
+        await db.trip_reservations.update_one(
+            {"reservation_id": payload.reservation_id},
+            {"$set": {"stripe_session_id": session.id, "payment_method": "card", "payment_status": "pending"}},
+        )
+        return {"url": session.url, "session_id": session.id}
+    except stripe.error.StripeError as e:
+        msg = str(getattr(e, "user_message", None) or e)
+        raise HTTPException(status_code=400, detail=msg)
+
+
+@api_router.get("/trips/payment/{reservation_id}/status")
+async def trip_payment_status(reservation_id: str):
+    """Sprawdza status płatności rezerwacji (do polling po Checkout)."""
+    res = await db.trip_reservations.find_one({"reservation_id": reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Rezerwacja nie znaleziona")
+    intent_id = res.get("stripe_intent_id")
+    session_id = res.get("stripe_session_id")
+    new_status = res.get("payment_status", "unpaid")
+    if stripe.api_key and session_id and new_status != "succeeded":
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.payment_status == "paid":
+                new_status = "succeeded"
+                await db.trip_reservations.update_one(
+                    {"reservation_id": reservation_id},
+                    {"$set": {
+                        "payment_status": "succeeded",
+                        "status": "confirmed",
+                        "stripe_intent_id": session.payment_intent,
+                        "paid_at": datetime.now(timezone.utc),
+                    }},
+                )
+        except Exception as e:
+            logger.warning(f"Stripe session check failed: {e}")
+    if stripe.api_key and intent_id and new_status != "succeeded":
+        try:
+            intent = stripe.PaymentIntent.retrieve(intent_id)
+            if intent.status != new_status:
+                new_status = intent.status
+                await db.trip_reservations.update_one(
+                    {"reservation_id": reservation_id},
+                    {"$set": {"payment_status": intent.status, "status": "confirmed" if intent.status == "succeeded" else res.get("status", "pending")}},
+                )
+        except Exception:
+            pass
+    return {"payment_status": new_status, "reservation_status": res.get("status", "pending")}
 
 
 app.include_router(api_router)

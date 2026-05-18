@@ -1,372 +1,273 @@
 """
-Backend tests for Trip Reservations module.
-Focused ONLY on new /api/trips/* endpoints.
+Backend smoke test for the NEW Stripe payment endpoints for trip reservations:
+  - POST /api/trips/payment/blik
+  - POST /api/trips/payment/checkout
+  - GET  /api/trips/payment/{reservation_id}/status
+
+Uses production URL (https://mobility-platform-130.preview.emergentagent.com/api).
+Real Stripe test key is configured in backend/.env.
 """
-import os
 import sys
 import requests
-from datetime import datetime, timedelta, timezone
 
 BASE_URL = "https://mobility-platform-130.preview.emergentagent.com/api"
 ADMIN_PASSCODE = "taxigo2025"
-ADMIN_HEADER = {"X-Admin-Passcode": ADMIN_PASSCODE}
-WRONG_HEADER = {"X-Admin-Passcode": "wrong"}
 
-TRIP_SLUG = "pieniny"
-FUTURE_DATE = (datetime.now(timezone.utc) + timedelta(days=180)).strftime("%Y-%m-%d")  # ~6 months out
-BLOCKED_DATE = (datetime.now(timezone.utc) + timedelta(days=200)).strftime("%Y-%m-%d")
-ALL_BLOCKED_DATE = (datetime.now(timezone.utc) + timedelta(days=220)).strftime("%Y-%m-%d")
-PAST_DATE = "2020-01-01"
-
-results = []
-created_reservations = []
-created_blocked_dates = []  # list of (trip_slug, date)
+PASS = "✅"
+FAIL = "❌"
+results = []  # list of (name, ok, info)
 
 
-def log(name, ok, info=""):
-    status = "PASS" if ok else "FAIL"
-    print(f"[{status}] {name}  {info}")
+def record(name, ok, info=""):
     results.append((name, ok, info))
+    sym = PASS if ok else FAIL
+    print(f"{sym} {name}" + (f" — {info}" if info else ""))
 
 
-def test_health():
-    r = requests.get(f"{BASE_URL}/")
-    log("GET /api/ (health)", r.status_code == 200, f"status={r.status_code} body={r.text[:120]}")
+def make_future_date(days_ahead=120):
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) + timedelta(days=days_ahead)).date().isoformat()
 
 
-# ---------- 8. POST /api/trips/admin/verify ----------
-def test_admin_verify():
-    r = requests.post(f"{BASE_URL}/trips/admin/verify", json={"passcode": ADMIN_PASSCODE})
-    log("POST /trips/admin/verify (correct passcode)",
-        r.status_code == 200 and r.json().get("ok") is True,
-        f"status={r.status_code} body={r.text[:120]}")
-
-    r2 = requests.post(f"{BASE_URL}/trips/admin/verify", json={"passcode": "wrong"})
-    log("POST /trips/admin/verify (wrong passcode)",
-        r2.status_code == 401, f"status={r2.status_code}")
-
-    r3 = requests.post(f"{BASE_URL}/trips/admin/verify", json={})
-    log("POST /trips/admin/verify (no passcode)",
-        r3.status_code == 401, f"status={r3.status_code}")
-
-
-# ---------- 5. GET /api/trips/blocked-dates/{slug} (public) ----------
-def test_blocked_dates_public_initial():
-    r = requests.get(f"{BASE_URL}/trips/blocked-dates/{TRIP_SLUG}")
-    ok = r.status_code == 200 and isinstance(r.json(), list)
-    log("GET /trips/blocked-dates/{slug} (public)", ok, f"status={r.status_code} count={len(r.json()) if ok else 'n/a'}")
-
-
-# ---------- 6. POST /api/trips/blocked-dates ----------
-def test_block_date_no_auth():
-    r = requests.post(f"{BASE_URL}/trips/blocked-dates",
-                      json={"trip_slug": TRIP_SLUG, "date": BLOCKED_DATE, "reason": "święto"})
-    log("POST /trips/blocked-dates (no admin header)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_block_date_wrong_pin():
-    r = requests.post(f"{BASE_URL}/trips/blocked-dates",
-                      headers=WRONG_HEADER,
-                      json={"trip_slug": TRIP_SLUG, "date": BLOCKED_DATE, "reason": "święto"})
-    log("POST /trips/blocked-dates (wrong admin)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_block_date_invalid_date():
-    r = requests.post(f"{BASE_URL}/trips/blocked-dates",
-                      headers=ADMIN_HEADER,
-                      json={"trip_slug": TRIP_SLUG, "date": "not-a-date", "reason": ""})
-    log("POST /trips/blocked-dates (invalid date format)", r.status_code == 400, f"status={r.status_code} body={r.text[:120]}")
-
-
-def test_block_date_ok():
-    r = requests.post(f"{BASE_URL}/trips/blocked-dates",
-                      headers=ADMIN_HEADER,
-                      json={"trip_slug": TRIP_SLUG, "date": BLOCKED_DATE, "reason": "święto"})
-    ok = r.status_code == 200 and r.json().get("ok") is True
-    log("POST /trips/blocked-dates (correct admin)", ok, f"status={r.status_code} body={r.text[:120]}")
-    if ok:
-        created_blocked_dates.append((TRIP_SLUG, BLOCKED_DATE))
-
-
-def test_block_date_all_slug():
-    r = requests.post(f"{BASE_URL}/trips/blocked-dates",
-                      headers=ADMIN_HEADER,
-                      json={"trip_slug": "all", "date": ALL_BLOCKED_DATE, "reason": "global"})
-    ok = r.status_code == 200 and r.json().get("ok") is True
-    log("POST /trips/blocked-dates (slug='all')", ok, f"status={r.status_code}")
-    if ok:
-        created_blocked_dates.append(("all", ALL_BLOCKED_DATE))
-
-
-def test_blocked_dates_includes_all():
-    """Public GET for a specific slug should also include 'all' blocks."""
-    r = requests.get(f"{BASE_URL}/trips/blocked-dates/{TRIP_SLUG}")
-    if r.status_code != 200:
-        log("GET /trips/blocked-dates/{slug} includes 'all' blocks", False, f"status={r.status_code}")
-        return
-    dates = [item.get("date") for item in r.json()]
-    slugs = [item.get("trip_slug") for item in r.json()]
-    ok = ALL_BLOCKED_DATE in dates and BLOCKED_DATE in dates and "all" in slugs
-    log("GET /trips/blocked-dates/{slug} returns slug-specific + 'all' blocks",
-        ok, f"dates_returned={dates}")
-
-
-# ---------- 1. POST /api/trips/reservations ----------
-def _payload(date=None, **overrides):
-    base = {
-        "trip_slug": TRIP_SLUG,
-        "trip_name": "Pieniny - spływ Dunajcem",
-        "date": date or FUTURE_DATE,
-        "people": 2,
-        "name": "Jan Kowalski",
+def create_reservation(date_str, name_suffix=""):
+    payload = {
+        "trip_slug": "pieniny",
+        "trip_name": "Pieniny test",
+        "date": date_str,
+        "people": 1,
+        "name": f"BlikTest{name_suffix}",
         "phone": "+48600111222",
-        "email": "jan.kowalski@example.pl",
-        "pickup_address": "Kraków, Rynek Główny 1",
-        "price_per_person": 350,
-        "total_price": 700,
-        "notes": "Prosimy o kontakt SMS-em.",
+        "email": "blik@test.pl",
+        "pickup_address": "Krakow, Rynek Główny 1",
+        "price_per_person": 300,
+        "total_price": 300,
+        "payment_method": "blik",
     }
-    base.update(overrides)
-    return base
+    r = requests.post(f"{BASE_URL}/trips/reservations", json=payload, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"Failed to create reservation: {r.status_code} {r.text}")
+    return r.json()["reservation_id"]
 
 
-def test_create_reservation_happy_path():
-    r = requests.post(f"{BASE_URL}/trips/reservations", json=_payload())
+def cleanup_reservation(reservation_id):
+    try:
+        r = requests.delete(
+            f"{BASE_URL}/trips/reservations/{reservation_id}",
+            headers={"X-Admin-Passcode": ADMIN_PASSCODE},
+            timeout=15,
+        )
+        print(f"   🧹 cleanup {reservation_id}: HTTP {r.status_code}")
+    except Exception as e:
+        print(f"   ⚠ cleanup failed for {reservation_id}: {e}")
+
+
+def test_blik_endpoint():
+    print("\n=== Test 1: POST /api/trips/payment/blik ===")
+    date_str = make_future_date(120)
+    res_id = create_reservation(date_str, name_suffix="A")
+    print(f"   created reservation_id = {res_id}")
+    created_ids = [res_id]
+
+    # 1a) Happy path
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/blik",
+        json={"reservation_id": res_id, "blik_code": "777777"},
+        timeout=60,
+    )
     ok = r.status_code == 200
-    body = {}
+    info = f"HTTP {r.status_code}"
+    body = None
     if ok:
-        body = r.json()
-        ok = body.get("status") == "pending" and body.get("reservation_id", "").startswith("res_")
-        if ok:
-            created_reservations.append(body["reservation_id"])
-    log("POST /trips/reservations (happy path)", ok,
-        f"status={r.status_code} body={str(body)[:200] if body else r.text[:200]}")
-    return body.get("reservation_id") if ok else None
+        try:
+            body = r.json()
+            info += f" status={body.get('status')!r} intent_id={body.get('intent_id')!r}"
+            if not (isinstance(body.get("intent_id"), str) and body["intent_id"].startswith("pi_")):
+                ok = False
+                info += " | intent_id does not start with 'pi_'"
+            if "status" not in body:
+                ok = False
+                info += " | missing 'status'"
+        except Exception as e:
+            ok = False
+            info += f" | json parse error: {e}"
+    else:
+        info += f" body={r.text[:200]}"
+    record("BLIK happy path → 200 with pi_* intent_id (real Stripe)", ok, info)
 
+    # 1b) blik_code shorter than 6 digits → 422
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/blik",
+        json={"reservation_id": res_id, "blik_code": "12345"},
+        timeout=30,
+    )
+    record("BLIK code shorter than 6 → 422", r.status_code == 422, f"HTTP {r.status_code}")
 
-def test_create_reservation_past_date():
-    r = requests.post(f"{BASE_URL}/trips/reservations", json=_payload(date=PAST_DATE))
-    ok = r.status_code == 400 and "przeszło" in r.text.lower()
-    log("POST /trips/reservations (past date -> 400)", ok, f"status={r.status_code} body={r.text[:200]}")
+    # 1c) blik_code empty → 422
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/blik",
+        json={"reservation_id": res_id, "blik_code": ""},
+        timeout=30,
+    )
+    record("BLIK code empty → 422", r.status_code == 422, f"HTTP {r.status_code}")
 
-
-def test_create_reservation_invalid_date():
-    r = requests.post(f"{BASE_URL}/trips/reservations", json=_payload(date="abc"))
+    # 1d) blik_code "abcdef" (non-digit, length 6) - accepts 422 (if pydantic pattern) OR 400 (Stripe rejects)
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/blik",
+        json={"reservation_id": res_id, "blik_code": "abcdef"},
+        timeout=60,
+    )
     ok = r.status_code in (400, 422)
-    log("POST /trips/reservations (invalid date format -> 400/422)", ok, f"status={r.status_code} body={r.text[:200]}")
+    record(
+        "BLIK code 'abcdef' (non-digit) → 422 or 400 from Stripe",
+        ok,
+        f"HTTP {r.status_code} body={r.text[:160]}",
+    )
+
+    # 1e) Invalid reservation_id → 404
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/blik",
+        json={"reservation_id": "res_doesnotexist", "blik_code": "777777"},
+        timeout=30,
+    )
+    record("BLIK invalid reservation_id → 404", r.status_code == 404, f"HTTP {r.status_code}")
+
+    return created_ids, body
 
 
-def test_create_reservation_missing_fields():
-    p = _payload()
-    p.pop("name")
-    p.pop("phone")
-    r = requests.post(f"{BASE_URL}/trips/reservations", json=p)
-    log("POST /trips/reservations (missing required fields -> 422)", r.status_code == 422,
-        f"status={r.status_code}")
+def test_checkout_endpoint():
+    print("\n=== Test 2: POST /api/trips/payment/checkout ===")
+    date_str = make_future_date(125)
+    res_id = create_reservation(date_str, name_suffix="B")
+    print(f"   created reservation_id = {res_id}")
+    created_ids = [res_id]
 
-
-def test_create_reservation_people_out_of_range():
-    r1 = requests.post(f"{BASE_URL}/trips/reservations", json=_payload(people=0))
-    log("POST /trips/reservations (people=0 -> 422)", r1.status_code == 422, f"status={r1.status_code}")
-    r2 = requests.post(f"{BASE_URL}/trips/reservations", json=_payload(people=21))
-    log("POST /trips/reservations (people=21 -> 422)", r2.status_code == 422, f"status={r2.status_code}")
-
-
-def test_create_reservation_blocked_date():
-    """Should be 400 because BLOCKED_DATE has been blocked above."""
-    r = requests.post(f"{BASE_URL}/trips/reservations", json=_payload(date=BLOCKED_DATE))
-    ok = r.status_code == 400 and "niedostępn" in r.text.lower()
-    log("POST /trips/reservations (slug-blocked date -> 400)", ok, f"status={r.status_code} body={r.text[:200]}")
-
-
-def test_create_reservation_all_blocked_date():
-    """Even though slug='pieniny', 'all' block for ALL_BLOCKED_DATE must apply."""
-    r = requests.post(f"{BASE_URL}/trips/reservations", json=_payload(date=ALL_BLOCKED_DATE))
-    ok = r.status_code == 400 and "niedostępn" in r.text.lower()
-    log("POST /trips/reservations ('all'-blocked date -> 400)", ok, f"status={r.status_code} body={r.text[:200]}")
-
-
-# ---------- 2. GET /api/trips/reservations (admin) ----------
-def test_list_reservations_no_auth():
-    r = requests.get(f"{BASE_URL}/trips/reservations")
-    log("GET /trips/reservations (no header -> 401)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_list_reservations_wrong_pin():
-    r = requests.get(f"{BASE_URL}/trips/reservations", headers=WRONG_HEADER)
-    log("GET /trips/reservations (wrong pin -> 401)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_list_reservations_admin():
-    r = requests.get(f"{BASE_URL}/trips/reservations", headers=ADMIN_HEADER)
-    ok = r.status_code == 200 and isinstance(r.json(), list)
-    found = False
-    if ok and created_reservations:
-        ids = [it.get("reservation_id") for it in r.json()]
-        found = created_reservations[0] in ids
-    log("GET /trips/reservations (admin)", ok, f"status={r.status_code} count={len(r.json()) if ok else 'n/a'} found_test_res={found}")
-
-
-# ---------- 3. PATCH /api/trips/reservations/{id} ----------
-def test_patch_reservation_no_auth(res_id):
-    if not res_id:
-        log("PATCH /trips/reservations/{id} (no auth)", False, "no res_id available")
-        return
-    r = requests.patch(f"{BASE_URL}/trips/reservations/{res_id}", json={"status": "confirmed"})
-    log("PATCH /trips/reservations/{id} (no header -> 401)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_patch_reservation_admin(res_id):
-    if not res_id:
-        log("PATCH /trips/reservations/{id} (admin)", False, "no res_id available")
-        return
-    r = requests.patch(f"{BASE_URL}/trips/reservations/{res_id}",
-                       headers=ADMIN_HEADER, json={"status": "confirmed"})
-    ok = r.status_code == 200 and r.json().get("status") == "confirmed"
-    log("PATCH /trips/reservations/{id} (admin, status=confirmed)", ok, f"status={r.status_code} body={r.text[:200]}")
-
-
-def test_patch_reservation_404():
-    r = requests.patch(f"{BASE_URL}/trips/reservations/res_nonexistent_xyz",
-                       headers=ADMIN_HEADER, json={"status": "confirmed"})
-    log("PATCH /trips/reservations/{id} (non-existent -> 404)", r.status_code == 404, f"status={r.status_code}")
-
-
-def test_patch_reservation_invalid_status(res_id):
-    if not res_id:
-        log("PATCH /trips/reservations/{id} (invalid status)", False, "no res_id")
-        return
-    r = requests.patch(f"{BASE_URL}/trips/reservations/{res_id}",
-                       headers=ADMIN_HEADER, json={"status": "weird"})
-    log("PATCH /trips/reservations/{id} (invalid status -> 422)", r.status_code == 422, f"status={r.status_code}")
-
-
-# ---------- 4. DELETE /api/trips/reservations/{id} ----------
-def test_delete_reservation_no_auth(res_id):
-    if not res_id:
-        log("DELETE /trips/reservations/{id} (no auth)", False, "no res_id")
-        return
-    r = requests.delete(f"{BASE_URL}/trips/reservations/{res_id}")
-    log("DELETE /trips/reservations/{id} (no header -> 401)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_delete_reservation_admin(res_id):
-    if not res_id:
-        log("DELETE /trips/reservations/{id} (admin)", False, "no res_id")
-        return
-    r = requests.delete(f"{BASE_URL}/trips/reservations/{res_id}", headers=ADMIN_HEADER)
-    ok = r.status_code == 200 and r.json().get("ok") is True
-    log("DELETE /trips/reservations/{id} (admin)", ok, f"status={r.status_code} body={r.text[:200]}")
-    if ok and res_id in created_reservations:
-        created_reservations.remove(res_id)
-
-
-def test_delete_reservation_404():
-    r = requests.delete(f"{BASE_URL}/trips/reservations/res_nonexistent_xyz",
-                        headers=ADMIN_HEADER)
-    log("DELETE /trips/reservations/{id} (non-existent -> 404)", r.status_code == 404, f"status={r.status_code}")
-
-
-# ---------- 7. DELETE /api/trips/blocked-dates/{slug}/{date} ----------
-def test_delete_blocked_date_no_auth():
-    r = requests.delete(f"{BASE_URL}/trips/blocked-dates/{TRIP_SLUG}/{BLOCKED_DATE}")
-    log("DELETE /trips/blocked-dates (no header -> 401)", r.status_code == 401, f"status={r.status_code}")
-
-
-def test_delete_blocked_date_admin():
-    r = requests.delete(f"{BASE_URL}/trips/blocked-dates/{TRIP_SLUG}/{BLOCKED_DATE}",
-                        headers=ADMIN_HEADER)
-    ok = r.status_code == 200 and r.json().get("ok") is True
-    log("DELETE /trips/blocked-dates (admin)", ok, f"status={r.status_code} body={r.text[:200]}")
+    # 2a) Happy path
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/checkout",
+        json={
+            "reservation_id": res_id,
+            "success_url": "https://example.com/success",
+            "cancel_url": "https://example.com/cancel",
+        },
+        timeout=60,
+    )
+    ok = r.status_code == 200
+    info = f"HTTP {r.status_code}"
     if ok:
         try:
-            created_blocked_dates.remove((TRIP_SLUG, BLOCKED_DATE))
-        except ValueError:
-            pass
-
-
-# ---------- CLEANUP ----------
-def cleanup():
-    print("\n--- Cleanup ---")
-    for rid in list(created_reservations):
-        try:
-            r = requests.delete(f"{BASE_URL}/trips/reservations/{rid}", headers=ADMIN_HEADER)
-            print(f"  delete reservation {rid}: {r.status_code}")
+            body = r.json()
+            url = body.get("url", "")
+            sid = body.get("session_id", "")
+            info += f" url_prefix={url[:35]!r} session_id_prefix={sid[:15]!r}"
+            if not url.startswith("https://checkout.stripe.com/"):
+                ok = False
+                info += " | url does not start with https://checkout.stripe.com/"
+            if not sid.startswith("cs_test_"):
+                ok = False
+                info += " | session_id does not start with cs_test_"
         except Exception as e:
-            print(f"  delete reservation {rid} error: {e}")
+            ok = False
+            info += f" | json parse error: {e}"
+    else:
+        info += f" body={r.text[:200]}"
+    record("Checkout happy path → 200 with checkout.stripe.com URL & cs_test_ session_id", ok, info)
 
-    for slug, date in list(created_blocked_dates):
+    # 2b) Invalid reservation_id → 404
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/checkout",
+        json={
+            "reservation_id": "res_doesnotexist",
+            "success_url": "https://example.com/success",
+            "cancel_url": "https://example.com/cancel",
+        },
+        timeout=30,
+    )
+    record("Checkout invalid reservation_id → 404", r.status_code == 404, f"HTTP {r.status_code}")
+
+    # 2c) Missing success_url → 422
+    r = requests.post(
+        f"{BASE_URL}/trips/payment/checkout",
+        json={
+            "reservation_id": res_id,
+            "cancel_url": "https://example.com/cancel",
+        },
+        timeout=30,
+    )
+    record("Checkout missing success_url → 422", r.status_code == 422, f"HTTP {r.status_code}")
+
+    return created_ids
+
+
+def test_status_endpoint(blik_reservation_id):
+    print("\n=== Test 3: GET /api/trips/payment/{reservation_id}/status ===")
+
+    r = requests.get(f"{BASE_URL}/trips/payment/{blik_reservation_id}/status", timeout=30)
+    ok = r.status_code == 200
+    info = f"HTTP {r.status_code}"
+    body = None
+    if ok:
         try:
-            r = requests.delete(f"{BASE_URL}/trips/blocked-dates/{slug}/{date}",
-                                headers=ADMIN_HEADER)
-            print(f"  delete blocked {slug}/{date}: {r.status_code}")
+            body = r.json()
+            info += f" payment_status={body.get('payment_status')!r} reservation_status={body.get('reservation_status')!r}"
+            if "payment_status" not in body or "reservation_status" not in body:
+                ok = False
+                info += " | missing required fields"
         except Exception as e:
-            print(f"  delete blocked {slug}/{date} error: {e}")
+            ok = False
+            info += f" | json parse error: {e}"
+    else:
+        info += f" body={r.text[:200]}"
+    record("Status endpoint → 200 with payment_status & reservation_status", ok, info)
+
+    if ok and body:
+        ps = body.get("payment_status")
+        acceptable = {
+            "requires_action",
+            "requires_payment_method",
+            "requires_confirmation",
+            "processing",
+            "succeeded",
+        }
+        record(
+            f"BLIK payment_status is a valid Stripe state (got {ps!r})",
+            ps in acceptable,
+            "",
+        )
+
+    # Non-existing id → 404
+    r = requests.get(f"{BASE_URL}/trips/payment/res_doesnotexist/status", timeout=15)
+    record("Status non-existing reservation → 404", r.status_code == 404, f"HTTP {r.status_code}")
 
 
 def main():
-    print(f"Base URL: {BASE_URL}")
-    print(f"Future date: {FUTURE_DATE} | Blocked date: {BLOCKED_DATE} | All-blocked: {ALL_BLOCKED_DATE}\n")
+    print(f"Backend BASE_URL = {BASE_URL}")
+    all_created = []
+    blik_res_id = None
+    try:
+        ids, _ = test_blik_endpoint()
+        all_created.extend(ids)
+        blik_res_id = ids[0]
 
-    test_health()
+        ids = test_checkout_endpoint()
+        all_created.extend(ids)
 
-    # Admin verify
-    test_admin_verify()
+        if blik_res_id:
+            test_status_endpoint(blik_res_id)
+    finally:
+        print("\n=== CLEANUP ===")
+        for rid in all_created:
+            cleanup_reservation(rid)
 
-    # Blocked dates - public initial
-    test_blocked_dates_public_initial()
-
-    # Block dates (need to be set before reservation-blocking tests)
-    test_block_date_no_auth()
-    test_block_date_wrong_pin()
-    test_block_date_invalid_date()
-    test_block_date_ok()
-    test_block_date_all_slug()
-    test_blocked_dates_includes_all()
-
-    # Reservations
-    res_id = test_create_reservation_happy_path()
-    test_create_reservation_past_date()
-    test_create_reservation_invalid_date()
-    test_create_reservation_missing_fields()
-    test_create_reservation_people_out_of_range()
-    test_create_reservation_blocked_date()
-    test_create_reservation_all_blocked_date()
-
-    # List reservations
-    test_list_reservations_no_auth()
-    test_list_reservations_wrong_pin()
-    test_list_reservations_admin()
-
-    # PATCH
-    test_patch_reservation_no_auth(res_id)
-    test_patch_reservation_admin(res_id)
-    test_patch_reservation_invalid_status(res_id)
-    test_patch_reservation_404()
-
-    # DELETE reservation
-    test_delete_reservation_no_auth(res_id)
-    test_delete_reservation_admin(res_id)
-    test_delete_reservation_404()
-
-    # DELETE blocked date
-    test_delete_blocked_date_no_auth()
-    test_delete_blocked_date_admin()
-
-    # Cleanup any leftovers
-    cleanup()
-
-    # Summary
+    print("\n========== SUMMARY ==========")
+    total = len(results)
     passed = sum(1 for _, ok, _ in results if ok)
-    failed = sum(1 for _, ok, _ in results if not ok)
-    print(f"\n{'='*60}\nTotal: {len(results)} | Passed: {passed} | Failed: {failed}\n{'='*60}")
-    if failed:
-        print("\nFailed cases:")
-        for name, ok, info in results:
-            if not ok:
-                print(f"  - {name}  {info}")
-        sys.exit(1)
+    failed = total - passed
+    for name, ok, info in results:
+        sym = PASS if ok else FAIL
+        print(f"  {sym} {name}" + (f" — {info}" if info else ""))
+    print(f"\nPASSED: {passed}/{total}    FAILED: {failed}/{total}")
+    return 0 if failed == 0 else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

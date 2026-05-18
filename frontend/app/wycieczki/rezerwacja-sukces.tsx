@@ -14,7 +14,13 @@ export default function ReservationSuccess() {
   const total = (params.total as string) || "";
   const payment = (params.payment as string) || "cash";
   const proposed = (params.proposed as string) || "";
+  const paid = (params.paid as string) === "1";
   const isNegotiate = payment === "negotiate";
+  const isPaid = paid && (payment === "blik" || payment === "card");
+  const paymentLabel =
+    payment === "blik" ? (paid ? "📱 Opłacone BLIK-iem" : "📱 BLIK (oczekuje)") :
+    payment === "card" ? (paid ? "💳 Opłacone kartą" : "💳 Karta (oczekuje)") :
+    isNegotiate ? "💬 Do negocjacji" : "💵 Gotówka przy odbiorze";
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f7" }}>
@@ -23,9 +29,11 @@ export default function ReservationSuccess() {
           <View style={s.iconCircle}>
             <Ionicons name="checkmark" size={56} color="#fff" />
           </View>
-          <Text style={s.title}>{isNegotiate ? "Propozycja wysłana! 💬" : "Rezerwacja przyjęta! 🎉"}</Text>
+          <Text style={s.title}>{isPaid ? "Płatność potwierdzona! 🎉" : isNegotiate ? "Propozycja wysłana! 💬" : "Rezerwacja przyjęta! 🎉"}</Text>
           <Text style={s.subtitle}>
-            {isNegotiate
+            {isPaid
+              ? "Rezerwacja została opłacona i potwierdzona. Do zobaczenia w dniu wycieczki!"
+              : isNegotiate
               ? "Skontaktujemy się z Tobą telefonicznie, aby omówić proponowaną cenę i potwierdzić rezerwację."
               : "Skontaktujemy się z Tobą telefonicznie w ciągu 24 godzin, aby potwierdzić rezerwację. Płatność gotówką u kierowcy w dniu wycieczki."}
           </Text>
@@ -49,7 +57,7 @@ export default function ReservationSuccess() {
             </View>
             <View style={s.row}>
               <Text style={s.label}>Płatność</Text>
-              <Text style={s.val}>{isNegotiate ? "💬 Do negocjacji" : "💵 Gotówka przy odbiorze"}</Text>
+              <Text style={s.val}>{paymentLabel}</Text>
             </View>
             {isNegotiate ? (
               <>

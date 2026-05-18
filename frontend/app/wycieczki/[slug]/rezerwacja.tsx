@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Modal,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -48,6 +49,13 @@ export default function TripReservation() {
   const [email, setEmail] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Metoda płatności (cash | blik | card)
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "blik" | "card">("cash");
+  // BLIK modal
+  const [blikOpen, setBlikOpen] = useState(false);
+  const [blikCode, setBlikCode] = useState("");
+  const [blikStage, setBlikStage] = useState<"input" | "waiting" | "success" | "failed">("input");
+  const [blikMessage, setBlikMessage] = useState("");
   // Negocjacja ceny
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [proposedPrice, setProposedPrice] = useState("");
@@ -121,7 +129,7 @@ export default function TripReservation() {
     return null;
   };
 
-  const submit = async (paymentMethod: "cash" | "negotiate") => {
+  const submit = async (paymentMethodArg: "cash" | "negotiate" | "blik" | "card") => {
     const err = validate();
     if (err) {
       if (Platform.OS === "web") {
@@ -133,7 +141,7 @@ export default function TripReservation() {
     }
     // walidacja negocjacji
     let proposed: number | null = null;
-    if (paymentMethod === "negotiate") {
+    if (paymentMethodArg === "negotiate") {
       const p = parseFloat(proposedPrice.replace(",", "."));
       if (!proposedPrice || isNaN(p) || p <= 0) {
         const msg = "Wpisz proponowaną cenę (większą od 0)";
@@ -145,6 +153,7 @@ export default function TripReservation() {
     }
     setSubmitting(true);
     try {
+      // 1. zawsze najpierw tworzymy rezerwację
       const res = await fetch(`${BACKEND}/api/trips/reservations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,9 +169,9 @@ export default function TripReservation() {
           price_per_person: trip.price,
           total_price: totalPrice,
           notes: "",
-          payment_method: paymentMethod,
+          payment_method: paymentMethodArg,
           proposed_price: proposed,
-          negotiation_note: paymentMethod === "negotiate" ? negotiationNote.trim() : "",
+          negotiation_note: paymentMethodArg === "negotiate" ? negotiationNote.trim() : "",
         }),
       });
       const data = await res.json();
@@ -173,6 +182,51 @@ export default function TripReservation() {
         setSubmitting(false);
         return;
       }
+
+      // 2. dalsze kroki dla każdej metody
+      if (paymentMethodArg === "blik") {
+        // Otwieramy modal BLIK; zapamiętujemy ID rezerwacji
+        setSubmitting(false);
+        setBlikStage("input");
+        setBlikCode("");
+        setBlikMessage("");
+        setBlikOpen(true);
+        (globalThis as any).__pendingReservationId = data.reservation_id;
+        return;
+      }
+
+      if (paymentMethodArg === "card") {
+        // Tworzymy Stripe Checkout Session i przekierowujemy
+        const origin = Platform.OS === "web" ? window.location.origin : BACKEND;
+        const successUrl = `${origin}/wycieczki/rezerwacja-sukces?id=${data.reservation_id}&trip=${encodeURIComponent(trip.title)}&date=${selectedDate}&people=${people}&total=${totalPrice}&payment=card&paid=1`;
+        const cancelUrl = `${origin}/wycieczki/${trip.slug}/rezerwacja`;
+        const checkoutRes = await fetch(`${BACKEND}/api/trips/payment/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reservation_id: data.reservation_id,
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+          }),
+        });
+        const checkoutData = await checkoutRes.json();
+        if (!checkoutRes.ok || !checkoutData.url) {
+          const msg = checkoutData?.detail || "Nie udało się otworzyć płatności kartą";
+          if (Platform.OS === "web") window.alert(msg);
+          else Alert.alert("Błąd", msg);
+          setSubmitting(false);
+          return;
+        }
+        if (Platform.OS === "web") {
+          window.location.href = checkoutData.url;
+        } else {
+          const { Linking } = require("react-native");
+          await Linking.openURL(checkoutData.url);
+        }
+        return;
+      }
+
+      // cash / negotiate -> bezpośrednio na ekran sukcesu
       router.replace({
         pathname: "/wycieczki/rezerwacja-sukces" as any,
         params: {
@@ -181,7 +235,7 @@ export default function TripReservation() {
           date: selectedDate,
           people: String(people),
           total: String(totalPrice),
-          payment: paymentMethod,
+          payment: paymentMethodArg,
           proposed: proposed != null ? String(proposed) : "",
         },
       });
@@ -190,6 +244,76 @@ export default function TripReservation() {
       if (Platform.OS === "web") window.alert(msg);
       else Alert.alert("Błąd", msg);
       setSubmitting(false);
+    }
+  };
+
+  // BLIK confirmation - po utworzeniu rezerwacji + wpisaniu kodu
+  const confirmBlik = async () => {
+    if (!/^\d{6}$/.test(blikCode)) {
+      setBlikMessage("Wpisz 6 cyfr kodu BLIK");
+      return;
+    }
+    const reservationId = (globalThis as any).__pendingReservationId;
+    if (!reservationId) {
+      setBlikMessage("Brak ID rezerwacji - zacznij od nowa");
+      return;
+    }
+    setBlikStage("waiting");
+    setBlikMessage("Wysyłam kod do banku... Potwierdź w aplikacji bankowej.");
+    try {
+      const res = await fetch(`${BACKEND}/api/trips/payment/blik`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reservation_id: reservationId, blik_code: blikCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBlikStage("failed");
+        setBlikMessage(data?.detail || "Nie udało się przetworzyć płatności BLIK");
+        return;
+      }
+      // poll status (BLIK często requires_action -> czekamy na akceptację)
+      let attempts = 0;
+      const poll = async (): Promise<void> => {
+        attempts++;
+        const statusRes = await fetch(`${BACKEND}/api/trips/payment/${reservationId}/status`);
+        const statusData = await statusRes.json();
+        if (statusData.payment_status === "succeeded") {
+          setBlikStage("success");
+          setBlikMessage("Płatność potwierdzona!");
+          setTimeout(() => {
+            setBlikOpen(false);
+            router.replace({
+              pathname: "/wycieczki/rezerwacja-sukces" as any,
+              params: {
+                id: reservationId,
+                trip: trip.title,
+                date: selectedDate,
+                people: String(people),
+                total: String(totalPrice),
+                payment: "blik",
+                paid: "1",
+              },
+            });
+          }, 1500);
+          return;
+        }
+        if (["requires_payment_method", "canceled", "failed"].includes(statusData.payment_status)) {
+          setBlikStage("failed");
+          setBlikMessage("Płatność nieudana lub anulowana. Spróbuj ponownie.");
+          return;
+        }
+        if (attempts < 40) {
+          setTimeout(poll, 1500);
+        } else {
+          setBlikStage("failed");
+          setBlikMessage("Czas oczekiwania minął. Sprawdź aplikację bankową.");
+        }
+      };
+      setTimeout(poll, 1500);
+    } catch (e: any) {
+      setBlikStage("failed");
+      setBlikMessage(e?.message || "Błąd połączenia");
     }
   };
 
@@ -305,6 +429,47 @@ export default function TripReservation() {
             />
           </View>
 
+          {/* Payment method selector */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>💳 Metoda płatności</Text>
+            <View style={s.payMethodGrid}>
+              <PayMethodChip
+                active={paymentMethod === "cash"}
+                icon="cash"
+                label="Gotówka"
+                sub="u kierowcy"
+                onPress={() => setPaymentMethod("cash")}
+                accent={trip.accent}
+                bgAccent={trip.bgAccent}
+              />
+              <PayMethodChip
+                active={paymentMethod === "blik"}
+                icon="phone-portrait"
+                label="BLIK"
+                sub="6-cyfrowy kod"
+                onPress={() => setPaymentMethod("blik")}
+                accent={trip.accent}
+                bgAccent={trip.bgAccent}
+              />
+              <PayMethodChip
+                active={paymentMethod === "card"}
+                icon="card"
+                label="Karta"
+                sub="online"
+                onPress={() => setPaymentMethod("card")}
+                accent={trip.accent}
+                bgAccent={trip.bgAccent}
+              />
+            </View>
+            {paymentMethod === "cash" ? (
+              <Text style={s.payHint}>💵 Zapłacisz gotówką kierowcy w dniu wycieczki — bez prowizji.</Text>
+            ) : paymentMethod === "blik" ? (
+              <Text style={s.payHint}>📱 Po kliknięciu wpiszesz 6-cyfrowy kod ze swojej aplikacji bankowej.</Text>
+            ) : (
+              <Text style={s.payHint}>💳 Przekierujemy Cię na bezpieczną stronę Stripe (Visa / Mastercard / Apple Pay).</Text>
+            )}
+          </View>
+
           {/* Summary */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>💰 Podsumowanie</Text>
@@ -380,16 +545,24 @@ export default function TripReservation() {
             <TouchableOpacity
               activeOpacity={0.85}
               style={[s.ctaBtn, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1, flex: 1.4 }]}
-              onPress={() => submit("cash")}
+              onPress={() => submit(paymentMethod)}
               disabled={submitting}
-              testID="reserve-cash-btn"
+              testID="reserve-main-btn"
             >
               {submitting && !negotiateOpen ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  <Ionicons name="cash" size={18} color="#fff" />
-                  <Text style={s.ctaBtnText} numberOfLines={1}>Gotówka — {totalPrice} zł</Text>
+                  <Ionicons
+                    name={paymentMethod === "cash" ? "cash" : paymentMethod === "blik" ? "phone-portrait" : "card"}
+                    size={18}
+                    color="#fff"
+                  />
+                  <Text style={s.ctaBtnText} numberOfLines={1}>
+                    {paymentMethod === "cash" ? `Zarezerwuj — ${totalPrice} zł` :
+                     paymentMethod === "blik" ? `Zapłać BLIK — ${totalPrice} zł` :
+                     `Zapłać kartą — ${totalPrice} zł`}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -404,10 +577,116 @@ export default function TripReservation() {
               <Text style={[s.ctaSecondaryText, { color: negotiateOpen ? "#fff" : trip.accent }]}>Negocjuj</Text>
             </TouchableOpacity>
           </View>
-          <Text style={s.ctaHint}>💵 Płatność gotówką u kierowcy w dniu wycieczki</Text>
+          <Text style={s.ctaHint}>
+            {paymentMethod === "cash"
+              ? "💵 Płatność gotówką u kierowcy w dniu wycieczki"
+              : paymentMethod === "blik"
+              ? "📱 BLIK — kod 6-cyfrowy z aplikacji bankowej"
+              : "💳 Karta — bezpieczna płatność przez Stripe"}
+          </Text>
         </SafeAreaView>
       </KeyboardAvoidingView>
+
+      {/* BLIK Modal */}
+      <Modal
+        visible={blikOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => blikStage !== "waiting" && setBlikOpen(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalBox}>
+            <View style={s.modalHeader}>
+              <Ionicons name="phone-portrait" size={22} color={trip.accent} />
+              <Text style={s.modalTitle}>Płatność BLIK</Text>
+              {blikStage !== "waiting" && (
+                <TouchableOpacity onPress={() => setBlikOpen(false)} style={{ padding: 4 }}>
+                  <Ionicons name="close" size={22} color="#666" />
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={s.modalAmount}>Do zapłaty: <Text style={{ color: trip.accent, fontWeight: "800" }}>{totalPrice} zł</Text></Text>
+
+            {blikStage === "input" && (
+              <>
+                <Text style={s.modalHint}>Otwórz aplikację banku i wygeneruj kod BLIK, potem wpisz go poniżej:</Text>
+                <TextInput
+                  style={s.blikInput}
+                  placeholder="• • • • • •"
+                  placeholderTextColor="#bbb"
+                  value={blikCode}
+                  onChangeText={(t) => setBlikCode(t.replace(/\D/g, "").slice(0, 6))}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  autoFocus
+                />
+                {blikMessage ? <Text style={s.blikErr}>{blikMessage}</Text> : null}
+                <TouchableOpacity
+                  style={[s.blikSubmit, { backgroundColor: trip.accent, opacity: blikCode.length === 6 ? 1 : 0.5 }]}
+                  onPress={confirmBlik}
+                  disabled={blikCode.length !== 6}
+                  activeOpacity={0.85}
+                >
+                  <Text style={s.blikSubmitText}>Zapłać {totalPrice} zł</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {blikStage === "waiting" && (
+              <View style={{ alignItems: "center", paddingVertical: 30 }}>
+                <ActivityIndicator size="large" color={trip.accent} />
+                <Text style={[s.modalHint, { textAlign: "center", marginTop: 16 }]}>{blikMessage}</Text>
+                <Text style={[s.modalHint, { textAlign: "center", marginTop: 6, fontSize: 11 }]}>
+                  Otwórz aplikację banku i potwierdź transakcję.
+                </Text>
+              </View>
+            )}
+
+            {blikStage === "success" && (
+              <View style={{ alignItems: "center", paddingVertical: 30 }}>
+                <View style={[s.modalSuccessIcon, { backgroundColor: trip.accent }]}>
+                  <Ionicons name="checkmark" size={36} color="#fff" />
+                </View>
+                <Text style={[s.modalTitle, { marginTop: 12 }]}>{blikMessage}</Text>
+              </View>
+            )}
+
+            {blikStage === "failed" && (
+              <View style={{ alignItems: "center", paddingVertical: 20 }}>
+                <View style={[s.modalSuccessIcon, { backgroundColor: "#c0392b" }]}>
+                  <Ionicons name="close" size={36} color="#fff" />
+                </View>
+                <Text style={[s.modalHint, { textAlign: "center", marginTop: 12 }]}>{blikMessage}</Text>
+                <TouchableOpacity
+                  style={[s.blikSubmit, { backgroundColor: trip.accent, marginTop: 16 }]}
+                  onPress={() => { setBlikStage("input"); setBlikCode(""); setBlikMessage(""); }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={s.blikSubmitText}>Spróbuj ponownie</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
+  );
+}
+
+function PayMethodChip({ active, icon, label, sub, onPress, accent, bgAccent }: any) {
+  return (
+    <TouchableOpacity
+      style={[
+        s.payChip,
+        active && { backgroundColor: bgAccent, borderColor: accent },
+      ]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Ionicons name={icon} size={20} color={active ? accent : "#666"} />
+      <Text style={[s.payChipLabel, active && { color: accent, fontWeight: "800" }]}>{label}</Text>
+      <Text style={s.payChipSub}>{sub}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -464,4 +743,22 @@ const s = StyleSheet.create({
   negoCurrency: { fontSize: 16, fontWeight: "700", color: "#1c1c1e" },
   negoSubmit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 13, borderRadius: 12, marginTop: 10 },
   negoSubmitText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  // payment method chips
+  payMethodGrid: { flexDirection: "row", gap: 8, marginTop: 4 },
+  payChip: { flex: 1, borderWidth: 1.5, borderColor: "#e5e5ea", backgroundColor: "#fff", borderRadius: 12, paddingVertical: 12, paddingHorizontal: 6, alignItems: "center", gap: 3 },
+  payChipLabel: { fontSize: 13, fontWeight: "700", color: "#1c1c1e", marginTop: 4 },
+  payChipSub: { fontSize: 10, color: "#8e8e93" },
+  payHint: { fontSize: 12, color: "#666", marginTop: 12, lineHeight: 17 },
+  // BLIK modal
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", padding: 20 },
+  modalBox: { backgroundColor: "#fff", borderRadius: 18, padding: 22, width: "100%", maxWidth: 380 },
+  modalHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
+  modalTitle: { fontSize: 18, fontWeight: "800", color: "#1c1c1e", flex: 1 },
+  modalAmount: { fontSize: 14, color: "#666", marginBottom: 14 },
+  modalHint: { fontSize: 13, color: "#666", lineHeight: 18, marginBottom: 12 },
+  blikInput: { borderWidth: 2, borderColor: "#e5e5ea", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 16, fontSize: 28, fontWeight: "800", textAlign: "center", letterSpacing: 8, color: "#1c1c1e", marginBottom: 6 },
+  blikErr: { fontSize: 12, color: "#c0392b", marginBottom: 8, marginTop: 4 },
+  blikSubmit: { paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
+  blikSubmitText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  modalSuccessIcon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
 });
