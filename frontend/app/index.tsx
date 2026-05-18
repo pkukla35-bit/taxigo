@@ -44,6 +44,22 @@ export default function Index() {
           <Text style={styles.eyebrow}>{t("index.choose_role").toUpperCase()}</Text>
 
           <TouchableOpacity
+            testID="trips-btn"
+            activeOpacity={0.85}
+            style={[styles.card, styles.cardTrips]}
+            onPress={() => router.push("/wycieczki" as any)}
+          >
+            <View style={styles.iconCircleTrips}>
+              <Ionicons name="map" size={26} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitleLight}>🚐 Wycieczki turystyczne</Text>
+              <Text style={styles.cardSubLight}>Pieniny • Słowacja • Zakopane + 2 więcej</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             testID="role-passenger-btn"
             activeOpacity={0.85}
             style={[styles.card, styles.cardPassenger]}
@@ -103,8 +119,10 @@ const styles = StyleSheet.create({
   card: { flexDirection: "row", alignItems: "center", padding: 18, borderRadius: 18, gap: 14 },
   cardPassenger: { backgroundColor: "#FFFFFF" },
   cardDriver: { backgroundColor: "#0A0A0A", borderWidth: 1, borderColor: "#262626" },
+  cardTrips: { backgroundColor: "#2E7D32", borderWidth: 1, borderColor: "#43a047" },
   iconCircleLight: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#FFD600", alignItems: "center", justifyContent: "center" },
   iconCircleDark: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(0,230,118,0.15)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(0,230,118,0.4)" },
+  iconCircleTrips: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.4)" },
   cardTitleDark: { color: "#0F0F0F", fontSize: 22, fontWeight: "900" },
   cardSubDark: { color: "#525252", fontSize: 13, marginTop: 2 },
   cardTitleLight: { color: "#FFFFFF", fontSize: 22, fontWeight: "900" },
