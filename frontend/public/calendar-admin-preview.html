@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO Trips — Kalendarz Admina (podgląd)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  body { background: #f5f5f7; padding: 16px; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .header { padding: 16px 20px; background: linear-gradient(135deg, #2E7D32, #43a047); color: white; }
+  .header h2 { font-size: 18px; font-weight: 700; }
+  .header p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+  .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .month-nav .arrow { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f5f5f7; cursor: pointer; font-size: 16px; }
+  .month-nav h3 { font-size: 16px; font-weight: 700; }
+  .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding: 8px 20px 4px; gap: 2px; }
+  .weekdays div { text-align: center; font-size: 11px; color: #8e8e93; font-weight: 600; padding: 6px 0; }
+  .calendar { display: grid; grid-template-columns: repeat(7, 1fr); padding: 4px 20px 20px; gap: 4px; }
+  .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; font-weight: 600; position: relative; cursor: pointer; transition: all 0.15s; }
+  .day.empty { background: transparent; cursor: default; }
+  .day.available { background: #e8f5e9; color: #2E7D32; }
+  .day.available:hover { background: #c8e6c9; transform: scale(1.05); }
+  .day.unavailable { background: #ffcdd2; color: #c62828; text-decoration: line-through; }
+  .day.unavailable::after { content: '🚫'; position: absolute; bottom: -2px; right: -2px; font-size: 10px; }
+  .day.booked { background: #fff3cd; color: #856404; }
+  .day.booked::after { content: '👤'; position: absolute; bottom: -2px; right: -2px; font-size: 10px; }
+  .day.full { background: #c62828; color: white; }
+  .day.full::after { content: '🚗'; position: absolute; bottom: -2px; right: -2px; font-size: 10px; }
+  .day.today { box-shadow: 0 0 0 2px #2E7D32; }
+  .day.weekend { color: #d35400; }
+
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 20px; border-top: 8px solid #f5f5f7; font-size: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-box { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+
+  .actions { padding: 16px 20px; background: #f9f9f9; border-top: 1px solid #f0f0f0; }
+  .action-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .btn { flex: 1; padding: 10px 12px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-block { background: #c62828; color: white; }
+  .btn-unblock { background: #2E7D32; color: white; }
+  .btn-week { background: #fff; border: 1px solid #d1d1d6; color: #1c1c1e; }
+
+  .info-bar { background: #e3f2fd; padding: 10px 14px; font-size: 12px; color: #1565c0; border-radius: 8px; margin: 0 20px 16px; display: flex; align-items: center; gap: 8px; }
+
+  .selected-day { background: #fff3cd; padding: 14px 20px; border-top: 1px solid #f0f0f0; }
+  .selected-day-title { font-size: 13px; font-weight: 700; color: #856404; margin-bottom: 8px; }
+  .selected-day-info { font-size: 12px; color: #6e6e73; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>🚗 Panel Kierowcy — Kalendarz dostępności</h2>
+      <p>Zarządzaj swoimi dniami pracy. Klikaj dzień, by zaznaczać/odznaczać.</p>
+    </div>
+
+    <div class="month-nav">
+      <div class="arrow">‹</div>
+      <h3>📅 Czerwiec 2026</h3>
+      <div class="arrow">›</div>
+    </div>
+
+    <div class="weekdays">
+      <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sb</div><div>Nd</div>
+    </div>
+
+    <div class="calendar">
+      <!-- Week 1 -->
+      <div class="day empty"></div>
+      <div class="day available">1</div>
+      <div class="day available">2</div>
+      <div class="day available">3</div>
+      <div class="day unavailable">4</div>
+      <div class="day available weekend">5</div>
+      <div class="day available weekend">6</div>
+      <!-- Week 2 -->
+      <div class="day available">7</div>
+      <div class="day booked">8</div>
+      <div class="day available">9</div>
+      <div class="day available">10</div>
+      <div class="day available">11</div>
+      <div class="day full weekend">12</div>
+      <div class="day available weekend">13</div>
+      <!-- Week 3 -->
+      <div class="day unavailable">14</div>
+      <div class="day unavailable">15</div>
+      <div class="day unavailable">16</div>
+      <div class="day available today">17</div>
+      <div class="day available">18</div>
+      <div class="day booked weekend">19</div>
+      <div class="day available weekend">20</div>
+      <!-- Week 4 -->
+      <div class="day available">21</div>
+      <div class="day available">22</div>
+      <div class="day available">23</div>
+      <div class="day available">24</div>
+      <div class="day available">25</div>
+      <div class="day available weekend">26</div>
+      <div class="day available weekend">27</div>
+      <!-- Week 5 -->
+      <div class="day full">28</div>
+      <div class="day available">29</div>
+      <div class="day unavailable">30</div>
+    </div>
+
+    <div class="info-bar">
+      💡 <span><b>Wybrany:</b> 14-16 czerwca — zaznaczone jako niedostępne (urlop)</span>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-box" style="background:#e8f5e9"></div>🟢 Dostępne</div>
+      <div class="legend-item"><div class="legend-box" style="background:#ffcdd2"></div>🚫 Niedostępne (Ty)</div>
+      <div class="legend-item"><div class="legend-box" style="background:#fff3cd"></div>👤 Zarezerwowane (klient)</div>
+      <div class="legend-item"><div class="legend-box" style="background:#c62828"></div>🚗 Pełne (4/4 osoby)</div>
+    </div>
+
+    <div class="selected-day">
+      <div class="selected-day-title">📍 15 czerwca 2026 (niedziela)</div>
+      <div class="selected-day-info">
+        Status: <b>🚫 Niedostępne</b><br/>
+        Powód: <i>Urlop rodzinny</i><br/>
+        Rezerwacji: 0
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="action-row">
+        <button class="btn btn-unblock">✅ Odblokuj dzień</button>
+        <button class="btn btn-block">🚫 Zablokuj dzień</button>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-week">📅 Zablokuj cały tydzień</button>
+        <button class="btn btn-week">📅 Odblokuj tydzień</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
