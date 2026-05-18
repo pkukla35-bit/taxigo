@@ -62,6 +62,14 @@ export default function TripDetail() {
           </View>
         </View>
 
+        <View style={styles.transportBadge}>
+          <Ionicons name="car-sport" size={18} color="#1565c0" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.transportTitle}>Transport prywatny — Toyota Prius</Text>
+            <Text style={styles.transportSub}>Komfortowy hybrydowy samochód, klimatyzacja, max {trip.maxPeople} pasażerów</Text>
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>📸 Galeria ({trip.gallery.length} zdjęć)</Text>
           <View style={styles.gallery}>
@@ -150,6 +158,9 @@ const styles = StyleSheet.create({
   priceUnit: { fontSize: 13, color: "#8e8e93", fontWeight: "500" },
   durationPill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 },
   durationText: { fontSize: 13, fontWeight: "700" },
+  transportBadge: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, backgroundColor: "#e3f2fd", marginHorizontal: 16, marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#bbdefb" },
+  transportTitle: { fontSize: 14, fontWeight: "700", color: "#1565c0" },
+  transportSub: { fontSize: 11, color: "#1976d2", marginTop: 2 },
   section: { padding: 20, backgroundColor: "#fff", borderTopWidth: 8, borderTopColor: "#f5f5f7" },
   sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 14, color: "#1c1c1e" },
   timeline: { position: "relative", paddingLeft: 12 },
