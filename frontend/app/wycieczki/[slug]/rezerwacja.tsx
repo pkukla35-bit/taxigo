@@ -569,6 +569,11 @@ export default function TripReservation() {
               ? "💳 Płatność kartą u kierowcy w dniu wycieczki (terminal)"
               : "📱 Płatność online — BLIK z aplikacji bankowej"}
           </Text>
+          <TouchableOpacity onPress={() => router.push("/regulamin" as any)}>
+            <Text style={s.legalLink}>
+              Klikając „Zarezerwuj" akceptujesz <Text style={{ textDecorationLine: "underline" }}>regulamin</Text> i <Text style={{ textDecorationLine: "underline" }} onPress={() => router.push("/polityka-prywatnosci" as any)}>politykę prywatności</Text>.
+            </Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </KeyboardAvoidingView>
 
@@ -718,6 +723,7 @@ const s = StyleSheet.create({
   ctaSecondary: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 16, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5, borderColor: "#2E7D32", backgroundColor: "#fff" },
   ctaSecondaryText: { fontSize: 14, fontWeight: "700" },
   ctaHint: { fontSize: 11, color: "#8e8e93", textAlign: "center", marginTop: 8 },
+  legalLink: { fontSize: 10.5, color: "#8e8e93", textAlign: "center", marginTop: 6, lineHeight: 14 },
   // negotiate box
   negoBox: { borderWidth: 1.5, borderRadius: 14, padding: 14, marginBottom: 10 },
   negoHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },

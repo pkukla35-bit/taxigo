@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TRIPS } from "../../data/trips";
+import LegalFooter from "../../components/LegalFooter";
 
 export default function WycieczkiIndex() {
   const router = useRouter();
@@ -99,6 +100,7 @@ export default function WycieczkiIndex() {
             </View>
           ))}
         </View>
+        <LegalFooter />
       </ScrollView>
     </View>
   );
