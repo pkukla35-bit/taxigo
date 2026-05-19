@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, LocaleConfig, DateData } from "react-native-calendars";
 import { getTripBySlug } from "../../../data/trips";
+import { COMPANY } from "../../../data/legal";
 
 // Polish locale for calendar
 LocaleConfig.locales["pl"] = {
@@ -49,8 +50,11 @@ export default function TripReservation() {
   const [email, setEmail] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Metoda płatności (cash | blik | card_on_arrival)
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "blik" | "card_on_arrival">("cash");
+  // Metoda płatności (cash | card_on_arrival | blik_phone)
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card_on_arrival" | "blik_phone">("cash");
+  // BLIK na telefon - modal z instrukcjami
+  const [blikPhoneOpen, setBlikPhoneOpen] = useState(false);
+  const [pendingReservation, setPendingReservation] = useState<any>(null);
   // BLIK modal
   const [blikOpen, setBlikOpen] = useState(false);
   const [blikCode, setBlikCode] = useState("");
@@ -208,6 +212,14 @@ export default function TripReservation() {
             payment: "card_on_arrival",
           },
         });
+        return;
+      }
+
+      if (paymentMethodArg === "blik_phone") {
+        // BLIK na telefon — pokazujemy modal z instrukcjami przelewu P2P
+        setSubmitting(false);
+        setPendingReservation(data);
+        setBlikPhoneOpen(true);
         return;
       }
 
@@ -436,11 +448,22 @@ export default function TripReservation() {
                 accent={trip.accent}
                 bgAccent={trip.bgAccent}
               />
+              <PayMethodChip
+                active={paymentMethod === "blik_phone"}
+                icon="phone-portrait"
+                label="BLIK"
+                sub="na telefon"
+                onPress={() => setPaymentMethod("blik_phone")}
+                accent={trip.accent}
+                bgAccent={trip.bgAccent}
+              />
             </View>
             {paymentMethod === "cash" ? (
               <Text style={s.payHint}>💵 Zapłacisz gotówką kierowcy w dniu wycieczki — bez prowizji.</Text>
-            ) : (
+            ) : paymentMethod === "card_on_arrival" ? (
               <Text style={s.payHint}>💳 Zapłacisz kartą u kierowcy w dniu wycieczki (terminal mobilny).</Text>
+            ) : (
+              <Text style={s.payHint}>📱 Przelew BLIK na numer telefonu {COMPANY.phone} — z aplikacji bankowej, w 30 sekund.</Text>
             )}
           </View>
 
@@ -528,12 +551,12 @@ export default function TripReservation() {
               ) : (
                 <>
                   <Ionicons
-                    name={paymentMethod === "cash" ? "cash" : "card"}
+                    name={paymentMethod === "cash" ? "cash" : paymentMethod === "blik_phone" ? "phone-portrait" : "card"}
                     size={18}
                     color="#fff"
                   />
                   <Text style={s.ctaBtnText} numberOfLines={1}>
-                    Zarezerwuj — {totalPrice} zł
+                    {paymentMethod === "blik_phone" ? `Zarezerwuj + BLIK — ${totalPrice} zł` : `Zarezerwuj — ${totalPrice} zł`}
                   </Text>
                 </>
               )}
@@ -552,7 +575,9 @@ export default function TripReservation() {
           <Text style={s.ctaHint}>
             {paymentMethod === "cash"
               ? "💵 Płatność gotówką u kierowcy w dniu wycieczki"
-              : "💳 Płatność kartą u kierowcy w dniu wycieczki (terminal)"}
+              : paymentMethod === "card_on_arrival"
+              ? "💳 Płatność kartą u kierowcy w dniu wycieczki (terminal)"
+              : `📱 Przelew BLIK na numer ${COMPANY.phone} z aplikacji bankowej`}
           </Text>
           <TouchableOpacity onPress={() => router.push("/regulamin" as any)}>
             <Text style={s.legalLink}>
@@ -561,6 +586,71 @@ export default function TripReservation() {
           </TouchableOpacity>
         </SafeAreaView>
       </KeyboardAvoidingView>
+
+      {/* BLIK na telefon - modal z instrukcjami */}
+      <Modal
+        visible={blikPhoneOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBlikPhoneOpen(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalBox}>
+            <View style={s.modalHeader}>
+              <Ionicons name="phone-portrait" size={22} color={trip.accent} />
+              <Text style={s.modalTitle}>Przelew BLIK na telefon</Text>
+              <TouchableOpacity onPress={() => setBlikPhoneOpen(false)} style={{ padding: 4 }}>
+                <Ionicons name="close" size={22} color="#666" />
+              </TouchableOpacity>
+            </View>
+            <Text style={s.modalAmount}>Do zapłaty: <Text style={{ color: trip.accent, fontWeight: "800" }}>{totalPrice} zł</Text></Text>
+
+            <View style={s.phoneBox}>
+              <Text style={s.phoneLabel}>Numer odbiorcy:</Text>
+              <Text style={[s.phoneNumber, { color: trip.accent }]}>{COMPANY.phone}</Text>
+              <Text style={s.phoneOwner}>{COMPANY.name}</Text>
+            </View>
+
+            <Text style={s.modalHint}>📲 Jak zapłacić w 30 sekund:</Text>
+            <View style={s.steps}>
+              <Step n="1" text="Otwórz aplikację swojego banku" />
+              <Step n="2" text={`Wybierz „BLIK" → „Przelew na telefon" (lub „BLIK P2P")`} />
+              <Step n="3" text={`Wpisz numer: ${COMPANY.phone}`} />
+              <Step n="4" text={`Wpisz kwotę: ${totalPrice} zł`} />
+              <Step n="5" text="W tytule podaj numer rezerwacji (zobaczysz na następnym ekranie)" />
+              <Step n="6" text="Potwierdź PIN-em w aplikacji banku" />
+            </View>
+
+            <View style={s.infoBoxNote}>
+              <Ionicons name="information-circle" size={16} color="#856404" />
+              <Text style={s.infoBoxNoteText}>Pieniądze wpłyną w 30 sek. Po sprawdzeniu zaksięgujemy rezerwację jako „Opłaconą".</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[s.blikSubmit, { backgroundColor: trip.accent }]}
+              onPress={() => {
+                setBlikPhoneOpen(false);
+                if (pendingReservation) {
+                  router.replace({
+                    pathname: "/wycieczki/rezerwacja-sukces" as any,
+                    params: {
+                      id: pendingReservation.reservation_id,
+                      trip: trip.title,
+                      date: selectedDate,
+                      people: String(people),
+                      total: String(totalPrice),
+                      payment: "blik_phone",
+                    },
+                  });
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={s.blikSubmitText}>✓ Wysłałem przelew</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* BLIK Modal */}
       <Modal
@@ -665,6 +755,15 @@ function PayMethodChip({ active, icon, label, sub, onPress, accent, bgAccent }: 
   );
 }
 
+function Step({ n, text }: { n: string; text: string }) {
+  return (
+    <View style={s.step}>
+      <View style={s.stepNum}><Text style={s.stepNumText}>{n}</Text></View>
+      <Text style={s.stepText}>{text}</Text>
+    </View>
+  );
+}
+
 function formatPlDate(iso: string) {
   try {
     const d = new Date(iso + "T00:00:00");
@@ -737,4 +836,16 @@ const s = StyleSheet.create({
   blikSubmit: { paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
   blikSubmitText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   modalSuccessIcon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
+  // BLIK na telefon
+  phoneBox: { backgroundColor: "#f5f5f7", borderRadius: 12, padding: 16, marginBottom: 14, alignItems: "center" },
+  phoneLabel: { fontSize: 11, color: "#8e8e93", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 },
+  phoneNumber: { fontSize: 28, fontWeight: "800", letterSpacing: 2, marginBottom: 4 },
+  phoneOwner: { fontSize: 12, color: "#666", fontWeight: "600" },
+  steps: { gap: 8, marginBottom: 12 },
+  step: { flexDirection: "row", alignItems: "center", gap: 10 },
+  stepNum: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#2E7D32", alignItems: "center", justifyContent: "center" },
+  stepNumText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  stepText: { flex: 1, fontSize: 12.5, color: "#1c1c1e", lineHeight: 17 },
+  infoBoxNote: { flexDirection: "row", gap: 8, backgroundColor: "#fff3cd", padding: 10, borderRadius: 8, marginBottom: 12 },
+  infoBoxNoteText: { flex: 1, fontSize: 11, color: "#856404", lineHeight: 15 },
 });

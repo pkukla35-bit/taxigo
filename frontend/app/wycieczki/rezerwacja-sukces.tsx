@@ -19,6 +19,7 @@ export default function ReservationSuccess() {
   const isPaid = paid && payment === "blik";
   const paymentLabel =
     payment === "blik" ? (paid ? "📱 Opłacone BLIK-iem" : "📱 BLIK (oczekuje)") :
+    payment === "blik_phone" ? "📱 BLIK na telefon (oczekuje potwierdzenia)" :
     payment === "card_on_arrival" ? "💳 Karta u kierowcy" :
     isNegotiate ? "💬 Do negocjacji" : "💵 Gotówka przy odbiorze";
 
