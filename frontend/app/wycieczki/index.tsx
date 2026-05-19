@@ -111,7 +111,7 @@ const WHY_FEATURES = [
   { icon: "🚗", name: "Komfortowy kierowca", desc: "Doświadczony kierowca lokalnie, znający trasy i okolice." },
   { icon: "📍", name: "Odbiór z hotelu", desc: "Wskazujesz adres w Krakowie — odbieramy pod sam hotel." },
   { icon: "🎫", name: "Pomoc z biletami", desc: "Doradzimy gdzie kupić bilety wstępu i rejs." },
-  { icon: "💵", name: "Gotówka, karta lub BLIK", desc: "Gotówką lub kartą u kierowcy w dniu wycieczki. BLIK-iem zapłacisz online z góry. Możesz też negocjować cenę." },
+  { icon: "💵", name: "Gotówka lub karta u kierowcy", desc: "Zapłacisz gotówką lub kartą (terminal mobilny) u kierowcy w dniu wycieczki. BLIK online wkrótce. Możesz też negocjować cenę." },
 ];
 
 const styles = StyleSheet.create({

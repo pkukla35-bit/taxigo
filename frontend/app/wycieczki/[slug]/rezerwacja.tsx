@@ -436,22 +436,11 @@ export default function TripReservation() {
                 accent={trip.accent}
                 bgAccent={trip.bgAccent}
               />
-              <PayMethodChip
-                active={paymentMethod === "blik"}
-                icon="phone-portrait"
-                label="BLIK"
-                sub="online"
-                onPress={() => setPaymentMethod("blik")}
-                accent={trip.accent}
-                bgAccent={trip.bgAccent}
-              />
             </View>
             {paymentMethod === "cash" ? (
               <Text style={s.payHint}>💵 Zapłacisz gotówką kierowcy w dniu wycieczki — bez prowizji.</Text>
-            ) : paymentMethod === "card_on_arrival" ? (
-              <Text style={s.payHint}>💳 Zapłacisz kartą u kierowcy w dniu wycieczki (terminal mobilny).</Text>
             ) : (
-              <Text style={s.payHint}>📱 Płatność online BLIK-iem — wpiszesz 6-cyfrowy kod z aplikacji bankowej.</Text>
+              <Text style={s.payHint}>💳 Zapłacisz kartą u kierowcy w dniu wycieczki (terminal mobilny).</Text>
             )}
           </View>
 
@@ -539,14 +528,12 @@ export default function TripReservation() {
               ) : (
                 <>
                   <Ionicons
-                    name={paymentMethod === "cash" ? "cash" : paymentMethod === "blik" ? "phone-portrait" : "card"}
+                    name={paymentMethod === "cash" ? "cash" : "card"}
                     size={18}
                     color="#fff"
                   />
                   <Text style={s.ctaBtnText} numberOfLines={1}>
-                    {paymentMethod === "cash" ? `Zarezerwuj — ${totalPrice} zł` :
-                     paymentMethod === "blik" ? `Zapłać BLIK — ${totalPrice} zł` :
-                     `Zarezerwuj (karta) — ${totalPrice} zł`}
+                    Zarezerwuj — {totalPrice} zł
                   </Text>
                 </>
               )}
@@ -565,9 +552,7 @@ export default function TripReservation() {
           <Text style={s.ctaHint}>
             {paymentMethod === "cash"
               ? "💵 Płatność gotówką u kierowcy w dniu wycieczki"
-              : paymentMethod === "card_on_arrival"
-              ? "💳 Płatność kartą u kierowcy w dniu wycieczki (terminal)"
-              : "📱 Płatność online — BLIK z aplikacji bankowej"}
+              : "💳 Płatność kartą u kierowcy w dniu wycieczki (terminal)"}
           </Text>
           <TouchableOpacity onPress={() => router.push("/regulamin" as any)}>
             <Text style={s.legalLink}>
