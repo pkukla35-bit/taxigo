@@ -49,8 +49,8 @@ export default function TripReservation() {
   const [email, setEmail] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Metoda płatności (cash | blik | card)
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "blik" | "card">("cash");
+  // Metoda płatności (cash | blik | card_on_arrival)
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "blik" | "card_on_arrival">("cash");
   // BLIK modal
   const [blikOpen, setBlikOpen] = useState(false);
   const [blikCode, setBlikCode] = useState("");
@@ -129,7 +129,7 @@ export default function TripReservation() {
     return null;
   };
 
-  const submit = async (paymentMethodArg: "cash" | "negotiate" | "blik" | "card") => {
+  const submit = async (paymentMethodArg: "cash" | "negotiate" | "blik" | "card_on_arrival") => {
     const err = validate();
     if (err) {
       if (Platform.OS === "web") {
@@ -195,34 +195,19 @@ export default function TripReservation() {
         return;
       }
 
-      if (paymentMethodArg === "card") {
-        // Tworzymy Stripe Checkout Session i przekierowujemy
-        const origin = Platform.OS === "web" ? window.location.origin : BACKEND;
-        const successUrl = `${origin}/wycieczki/rezerwacja-sukces?id=${data.reservation_id}&trip=${encodeURIComponent(trip.title)}&date=${selectedDate}&people=${people}&total=${totalPrice}&payment=card&paid=1`;
-        const cancelUrl = `${origin}/wycieczki/${trip.slug}/rezerwacja`;
-        const checkoutRes = await fetch(`${BACKEND}/api/trips/payment/checkout`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reservation_id: data.reservation_id,
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-          }),
+      if (paymentMethodArg === "card_on_arrival") {
+        // Karta u kierowcy na miejscu — działa tak jak gotówka, idziemy na ekran sukcesu
+        router.replace({
+          pathname: "/wycieczki/rezerwacja-sukces" as any,
+          params: {
+            id: data.reservation_id,
+            trip: trip.title,
+            date: selectedDate,
+            people: String(people),
+            total: String(totalPrice),
+            payment: "card_on_arrival",
+          },
         });
-        const checkoutData = await checkoutRes.json();
-        if (!checkoutRes.ok || !checkoutData.url) {
-          const msg = checkoutData?.detail || "Nie udało się otworzyć płatności kartą";
-          if (Platform.OS === "web") window.alert(msg);
-          else Alert.alert("Błąd", msg);
-          setSubmitting(false);
-          return;
-        }
-        if (Platform.OS === "web") {
-          window.location.href = checkoutData.url;
-        } else {
-          const { Linking } = require("react-native");
-          await Linking.openURL(checkoutData.url);
-        }
         return;
       }
 
@@ -443,30 +428,30 @@ export default function TripReservation() {
                 bgAccent={trip.bgAccent}
               />
               <PayMethodChip
-                active={paymentMethod === "blik"}
-                icon="phone-portrait"
-                label="BLIK"
-                sub="6-cyfrowy kod"
-                onPress={() => setPaymentMethod("blik")}
+                active={paymentMethod === "card_on_arrival"}
+                icon="card"
+                label="Karta"
+                sub="u kierowcy"
+                onPress={() => setPaymentMethod("card_on_arrival")}
                 accent={trip.accent}
                 bgAccent={trip.bgAccent}
               />
               <PayMethodChip
-                active={paymentMethod === "card"}
-                icon="card"
-                label="Karta"
+                active={paymentMethod === "blik"}
+                icon="phone-portrait"
+                label="BLIK"
                 sub="online"
-                onPress={() => setPaymentMethod("card")}
+                onPress={() => setPaymentMethod("blik")}
                 accent={trip.accent}
                 bgAccent={trip.bgAccent}
               />
             </View>
             {paymentMethod === "cash" ? (
               <Text style={s.payHint}>💵 Zapłacisz gotówką kierowcy w dniu wycieczki — bez prowizji.</Text>
-            ) : paymentMethod === "blik" ? (
-              <Text style={s.payHint}>📱 Po kliknięciu wpiszesz 6-cyfrowy kod ze swojej aplikacji bankowej.</Text>
+            ) : paymentMethod === "card_on_arrival" ? (
+              <Text style={s.payHint}>💳 Zapłacisz kartą u kierowcy w dniu wycieczki (terminal mobilny).</Text>
             ) : (
-              <Text style={s.payHint}>💳 Przekierujemy Cię na bezpieczną stronę Stripe (Visa / Mastercard / Apple Pay).</Text>
+              <Text style={s.payHint}>📱 Płatność online BLIK-iem — wpiszesz 6-cyfrowy kod z aplikacji bankowej.</Text>
             )}
           </View>
 
@@ -561,7 +546,7 @@ export default function TripReservation() {
                   <Text style={s.ctaBtnText} numberOfLines={1}>
                     {paymentMethod === "cash" ? `Zarezerwuj — ${totalPrice} zł` :
                      paymentMethod === "blik" ? `Zapłać BLIK — ${totalPrice} zł` :
-                     `Zapłać kartą — ${totalPrice} zł`}
+                     `Zarezerwuj (karta) — ${totalPrice} zł`}
                   </Text>
                 </>
               )}
@@ -580,9 +565,9 @@ export default function TripReservation() {
           <Text style={s.ctaHint}>
             {paymentMethod === "cash"
               ? "💵 Płatność gotówką u kierowcy w dniu wycieczki"
-              : paymentMethod === "blik"
-              ? "📱 BLIK — kod 6-cyfrowy z aplikacji bankowej"
-              : "💳 Karta — bezpieczna płatność przez Stripe"}
+              : paymentMethod === "card_on_arrival"
+              ? "💳 Płatność kartą u kierowcy w dniu wycieczki (terminal)"
+              : "📱 Płatność online — BLIK z aplikacji bankowej"}
           </Text>
         </SafeAreaView>
       </KeyboardAvoidingView>

@@ -44,7 +44,7 @@ type Reservation = {
   total_price: number;
   status: "pending" | "confirmed" | "cancelled" | "completed";
   created_at: string;
-  payment_method?: "cash" | "negotiate";
+  payment_method?: "cash" | "negotiate" | "blik" | "card_on_arrival";
   proposed_price?: number | null;
   negotiation_note?: string;
 };
@@ -320,8 +320,14 @@ export default function AdminPanel() {
                   </View>
                 ) : (
                   <View style={s.paymentChip}>
-                    <Ionicons name="cash" size={12} color="#155724" />
-                    <Text style={s.paymentChipText}>Gotówka przy odbiorze</Text>
+                    <Ionicons
+                      name={r.payment_method === "card_on_arrival" ? "card" : r.payment_method === "blik" ? "phone-portrait" : "cash"}
+                      size={12}
+                      color="#155724"
+                    />
+                    <Text style={s.paymentChipText}>
+                      {r.payment_method === "card_on_arrival" ? "Karta u kierowcy" : r.payment_method === "blik" ? "BLIK online" : "Gotówka przy odbiorze"}
+                    </Text>
                   </View>
                 )}
                 <View style={s.resBody}>

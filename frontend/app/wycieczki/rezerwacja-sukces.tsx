@@ -16,10 +16,10 @@ export default function ReservationSuccess() {
   const proposed = (params.proposed as string) || "";
   const paid = (params.paid as string) === "1";
   const isNegotiate = payment === "negotiate";
-  const isPaid = paid && (payment === "blik" || payment === "card");
+  const isPaid = paid && payment === "blik";
   const paymentLabel =
     payment === "blik" ? (paid ? "📱 Opłacone BLIK-iem" : "📱 BLIK (oczekuje)") :
-    payment === "card" ? (paid ? "💳 Opłacone kartą" : "💳 Karta (oczekuje)") :
+    payment === "card_on_arrival" ? "💳 Karta u kierowcy" :
     isNegotiate ? "💬 Do negocjacji" : "💵 Gotówka przy odbiorze";
 
   return (
