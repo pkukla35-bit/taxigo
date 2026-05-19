@@ -109,7 +109,7 @@ export const TRIPS: Trip[] = [
     badgeColors: ["#1976D2", "#2196F3"],
     flag: "PL",
     title: "Spływ Dunajcem z Krakowa",
-    subtitle: "Spływ • Szczawnica • Palenica • Wąwóz Homole",
+    subtitle: "Spływ Dunajcem • Szczawnica • Palenica • Wąwóz Homole",
     heroImage: "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ohfdd51n_OlnaMJzYyc94aAr5cQNoWavXnSVAzs1js3YMPxg88lOUNdwOKKdMDDpzZmcIwGVM0K-TBmF95XcfP7t2UKhSty-6LDX7ATbaLJ8iH5UldSLAhCZ9MsaPCfki09DUs0EUSihFMY1FWSC_NghV0EuQhdZynRpPAF5jpPGd8xHAiYXFh-MxtT1gXO2M-xr8OhgN.jpg",
     price: 350,
     duration: "~12h",
