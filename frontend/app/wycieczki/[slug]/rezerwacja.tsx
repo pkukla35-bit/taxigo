@@ -96,7 +96,7 @@ export default function TripReservation() {
   }
 
   const maxPeople = trip.maxPeople || 8;
-  const totalPrice = trip.price * people;
+  const totalPrice = trip.price; // cena za samochód (nie × osoby)
 
   const markedDates = useMemo(() => {
     const m: Record<string, any> = {};
@@ -471,82 +471,32 @@ export default function TripReservation() {
           <View style={s.section}>
             <Text style={s.sectionTitle}>💰 Podsumowanie</Text>
             <View style={s.summaryRow}>
-              <Text style={s.summaryLabel}>Cena za osobę</Text>
+              <Text style={s.summaryLabel}>Cena za samochód (do {maxPeople} osób)</Text>
               <Text style={s.summaryVal}>{trip.price} zł</Text>
             </View>
             <View style={s.summaryRow}>
               <Text style={s.summaryLabel}>Liczba osób</Text>
-              <Text style={s.summaryVal}>× {people}</Text>
+              <Text style={s.summaryVal}>{people}</Text>
             </View>
             <View style={[s.summaryRow, s.summaryTotal]}>
               <Text style={s.summaryTotalLabel}>Razem</Text>
               <Text style={[s.summaryTotalVal, { color: trip.accent }]}>{totalPrice} zł</Text>
             </View>
             <Text style={s.summaryNote}>
-              Rezerwacja będzie miała status „Oczekująca". Skontaktujemy się telefonicznie w celu potwierdzenia i ustalenia formy płatności.
+              Cena obejmuje transport prywatny Toyotą Prius (do {maxPeople} osób) tam i z powrotem. Skontaktujemy się z Tobą telefonicznie w celu potwierdzenia rezerwacji.
             </Text>
           </View>
         </ScrollView>
 
         <SafeAreaView edges={["bottom"]} style={s.ctaBar}>
-          {negotiateOpen && (
-            <View style={[s.negoBox, { borderColor: trip.accent, backgroundColor: trip.bgAccent }]}>
-              <View style={s.negoHeader}>
-                <Ionicons name="chatbubbles" size={18} color={trip.accent} />
-                <Text style={[s.negoTitle, { color: trip.accent }]}>💬 Negocjuj cenę</Text>
-                <TouchableOpacity onPress={() => setNegotiateOpen(false)} style={{ padding: 4 }}>
-                  <Ionicons name="close" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-              <Text style={s.negoHint}>Cena standardowa: {totalPrice} zł ({trip.price} zł × {people} os).
-                {"\n"}Wpisz cenę, którą proponujesz — skontaktujemy się aby ustalić szczegóły.
-              </Text>
-              <View style={s.negoRow}>
-                <TextInput
-                  style={s.negoInput}
-                  placeholder="np. 280"
-                  placeholderTextColor="#9aa0a6"
-                  keyboardType="numeric"
-                  value={proposedPrice}
-                  onChangeText={setProposedPrice}
-                />
-                <Text style={s.negoCurrency}>zł</Text>
-              </View>
-              <TextInput
-                style={[s.negoInput, { height: 60, marginTop: 8, textAlignVertical: "top" }]}
-                placeholder="Opcjonalna notatka (np. studenci, grupa, stały klient)..."
-                placeholderTextColor="#9aa0a6"
-                value={negotiationNote}
-                onChangeText={setNegotiationNote}
-                multiline
-              />
-              <TouchableOpacity
-                style={[s.negoSubmit, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1 }]}
-                onPress={() => submit("negotiate")}
-                disabled={submitting}
-                activeOpacity={0.85}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Ionicons name="send" size={16} color="#fff" />
-                    <Text style={s.negoSubmitText}>Wyślij propozycję {proposedPrice ? `— ${proposedPrice} zł` : ""}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-
-          <View style={s.ctaRow}>
-            <TouchableOpacity
+          <TouchableOpacity
               activeOpacity={0.85}
-              style={[s.ctaBtn, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1, flex: 1.4 }]}
+              style={[s.ctaBtn, { backgroundColor: trip.accent, opacity: submitting ? 0.7 : 1 }]}
               onPress={() => submit(paymentMethod)}
               disabled={submitting}
               testID="reserve-main-btn"
             >
-              {submitting && !negotiateOpen ? (
+              {submitting ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
@@ -561,17 +511,6 @@ export default function TripReservation() {
                 </>
               )}
             </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={[s.ctaSecondary, negotiateOpen && { backgroundColor: trip.accent }]}
-              onPress={() => setNegotiateOpen((o) => !o)}
-              disabled={submitting}
-              testID="negotiate-btn"
-            >
-              <Ionicons name="chatbubbles-outline" size={18} color={negotiateOpen ? "#fff" : trip.accent} />
-              <Text style={[s.ctaSecondaryText, { color: negotiateOpen ? "#fff" : trip.accent }]}>Negocjuj</Text>
-            </TouchableOpacity>
-          </View>
           <Text style={s.ctaHint}>
             {paymentMethod === "cash"
               ? "💵 Płatność gotówką u kierowcy w dniu wycieczki"

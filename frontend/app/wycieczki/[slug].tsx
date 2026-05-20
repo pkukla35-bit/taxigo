@@ -54,8 +54,8 @@ export default function TripDetail() {
 
         <View style={styles.priceBar}>
           <View>
-            <Text style={styles.priceLabel}>Cena od osoby</Text>
-            <Text style={[styles.priceValue, { color: trip.accent }]}>{trip.price} zł <Text style={styles.priceUnit}>/os</Text></Text>
+            <Text style={styles.priceLabel}>Cena za samochód (do {trip.maxPeople || 4} osób)</Text>
+            <Text style={[styles.priceValue, { color: trip.accent }]}>{trip.price} zł</Text>
           </View>
           <View style={[styles.durationPill, { backgroundColor: trip.bgAccent }]}>
             <Text style={[styles.durationText, { color: trip.accent }]}>⏱️ {trip.duration}</Text>
@@ -114,7 +114,7 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✅ Co w cenie ({trip.price} zł/os)</Text>
+          <Text style={styles.sectionTitle}>✅ Co w cenie ({trip.price} zł / samochód)</Text>
           <View style={styles.includedBox}>
             {trip.included.map((item, i) => (
               <Text key={i} style={styles.includedItem}>✅ {item}</Text>
@@ -132,7 +132,7 @@ export default function TripDetail() {
       <SafeAreaView edges={["bottom"]} style={styles.ctaBar}>
         <TouchableOpacity activeOpacity={0.85} style={[styles.ctaBtn, { backgroundColor: trip.accent }]} onPress={handleReserve}>
           <Ionicons name="calendar" size={18} color="#fff" />
-          <Text style={styles.ctaBtnText}>Zarezerwuj teraz — {trip.price} zł/os</Text>
+          <Text style={styles.ctaBtnText}>Zarezerwuj teraz — {trip.price} zł / samochód</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </View>

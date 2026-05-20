@@ -81,7 +81,7 @@ export default function WycieczkiIndex() {
                 </View>
                 <View style={styles.cardPrice}>
                   <Text style={[styles.cardPriceValue, { color: trip.accent }]}>{trip.price} zł</Text>
-                  <Text style={styles.cardPriceUnit}>/os</Text>
+                  <Text style={styles.cardPriceUnit}>/samochód</Text>
                 </View>
               </View>
             </TouchableOpacity>
