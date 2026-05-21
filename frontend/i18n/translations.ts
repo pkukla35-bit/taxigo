@@ -152,6 +152,11 @@ export const translations = {
     "trip.slovakia": "🇸🇰 SŁOWACJA",
     "trip.not_found": "Wycieczka nie znaleziona",
     "trip.back_list": "Powrót do listy",
+
+    // Footer
+    "footer.terms": "Regulamin",
+    "footer.privacy": "Polityka prywatności",
+    "footer.rights": "Wszelkie prawa zastrzeżone.",
   },
   en: {
     // Common
@@ -303,6 +308,11 @@ export const translations = {
     "trip.slovakia": "🇸🇰 SLOVAKIA",
     "trip.not_found": "Tour not found",
     "trip.back_list": "Back to list",
+
+    // Footer
+    "footer.terms": "Terms of Service",
+    "footer.privacy": "Privacy Policy",
+    "footer.rights": "All rights reserved.",
   },
 } as const;
 

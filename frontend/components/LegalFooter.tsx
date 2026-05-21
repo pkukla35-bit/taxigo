@@ -2,18 +2,20 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { COMPANY } from "../data/legal";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function LegalFooter() {
   const router = useRouter();
+  const { t } = useLanguage();
   return (
     <View style={s.footer}>
       <View style={s.linksRow}>
         <TouchableOpacity onPress={() => router.push("/regulamin" as any)}>
-          <Text style={s.link}>Regulamin</Text>
+          <Text style={s.link}>{t("footer.terms")}</Text>
         </TouchableOpacity>
         <Text style={s.dot}>•</Text>
         <TouchableOpacity onPress={() => router.push("/polityka-prywatnosci" as any)}>
-          <Text style={s.link}>Polityka prywatności</Text>
+          <Text style={s.link}>{t("footer.privacy")}</Text>
         </TouchableOpacity>
       </View>
       <View style={{ marginTop: 10, alignItems: "center" }}>
@@ -29,7 +31,7 @@ export default function LegalFooter() {
             <Text style={s.contactLink}>✉️ {COMPANY.email}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={s.copyright}>© {new Date().getFullYear()} TAXIGO. Wszelkie prawa zastrzeżone.</Text>
+        <Text style={s.copyright}>© {new Date().getFullYear()} TAXIGO. {t("footer.rights")}</Text>
       </View>
     </View>
   );
