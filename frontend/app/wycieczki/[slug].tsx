@@ -4,23 +4,32 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getTripBySlug } from "../../data/trips";
+import { localizeTrip } from "../../data/trips_en";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
+
+function fmt(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
+}
 
 export default function TripDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const slug = (params.slug as string) || "";
-  const trip = getTripBySlug(slug);
+  const { lang, t } = useLanguage();
+  const baseTrip = getTripBySlug(slug);
+  const trip = baseTrip ? localizeTrip(baseTrip, lang) : undefined;
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   if (!trip) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text>Wycieczka nie znaleziona</Text>
+        <Text>{t("trip.not_found")}</Text>
         <TouchableOpacity onPress={() => router.push("/wycieczki" as any)}>
-          <Text style={{ color: "#2E7D32", marginTop: 12 }}>Powrót do listy</Text>
+          <Text style={{ color: "#2E7D32", marginTop: 12 }}>{t("trip.back_list")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -53,8 +62,11 @@ export default function TripDetail() {
               <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                 <Ionicons name="arrow-back" size={22} color="#fff" />
               </TouchableOpacity>
-              <View style={styles.flagBig}>
-                <Text style={styles.flagBigText}>{trip.flag === "PL" ? "🇵🇱 POLSKA" : "🇸🇰 SŁOWACJA"}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <LanguageSwitcher compact />
+                <View style={styles.flagBig}>
+                  <Text style={styles.flagBigText}>{trip.flag === "PL" ? t("trip.poland") : t("trip.slovakia")}</Text>
+                </View>
               </View>
             </View>
           </SafeAreaView>
@@ -69,7 +81,7 @@ export default function TripDetail() {
 
         <View style={styles.priceBar}>
           <View>
-            <Text style={styles.priceLabel}>Cena za samochód (do {trip.maxPeople || 4} osób)</Text>
+            <Text style={styles.priceLabel}>{fmt(t("trip.price_label"), { n: trip.maxPeople || 4 })}</Text>
             <Text style={[styles.priceValue, { color: trip.accent }]}>{trip.price} zł</Text>
           </View>
           <View style={[styles.durationPill, { backgroundColor: trip.bgAccent }]}>
@@ -80,19 +92,19 @@ export default function TripDetail() {
         <View style={styles.transportBadge}>
           <Ionicons name="car-sport" size={18} color="#1565c0" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.transportTitle}>Transport prywatny — Toyota Prius</Text>
-            <Text style={styles.transportSub}>Komfortowy hybrydowy samochód, klimatyzacja, max {trip.maxPeople} pasażerów</Text>
+            <Text style={styles.transportTitle}>{t("trip.transport_title")}</Text>
+            <Text style={styles.transportSub}>{fmt(t("trip.transport_sub"), { n: trip.maxPeople })}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📖 O wycieczce</Text>
+          <Text style={styles.sectionTitle}>{t("trip.about_title")}</Text>
           {trip.description.split("\n\n").map((para, i) => (
             <Text key={i} style={styles.descPara}>{para}</Text>
           ))}
           {trip.highlights && trip.highlights.length > 0 && (
             <View style={[styles.highlightsBox, { backgroundColor: trip.bgAccent, borderColor: trip.accent }]}>
-              <Text style={[styles.highlightsTitle, { color: trip.accent }]}>✨ W skrócie</Text>
+              <Text style={[styles.highlightsTitle, { color: trip.accent }]}>{t("trip.in_short_title")}</Text>
               {trip.highlights.map((h, i) => (
                 <Text key={i} style={styles.highlightItem}>{h}</Text>
               ))}
@@ -101,8 +113,8 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📸 Galeria ({trip.gallery.length} zdjęć)</Text>
-          <Text style={styles.galleryHint}>💡 Kliknij w zdjęcie, aby powiększyć</Text>
+          <Text style={styles.sectionTitle}>{fmt(t("trip.gallery_title"), { n: trip.gallery.length })}</Text>
+          <Text style={styles.galleryHint}>{t("trip.gallery_hint")}</Text>
           <View style={styles.gallery}>
             {trip.gallery.map((url, i) => (
               <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => openLightbox(i)} style={styles.galleryItem}>
@@ -116,7 +128,7 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📅 Plan dnia</Text>
+          <Text style={styles.sectionTitle}>{t("trip.plan_title")}</Text>
           <View style={styles.timeline}>
             <View style={[styles.timelineLine, { backgroundColor: "#e5e5ea" }]} />
             {trip.timeline.map((step, i) => (
@@ -133,13 +145,13 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🗺️ Trasa na mapie</Text>
+          <Text style={styles.sectionTitle}>{t("trip.map_title")}</Text>
           <Image source={{ uri: trip.mapImage }} style={styles.mapImage} resizeMode="cover" />
           <Text style={styles.mapLegend}>{trip.mapLegend}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✨ Charakter wycieczki</Text>
+          <Text style={styles.sectionTitle}>{t("trip.character_title")}</Text>
           <Text style={styles.climateSubtitle}>{trip.climateSubtitle}</Text>
           {trip.climateList.map((item, i) => (
             <Text key={i} style={styles.climateItem}>• {item}</Text>
@@ -150,7 +162,7 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✅ Co w cenie ({trip.price} zł / samochód)</Text>
+          <Text style={styles.sectionTitle}>{fmt(t("trip.included_title"), { price: trip.price })}</Text>
           <View style={styles.includedBox}>
             {trip.included.map((item, i) => (
               <Text key={i} style={styles.includedItem}>✅ {item}</Text>
@@ -168,7 +180,7 @@ export default function TripDetail() {
       <SafeAreaView edges={["bottom"]} style={styles.ctaBar}>
         <TouchableOpacity activeOpacity={0.85} style={[styles.ctaBtn, { backgroundColor: trip.accent }]} onPress={handleReserve}>
           <Ionicons name="calendar" size={18} color="#fff" />
-          <Text style={styles.ctaBtnText}>Zarezerwuj teraz — {trip.price} zł / samochód</Text>
+          <Text style={styles.ctaBtnText}>{fmt(t("trip.cta_reserve"), { price: trip.price })}</Text>
         </TouchableOpacity>
       </SafeAreaView>
 

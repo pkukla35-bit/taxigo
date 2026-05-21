@@ -4,18 +4,32 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TRIPS } from "../../data/trips";
+import { localizeTrip } from "../../data/trips_en";
+import { useLanguage } from "../../contexts/LanguageContext";
 import LegalFooter from "../../components/LegalFooter";
+import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 
 export default function WycieczkiIndex() {
   const router = useRouter();
+  const { lang, t } = useLanguage();
 
-  const sorted = [...TRIPS].sort((a, b) => {
+  const localized = TRIPS.map((trip) => localizeTrip(trip, lang));
+
+  const sorted = [...localized].sort((a, b) => {
     if (a.badge.includes("NUMBER")) return -1;
     if (b.badge.includes("NUMBER")) return 1;
     if (a.badge.includes("BESTSELLER")) return 1;
     if (b.badge.includes("BESTSELLER")) return -1;
     return 0;
   });
+
+  const WHY_FEATURES = [
+    { icon: "🎯", name: t("trips.why_small_groups_name"), desc: t("trips.why_small_groups_desc") },
+    { icon: "🚗", name: t("trips.why_driver_name"), desc: t("trips.why_driver_desc") },
+    { icon: "📍", name: t("trips.why_pickup_name"), desc: t("trips.why_pickup_desc") },
+    { icon: "🎫", name: t("trips.why_tickets_name"), desc: t("trips.why_tickets_desc") },
+    { icon: "💵", name: t("trips.why_payment_name"), desc: t("trips.why_payment_desc") },
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fafafa" }}>
@@ -32,26 +46,29 @@ export default function WycieczkiIndex() {
               <View style={styles.brandPill}>
                 <Text style={styles.brandPillText}>TAXI<Text style={{ color: "#1c1c1e" }}>GO</Text> Trips</Text>
               </View>
-              <TouchableOpacity onPress={() => router.push("/wycieczki/admin" as any)} style={styles.backBtn} testID="open-admin">
-                <Ionicons name="settings-outline" size={20} color="#fff" />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <LanguageSwitcher compact />
+                <TouchableOpacity onPress={() => router.push("/wycieczki/admin" as any)} style={styles.backBtn} testID="open-admin">
+                  <Ionicons name="settings-outline" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
           </SafeAreaView>
           <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>Twoja przygoda{"\n"}zaczyna się{"\n"}w Krakowie</Text>
-            <Text style={styles.heroSubtitle}>Premium wycieczki do najpiękniejszych miejsc Polski i Słowacji</Text>
+            <Text style={styles.heroTitle}>{t("trips.hero_title")}</Text>
+            <Text style={styles.heroSubtitle}>{t("trips.hero_subtitle")}</Text>
           </View>
         </View>
 
         <View style={styles.stats}>
-          <View style={styles.stat}><Text style={styles.statNum}>5</Text><Text style={styles.statLabel}>WYCIECZEK</Text></View>
-          <View style={styles.stat}><Text style={styles.statNum}>2</Text><Text style={styles.statLabel}>KRAJE 🇵🇱 🇸🇰</Text></View>
-          <View style={styles.stat}><Text style={styles.statNum}>100%</Text><Text style={styles.statLabel}>PERSONALNIE</Text></View>
+          <View style={styles.stat}><Text style={styles.statNum}>5</Text><Text style={styles.statLabel}>{t("trips.stat_trips")}</Text></View>
+          <View style={styles.stat}><Text style={styles.statNum}>2</Text><Text style={styles.statLabel}>{t("trips.stat_countries")}</Text></View>
+          <View style={styles.stat}><Text style={styles.statNum}>100%</Text><Text style={styles.statLabel}>{t("trips.stat_personal")}</Text></View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌟 Nasze wycieczki</Text>
-          <Text style={styles.sectionSubtitle}>5 starannie zaplanowanych jednodniowych przygód</Text>
+          <Text style={styles.sectionTitle}>{t("trips.section_title")}</Text>
+          <Text style={styles.sectionSubtitle}>{t("trips.section_subtitle")}</Text>
           {sorted.map((trip) => (
             <TouchableOpacity
               key={trip.slug}
@@ -69,19 +86,21 @@ export default function WycieczkiIndex() {
                   <Text style={styles.flagMiniText}>{trip.flag === "PL" ? "🇵🇱 PL" : "🇸🇰 SK"}</Text>
                 </View>
                 <View style={styles.cardImageContent}>
-                  <Text style={styles.cardTitle}>{trip.title.replace(" z Krakowa", "")}</Text>
+                  <Text style={styles.cardTitle}>
+                    {trip.title.replace(" z Krakowa", "").replace(" from Krakow", "")}
+                  </Text>
                   <Text style={styles.cardSubtitle}>{trip.subtitle}</Text>
                 </View>
               </View>
               <View style={styles.cardBody}>
                 <View style={styles.cardInfo}>
                   <Text style={styles.cardInfoText}>⏱️ {trip.duration}</Text>
-                  <Text style={styles.cardInfoText}>📍 {trip.attractionsCount} atrakcje</Text>
-                  <Text style={styles.cardInfoText}>👥 max {trip.maxPeople} os</Text>
+                  <Text style={styles.cardInfoText}>📍 {trip.attractionsCount} {t("trips.card_attractions")}</Text>
+                  <Text style={styles.cardInfoText}>👥 {t("trips.card_max_people")} {trip.maxPeople} {t("trips.card_people_short")}</Text>
                 </View>
                 <View style={styles.cardPrice}>
                   <Text style={[styles.cardPriceValue, { color: trip.accent }]}>{trip.price} zł</Text>
-                  <Text style={styles.cardPriceUnit}>/samochód</Text>
+                  <Text style={styles.cardPriceUnit}>{t("trips.card_per_car")}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -89,7 +108,7 @@ export default function WycieczkiIndex() {
         </View>
 
         <View style={styles.whyUs}>
-          <Text style={styles.whyTitle}>Dlaczego TAXIGO Trips?</Text>
+          <Text style={styles.whyTitle}>{t("trips.why_title")}</Text>
           {WHY_FEATURES.map((f, i) => (
             <View key={i} style={styles.feature}>
               <View style={styles.featureIcon}><Text style={{ fontSize: 18 }}>{f.icon}</Text></View>
@@ -105,14 +124,6 @@ export default function WycieczkiIndex() {
     </View>
   );
 }
-
-const WHY_FEATURES = [
-  { icon: "🎯", name: "Małe, kameralne grupy", desc: "Maksymalnie 4 osoby — żadnych dużych autobusów." },
-  { icon: "🚗", name: "Komfortowy kierowca", desc: "Doświadczony kierowca lokalnie, znający trasy i okolice." },
-  { icon: "📍", name: "Odbiór z hotelu", desc: "Wskazujesz adres w Krakowie — odbieramy pod sam hotel." },
-  { icon: "🎫", name: "Pomoc z biletami", desc: "Doradzimy gdzie kupić bilety wstępu i rejs." },
-  { icon: "💵", name: "Gotówka, karta lub BLIK", desc: "Gotówką lub kartą u kierowcy w dniu wycieczki, albo BLIK-iem na telefon — przelew z aplikacji bankowej w 30 sekund. Możesz też negocjować cenę." },
-];
 
 const styles = StyleSheet.create({
   hero: { height: 340, position: "relative" },
