@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAXIGO - Ulotka | Wycieczki z Krakowa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #ddd; padding: 20px; }
+  .flyer { display: flex; gap: 8px; max-width: 1600px; margin: 0 auto; background: #fff; }
+  .side { width: 50%; aspect-ratio: 1/1.41; overflow: hidden; position: relative; }
+
+  /* LEFT SIDE - Black */
+  .left { background: linear-gradient(180deg, #0a0a0a 0%, #1c1c1e 60%, #2a2a2c 100%); color: #fff; padding: 28px 26px; display: flex; flex-direction: column; }
+  .logo-row { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+  .logo-text { font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+  .logo-text .yellow { color: #FFD600; }
+  .logo-text .white { color: #fff; }
+  .taxi-cab { width: 70px; height: 50px; position: relative; }
+  .taxi-cab::before { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 30px; background: #FFD600; border-radius: 6px 6px 0 0; }
+  .taxi-cab::after { content: ''; position: absolute; top: 8px; left: 8px; right: 8px; height: 18px; background: #1c1c1e; border-radius: 4px 4px 0 0; }
+  .taxi-checker { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: repeating-linear-gradient(90deg, #FFD600 0 8px, #1c1c1e 8px 16px); }
+
+  .tagline { color: #FFD600; font-weight: 700; font-size: 13px; letter-spacing: 1px; margin-bottom: 4px; }
+  .tagline-en { color: #aaa; font-weight: 600; font-size: 11px; letter-spacing: 1px; margin-bottom: 16px; }
+
+  .city-img { height: 130px; background: url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/qd16neg6_ChatGPT%20Image%208%20maj%202026%2C%2017_18_06.png') center/cover; border-radius: 8px; margin: 0 -10px 20px; opacity: 0.9; }
+
+  .section-header { background: #FFD600; color: #000; font-weight: 900; padding: 8px 14px; border-radius: 4px; display: inline-block; margin-bottom: 14px; font-size: 14px; letter-spacing: 0.5px; }
+
+  .destination { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 13px; }
+  .pin { color: #FFD600; font-size: 18px; flex-shrink: 0; line-height: 1.1; }
+  .dest-name { font-weight: 700; font-size: 14px; line-height: 1.2; }
+  .dest-en { color: #999; font-size: 11px; margin-top: 2px; }
+
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 18px 0; }
+  .feature { display: flex; gap: 8px; align-items: center; }
+  .feat-icon { width: 28px; height: 28px; border: 1.5px solid #FFD600; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #FFD600; flex-shrink: 0; }
+  .feat-text { font-size: 10px; line-height: 1.3; }
+  .feat-text strong { display: block; font-weight: 700; }
+  .feat-text span { color: #999; font-size: 9px; }
+
+  .contact-bar { background: #FFD600; color: #000; padding: 14px 16px; border-radius: 6px; margin-top: auto; display: flex; gap: 18px; align-items: center; }
+  .contact-block { display: flex; gap: 8px; align-items: center; flex: 1; }
+  .contact-icon { width: 30px; height: 30px; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FFD600; font-size: 14px; font-weight: 900; }
+  .contact-text { font-size: 11px; }
+  .contact-text strong { display: block; font-weight: 900; font-size: 13px; line-height: 1.1; }
+  .contact-text span { font-size: 9px; }
+
+  .footer-trust { background: #1c1c1e; padding: 11px 14px; margin-top: 8px; border-radius: 6px; text-align: center; }
+  .footer-trust strong { display: block; color: #FFD600; font-size: 12px; font-weight: 900; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .footer-trust div { color: #fff; font-size: 9px; font-weight: 600; letter-spacing: 1px; }
+  .footer-trust span { color: #999; font-size: 8px; }
+
+  /* RIGHT SIDE - White */
+  .right { background: #fff; color: #1c1c1e; padding: 24px 22px; display: flex; flex-direction: column; }
+  .right-title { background: #FFD600; padding: 14px 18px; border-radius: 6px; margin-bottom: 18px; text-align: center; }
+  .right-title h1 { font-size: 22px; font-weight: 900; color: #000; letter-spacing: 1px; }
+  .right-title p { color: #444; font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-top: 2px; }
+
+  .trip-card { display: flex; gap: 12px; padding: 10px; border: 1.5px solid #eee; border-radius: 10px; margin-bottom: 12px; background: #fafafa; }
+  .trip-img { width: 130px; height: 100px; background-size: cover; background-position: center; border-radius: 8px; flex-shrink: 0; }
+  .trip-info { flex: 1; }
+  .trip-number { background: #FFD600; color: #000; font-weight: 900; padding: 2px 8px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 4px; }
+  .trip-title { font-size: 14px; font-weight: 800; line-height: 1.15; margin-bottom: 4px; }
+  .trip-route { font-size: 10px; color: #666; line-height: 1.3; margin-bottom: 6px; }
+  .trip-en { font-size: 9px; color: #999; font-style: italic; line-height: 1.2; }
+  .trip-price { font-size: 12px; color: #c0392b; font-weight: 800; margin-top: 3px; }
+
+  .qr-section { background: linear-gradient(135deg, #FFD600 0%, #FFC107 100%); padding: 14px 16px; border-radius: 10px; display: flex; gap: 16px; align-items: center; margin-top: auto; }
+  .qr-info { flex: 1; }
+  .qr-info-title { font-size: 14px; font-weight: 900; color: #000; line-height: 1.2; margin-bottom: 4px; }
+  .qr-info-en { font-size: 10px; color: #444; font-weight: 600; margin-bottom: 6px; }
+  .qr-url { background: #000; color: #FFD600; padding: 6px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; font-family: monospace; display: inline-block; word-break: break-all; }
+  .qr-code-wrap { background: #fff; padding: 8px; border-radius: 8px; }
+  .qr-code { width: 110px; height: 110px; display: block; }
+  .qr-arrow { font-size: 28px; color: #000; font-weight: 900; }
+  .scan-text { font-size: 9px; font-weight: 800; text-align: center; color: #000; line-height: 1.2; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .flyer { gap: 0; box-shadow: none; }
+    .no-print { display: none !important; }
+  }
+  @media (max-width: 900px) {
+    .flyer { flex-direction: column; }
+    .side { width: 100%; aspect-ratio: auto; }
+  }
+
+  .print-bar { position: fixed; bottom: 20px; right: 20px; background: #2E7D32; color: #fff; padding: 14px 22px; border-radius: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); font-weight: 700; font-size: 14px; cursor: pointer; border: none; z-index: 999; }
+  .print-bar:hover { background: #1b5e20; }
+</style>
+</head>
+<body>
+  <button class="print-bar no-print" onclick="window.print()">🖨️ Drukuj / Zapisz PDF</button>
+
+  <div class="flyer">
+    <!-- LEFT SIDE -->
+    <div class="side left">
+      <div class="logo-row">
+        <div class="taxi-cab"><div class="taxi-checker"></div></div>
+        <div class="logo-text"><span class="yellow">TAXI</span><span class="white">GO</span></div>
+      </div>
+      <div class="tagline">BEZPIECZNIE • WYGODNIE • PUNKTUALNIE</div>
+      <div class="tagline-en">SAFE • COMFORTABLE • PUNCTUAL</div>
+
+      <div class="city-img"></div>
+
+      <div class="section-header">WYJAZDY Z KRAKOWA / DEPARTURES</div>
+
+      <div class="destination"><span class="pin">📍</span><div><div class="dest-name">Lotnisko / Airports</div><div class="dest-en">Balice (KRK) • Katowice (KTW)</div></div></div>
+      <div class="destination"><span class="pin">📍</span><div><div class="dest-name">Zakopane</div><div class="dest-en">Zakopane + Tatry</div></div></div>
+      <div class="destination"><span class="pin">📍</span><div><div class="dest-name">Spływ Dunajcem</div><div class="dest-en">Dunajec River Rafting</div></div></div>
+      <div class="destination"><span class="pin">📍</span><div><div class="dest-name">Oświęcim (Auschwitz)</div><div class="dest-en">Auschwitz Memorial</div></div></div>
+      <div class="destination"><span class="pin">📍</span><div><div class="dest-name">Wieliczka — Kopalnia Soli</div><div class="dest-en">Wieliczka Salt Mine</div></div></div>
+      <div class="destination"><span class="pin">📍</span><div><div class="dest-name">Wycieczki na Słowację 🇸🇰</div><div class="dest-en">Tours to Slovakia</div></div></div>
+
+      <div class="features">
+        <div class="feature"><div class="feat-icon">🏨</div><div class="feat-text"><strong>ODBIÓR Z HOTELU</strong><span>HOTEL PICK-UP</span></div></div>
+        <div class="feature"><div class="feat-icon">🎫</div><div class="feat-text"><strong>POMOC Z BILETAMI</strong><span>TICKET ASSISTANCE</span></div></div>
+        <div class="feature"><div class="feat-icon">🛡️</div><div class="feat-text"><strong>DOŚWIADCZENI KIEROWCY</strong><span>EXPERIENCED DRIVERS</span></div></div>
+        <div class="feature"><div class="feat-icon">⏰</div><div class="feat-text"><strong>DOSTĘPNI 24/7</strong><span>AVAILABLE 24/7</span></div></div>
+      </div>
+
+      <div class="contact-bar">
+        <div class="contact-block">
+          <div class="contact-icon">📞</div>
+          <div class="contact-text"><strong>881-208-313</strong><span>ZADZWOŃ / CALL</span></div>
+        </div>
+        <div class="contact-block">
+          <div class="contact-icon">🌐</div>
+          <div class="contact-text"><strong style="font-size:10px">wycieczki-z-krakowa.pl</strong><span>REZERWUJ ONLINE / BOOK</span></div>
+        </div>
+      </div>
+
+      <div class="footer-trust">
+        <strong>TWOJA DROGA, NASZ PRIORYTET</strong>
+        <div>YOUR JOURNEY, OUR PRIORITY</div>
+        <span>BEZPIECZEŃSTWO • KOMFORT • ZAUFANIE</span>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="side right">
+      <div class="right-title">
+        <h1>WYCIECZKI Z KRAKOWA</h1>
+        <p>TOURS FROM KRAKÓW</p>
+      </div>
+
+      <!-- Trip 1: Słowacja -->
+      <div class="trip-card">
+        <div class="trip-img" style="background-image: url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/rlag7woo_o4iOU0ZZp9tykdSrta9PV4ePzSRbv0b2cH4xfeqhEe9prQb9ZNHPQqimYd9M5aZLj3Uo0vA7-d4vQiGfWhqgz7wo39xzjHk50mBSDSOqGHOH3obqhIECyyIvZe_J2Ju_koaFz-JWF7gxP5V0Nggi9GCsDz6zm4bR5jkU-S7fuxooqdlclwSGOZgqHuknZ45c.jpg');"></div>
+        <div class="trip-info">
+          <div class="trip-number">1</div>
+          <div class="trip-title">Najpiękniejsza Słowacja z Krakowa</div>
+          <div class="trip-route">Bachledova • Jaskinia Bielańska • Strbskie Pleso</div>
+          <div class="trip-en">The Most Beautiful Slovakia from Kraków</div>
+          <div class="trip-price">750 zł / samochód</div>
+        </div>
+      </div>
+
+      <!-- Trip 2: Dunajec -->
+      <div class="trip-card">
+        <div class="trip-img" style="background-image: url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2mi92ztn_ChatGPT%20Image%208%20maj%202026%2C%2017_30_46.png');"></div>
+        <div class="trip-info">
+          <div class="trip-number">2</div>
+          <div class="trip-title">Spływ Dunajcem z Krakowa</div>
+          <div class="trip-route">Spływ • Szczawnica • Palenica • Wąwóz Homole</div>
+          <div class="trip-en">Dunajec River Rafting from Kraków</div>
+          <div class="trip-price">650 zł / samochód</div>
+        </div>
+      </div>
+
+      <!-- Trip 3: Zakopane -->
+      <div class="trip-card">
+        <div class="trip-img" style="background-image: url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/qd16neg6_ChatGPT%20Image%208%20maj%202026%2C%2017_18_06.png');"></div>
+        <div class="trip-info">
+          <div class="trip-number">3</div>
+          <div class="trip-title">Zakopane + Kasprowy lub Morskie Oko</div>
+          <div class="trip-route">Krupówki • Gubałówka • Kasprowy lub Morskie Oko</div>
+          <div class="trip-en">Zakopane + Kasprowy or Morskie Oko</div>
+          <div class="trip-price">600 zł / samochód</div>
+        </div>
+      </div>
+
+      <!-- Trip 4: Pieniny -->
+      <div class="trip-card">
+        <div class="trip-img" style="background-image: url('https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/b46ami7f_NXDe23akMPXdq-H2Ce_SJ03Oqqm8y2vxAinetxp1xeSjizepkczMNmNpinNeZvf0OYF7iGxu1qKBGiy2DxEuHiqGwhEVQ8xFZgvjFBpaaLHGGomCwZGEs4u5M6FtxI00MX0vwu4o3UCbEUEeJxpmN5uWHuLbEdvkczPvWkRbxIfOp791RHs_-sLAAHQeDYtv.jpg');"></div>
+        <div class="trip-info">
+          <div class="trip-number">4</div>
+          <div class="trip-title">Wycieczka w Pieniny z Krakowa</div>
+          <div class="trip-route">Niedzica • Czorsztyn • Rejs • Plaża Zamajerz</div>
+          <div class="trip-en">Pieniny Tour from Kraków</div>
+          <div class="trip-price">550 zł / samochód</div>
+        </div>
+      </div>
+
+      <!-- QR Section -->
+      <div class="qr-section">
+        <div class="qr-info">
+          <div class="qr-info-title">📱 REZERWACJA PRZEZ APLIKACJĘ</div>
+          <div class="qr-info-en">BOOKING VIA APP</div>
+          <div class="qr-url">https://wycieczki-z-krakowa.pl</div>
+        </div>
+        <div class="qr-arrow">→</div>
+        <div>
+          <div class="qr-code-wrap">
+            <img src="/qr-wycieczki.png" alt="QR Code" class="qr-code" />
+          </div>
+          <div class="scan-text" style="margin-top:6px">ZESKANUJ I ZAREZERWUJ<br><span style="font-size:8px;font-weight:600">SCAN AND BOOK</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Test QR works
+    document.querySelector('.qr-code').onerror = function() {
+      this.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://wycieczki-z-krakowa.pl';
+    };
+  </script>
+</body>
+</html>
