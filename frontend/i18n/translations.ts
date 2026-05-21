@@ -36,6 +36,8 @@ export const translations = {
     "index.choose_role": "Wybierz rolę",
     "index.login_google": "Zaloguj się przez Google",
     "index.login_subtitle": "Aby kontynuować, zaloguj się przez konto Google",
+    "index.trips": "🚐 Wycieczki turystyczne",
+    "index.trips_desc": "Pieniny • Słowacja • Zakopane + 2 więcej",
 
     // Share / Install
     "share.title": "Pobierz TAXIGO",
@@ -192,6 +194,8 @@ export const translations = {
     "index.choose_role": "Choose role",
     "index.login_google": "Sign in with Google",
     "index.login_subtitle": "To continue, sign in with your Google account",
+    "index.trips": "🚐 Tourist trips",
+    "index.trips_desc": "Pieniny • Slovakia • Zakopane + 2 more",
 
     // Share / Install
     "share.title": "Get TAXIGO",

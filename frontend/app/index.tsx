@@ -85,8 +85,8 @@ export default function Index() {
               <Ionicons name="map" size={26} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitleLight}>🚐 Wycieczki turystyczne</Text>
-              <Text style={styles.cardSubLight}>Pieniny • Słowacja • Zakopane + 2 więcej</Text>
+              <Text style={styles.cardTitleLight}>{t("index.trips")}</Text>
+              <Text style={styles.cardSubLight}>{t("index.trips_desc")}</Text>
             </View>
             <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
           </TouchableOpacity>
