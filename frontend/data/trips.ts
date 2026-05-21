@@ -30,6 +30,8 @@ export type Trip = {
   maxPeople: number;
   accent: string; // primary color
   bgAccent: string; // light bg
+  description: string; // long narrative description (paragraphs separated by \n\n)
+  highlights: string[]; // 4-6 short selling points
   attractions: Attraction[];
   timeline: TimelineStep[];
   mapImage: string;
@@ -47,6 +49,8 @@ export const TRIPS: Trip[] = [
   {
     slug: "pieniny",
     gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/b46ami7f_NXDe23akMPXdq-H2Ce_SJ03Oqqm8y2vxAinetxp1xeSjizepkczMNmNpinNeZvf0OYF7iGxu1qKBGiy2DxEuHiqGwhEVQ8xFZgvjFBpaaLHGGomCwZGEs4u5M6FtxI00MX0vwu4o3UCbEUEeJxpmN5uWHuLbEdvkczPvWkRbxIfOp791RHs_-sLAAHQeDYtv.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/uhh3sfta_kT-C3IsQFp03-lEpo3PH5qyaxgNNVlbmAFruyscXC6zAmVSAPJeQpgUvZ0pxFRGPviTw2_-pAD4AkVSd5eEzgP7B03YnGRs4I_0bEw2kZHP3YrLdzBlQws-GTMwLgr4u-MT-UHlluw6EPV77CqnT7P3XK5Vwm-9mUEi0aI9SOejtDxGaxz0jqPDv9edRx49L.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/1u4lylr3_fKcxwfwiG4eMDe8rfrx7J4b-rBcqNz9Cr5JPHTQqZWybIaSRBCS7Zvnz98PGp-lu8nRflpiOkvQ61xTqZfPxg0b8QtQAJDzzDLJSRz2W4CWEkzj9p-s3ChqXkPaiGB7z9J0to3RzHERd3GR9mfDgWANPHR5b2uQv05fIVBnuGCuad4CX4CF32Ze9MCfMLRaz.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/bo8omojz__WODmwSyszXYHGkICPkZBVdUtOU7o71COs1MSAr71Eh-K5vM7pNs8XfANys9F9coqmsYaVQzKmB7DaXZ3ESRdqQnoneGy0Gw2iNEXV9-LLq5tqXliXlATwvROZQYRODnLvFgXHpz3hfb9iZf5p0_7HeeCfLzzsjTTMPxk5Na4fGL8Ep51mFYURjgb1EP85kQ.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/d1l74zt9_M5rFJ58PPxAE6o6JMcfnCCX7sP0IbFm-7bC9G8AXpk2pMF1Zrw5QcP9Du_tUvnR1ZTFNECXlzFFXcY7BFslk5wkRlun_3zzv2h0j9TKqmG1k1HyRIttW0tAhIqghfbnqx8DuG3hE2PK0fMBuLWwp6Eh2zCt0QwSE7-dJU_vKku2W1594g4c-DyzUW2F6nhCd.jpg",
@@ -67,6 +71,14 @@ export const TRIPS: Trip[] = [
     maxPeople: 4,
     accent: "#2E7D32",
     bgAccent: "#e8f5e9",
+    description: "Wycieczka w Pieniny to idealna propozycja dla rodzin, par i grup przyjaciół, którzy chcą w jeden dzień zobaczyć najpiękniejsze zakątki tego niezwykłego regionu — bez pośpiechu, bez tłumów i z prywatnym kierowcą do dyspozycji.\n\nWyruszamy z Krakowa rano komfortową, hybrydową Toyotą Prius. Po około 2,5 godziny dojeżdżamy do Niedzicy, gdzie zwiedzamy słynny zamek „Dunajec\" — średniowieczną twierdzę wzniesioną na skale nad Jeziorem Czorsztyńskim. Komnaty, dziedziniec i legenda o ukrytym skarbie Inków zrobią wrażenie nawet na największych sceptykach historii.\n\nPotem czas na rejs po Jeziorze Czorsztyńskim zabytkowym statkiem kołowym. 50 minut pełnego relaksu, gdy przed Tobą rozpościera się panorama dwóch zamków i pienińskich szczytów. Po rejsie zatrzymujemy się na obiad w klimatycznej Karczmie Zadyma — kwaśnica, świeży pstrąg z miejscowej hodowli i tradycyjne placki po zbójnicku to absolutny must-try.\n\nPopołudnie należy do Zamku w Czorsztynie — malowniczych ruin z XIV wieku, z których przez gotyckie okna podziwiać można widok wprost na Niedzicę. Dzień kończymy na Plaży Zamajerz — eleganckim minikurorcie nad samym jeziorem, gdzie można napić się kawy, wypożyczyć SUP-a lub po prostu odpocząć z widokiem na góry.\n\nW cenie 550 zł za samochód (do 4 osób) otrzymujesz prywatny transport tam i z powrotem, kierowcę-przewodnika, czekanie podczas zwiedzania oraz pomoc w zakupie biletów. To wycieczka, po której wracasz spokojny, najedzony i z setkami zdjęć.",
+    highlights: [
+      "🏰 Zamek w Niedzicy z legendą o skarbie Inków",
+      "🚢 Rejs statkiem kołowym po Jeziorze Czorsztyńskim",
+      "🍽️ Obiad w klimatycznej Karczmie Zadyma",
+      "🏯 Romantyczne ruiny Zamku w Czorsztynie",
+      "🏖️ Relaks i kawa na Plaży Zamajerz",
+    ],
     attractions: [],
     timeline: [
       { time: "08:00", icon: "🚗", title: "Wyjazd z Krakowa", description: "Trasa: Kraków → Nowy Targ → Niedzica (~2.5h)" },
@@ -116,6 +128,14 @@ export const TRIPS: Trip[] = [
     maxPeople: 4,
     accent: "#1976D2",
     bgAccent: "#e3f2fd",
+    description: "Spływ Dunajcem to klasyk turystyki górskiej w Polsce — wycieczka, która łączy emocje, naturę i historię w jedną niezapomnianą przygodę. Idealna dla aktywnych rodzin, par i grup przyjaciół, którzy chcą poczuć adrenalinę i jednocześnie odpocząć od miejskiego zgiełku.\n\nWyruszamy bardzo wcześnie — o 6:30 z Krakowa — aby zdążyć na pierwsze tratwy w Sromowcach Wyżnych. Tradycyjne flisackie tratwy prowadzone są przez góralskich flisaków w regionalnych strojach, którzy w czasie spływu opowiadają legendy, anegdoty i pokazują najpiękniejsze miejsca Pienin. Trasa wiedzie wśród spektakularnych skał, m.in. obok kultowych Trzech Koron, a meta znajduje się w Szczawnicy po około 2-2,5 godziny na wodzie.\n\nSzczawnica to perełka uzdrowiskowa Pienin. Po spływie mamy czas na spacer pięknym deptakiem nad potokiem Grajcarek i obiad w Karczmie u Połonacy z lokalną kuchnią. Następnie wjeżdżamy kolejką linową na Palenicę (722 m n.p.m.), skąd rozciąga się widok na całe Pieniny, a przy dobrej pogodzie również na Tatry.\n\nKulminacją dnia jest Wąwóz Homole — jedno z najbardziej spektakularnych miejsc w polskich górach. Drewniane kładki i mostki prowadzą wzdłuż krystalicznego potoku pomiędzy pionowymi skałami sięgającymi 130 metrów wysokości. Spacer trwa 1-1,5 godziny i zostawia widoki, których nie zapomnisz.\n\nW cenie 650 zł za samochód (do 4 osób) — prywatny transport tam i z powrotem komfortową Toyotą Prius, kierowca, transfer z mety spływu oraz pomoc w zakupie biletów. To dzień pełen wody, gór, słońca i autentycznej góralskiej atmosfery.",
+    highlights: [
+      "🛶 Tradycyjny spływ flisacki Dunajcem (2-2,5h)",
+      "⛰️ Widoki na Trzy Korony z poziomu wody",
+      "☕ Spacer po promenadzie Szczawnicy",
+      "🚡 Kolejka linowa na Palenicę z panoramą Tatr",
+      "🏞️ Wąwóz Homole — drewniane kładki i 130-metrowe skały",
+    ],
     attractions: [],
     timeline: [
       { time: "06:30", icon: "🚗", title: "Wyjazd z Krakowa", description: "Wczesny start. Kraków → Nowy Targ → Sromowce" },
@@ -139,6 +159,8 @@ export const TRIPS: Trip[] = [
   {
     slug: "slowacja",
     gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/rlag7woo_o4iOU0ZZp9tykdSrta9PV4ePzSRbv0b2cH4xfeqhEe9prQb9ZNHPQqimYd9M5aZLj3Uo0vA7-d4vQiGfWhqgz7wo39xzjHk50mBSDSOqGHOH3obqhIECyyIvZe_J2Ju_koaFz-JWF7gxP5V0Nggi9GCsDz6zm4bR5jkU-S7fuxooqdlclwSGOZgqHuknZ45c.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/3xkad3d9_bt92QcohJS5fdf8EeO3UA_Y57zbhyLzkh83NX_i4cYgXpk1difajx5EX2-iMOrjoTrUOQW69Cxq8qsqhSp6iGJnpKb8Z6rgsqXGpGcBAet2JHcAHdOtGXL42E0jU2uziZnd7QkxU8ywAvxSffOirKk2Ccy2rX2N1dSd_agty66pUQsF6kDefrTty4zcxarWn.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/91hl9eiq_ChatGPT%20Image%2019%20maj%202026%2C%2011_20_31.png",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/0c8gtkwl_K-Or_DvV0gzZFPQpbs1HDNcjRt0hUXVFHLGt_KVkJJQfz8X9nWLJaWROA0d4avvHNX1_Mpuxd__kmvmYpzzWBh8LVv3bbgbEPorvrJbl7XRhVwF164paIeaWcgWzay8lN4gGoUvLnDQdu5_rk-2Yt9oAq7VuKl7pafG1WZ9_MnVm7U5qCI2RwcsGs4-oKF4x.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/jp0wjqga_i5C0P59CGNWKdxEDEmSZTOEYZvp7FOZyaNBFMgUa81igdWZNJjfYLi58GQPZhF_VORIX1sLUVoAW9zXlpSth6CvQH2hE5u3EATTvd-JxLzV53XgAK1V_jK1-QPXcBimcaJo6zYiPjHjMuSDaYk6wSWf3Vgtrpd0ewQxP0uNGABS-8C0ZhJUj6Whs-l7p3Aeo.jpg",
@@ -161,6 +183,14 @@ export const TRIPS: Trip[] = [
     maxPeople: 4,
     accent: "#c0392b",
     bgAccent: "#fde2e2",
+    description: "Najpiękniejsza Słowacja to wycieczka premium, łącząca trzy zupełnie różne oblicza Tatr Słowackich w jeden niezapomniany dzień. Polecamy ją osobom, które chcą zobaczyć coś więcej niż klasyczne Zakopane — bez wymagającego trekkingu, ale z widokami na poziomie alpejskich kurortów.\n\nWyjeżdżamy z Krakowa o 6:00, by jeszcze przed południem rozpocząć dzień w Bachledovej Dolinie pod Tatrami Bielskimi. Chodnik w Koronach Drzew to drewniana ścieżka 1,2 km wśród korony świerków na wysokości 10-30 m nad ziemią, zakończona 32-metrową wieżą widokową w kształcie spiralnej helisy. Z góry rozciąga się majestatyczna panorama na Tatry, doliny i lasy — to miejsce instagramowe i idealne na pamiątkowe zdjęcia z całą rodziną.\n\nKolejny punkt to Jaskinia Bielańska (Belianska jaskyňa) — jedna z najpiękniejszych jaskiń krasowych w Europie Środkowej. Trasa 1370 m zwiedzania prowadzi przez ponad 800 stopni wśród imponujących stalaktytów, draperii kalcytowych, jezior podziemnych i fantazyjnych form skalnych. Temperatura wewnątrz to 5-6°C, więc bluza i wygodne buty są obowiązkowe. Zwiedzanie z przewodnikiem trwa około 70 minut.\n\nDzień zamykamy nad Szczyrbskim Plesem — krystalicznie czystym jeziorem polodowcowym (1346 m n.p.m.) otoczonym świerkowym lasem i tatrzańskimi szczytami. Spacer wokół jeziora trwa około 1,5 godziny i to absolutny relaks z widokiem. Można wstąpić na kawę do legendarnego Grand Hotelu Kempinski lub wybrać kawiarnię z tarasem nad wodą.\n\nW cenie 750 zł za samochód (do 4 osób) — prywatny transport Toyotą Prius tam i z powrotem (z przekroczeniem granicy i opłatami drogowymi), kierowca, czekanie podczas zwiedzania, pomoc w zakupie biletów. To wycieczka, która łączy adrenalinę wysokości, magię podziemi i spokój alpejskiego jeziora.",
+    highlights: [
+      "🌲 Chodnik w Koronach Drzew z 32-metrową wieżą",
+      "🦇 Jaskinia Bielańska — 1370 m podziemnej trasy",
+      "💎 Szczyrbskie Pleso — krystaliczne jezioro polodowcowe",
+      "📸 Najbardziej instagramowe widoki na słowackie Tatry",
+      "🛂 Bez stresu z przekraczaniem granicy",
+    ],
     attractions: [],
     timeline: [
       { time: "06:00", icon: "🚗", title: "Wyjazd z Krakowa", description: "Trasa: Kraków → Zakopane → Jurgów → Słowacja" },
@@ -205,6 +235,14 @@ export const TRIPS: Trip[] = [
     maxPeople: 4,
     accent: "#0d7377",
     bgAccent: "#d1f2eb",
+    description: "Wodospady Studeneckie to ukryty skarb słowackich Tatr — wycieczka dla tych, którzy lubią szum górskiej wody, leśne ścieżki i widoki, których nie zobaczą w przewodnikach. Idealna dla miłośników natury, par i osób szukających ciszy z dala od tłumów Morskiego Oka.\n\nWyjeżdżamy z Krakowa o 5:30 — wcześnie, ale warto. Po przekroczeniu granicy w Łysej Polanie docieramy do Starego Smokowca, jednego z najbardziej eleganckich kurortów słowackich Tatr. Spacer wśród zabytkowej zabudowy uzdrowiska, kawa w cieniu legendarnego Grandhotelu Praha i klimat z początku XX wieku to świetny początek dnia.\n\nZ centrum Smokowca zabieramy kolejkę szynową na Hrebienok (1285 m n.p.m.) — krótka, ale efektowna podróż przez tatrzański las. Z Hrebienka rusza znakowany szlak do Wodospadów Studeneckich (Studené potoky), gdzie potok rozdziela się na cztery spektakularne kaskady: Wielki Wodospad, Mały Wodospad, Długi Wodospad i Pośredni Wodospad. Drewniane mostki, kładki nad strumieniami i mchowe skały tworzą atmosferę jak z bajki.\n\nPętla trwa około 2,5-3 godziny — to spacer, nie wspinaczka. Trasa jest wymagająca tylko w jednym miejscu (krótkie podejście pod Wielki Wodospad), reszta to przyjemne leśne ścieżki. Po drodze mijamy Symboliczny Cmentarz Ofiar Tatr — ciche, pełne refleksji miejsce wśród świerków.\n\nNa zakończenie zatrzymujemy się na obiad w góralskiej karczmie w Smokowcu lub na Hrebienku — zalecamy bryndzové halušky (kluski z bryndzą i skwarkami) lub kapustnicę. Powrót do Krakowa około 18:30-19:30.\n\nW cenie 650 zł za samochód (do 4 osób) — prywatny transport tam i z powrotem, kierowca, pomoc w zakupie biletów i przekroczenie granicy. To wycieczka, po której wracasz pełen leśnego powietrza i ciszy.",
+    highlights: [
+      "🏘️ Spacer po zabytkowym Starym Smokowcu",
+      "🚆 Kolejka szynowa na Hrebienok (1285 m)",
+      "💧 Cztery spektakularne kaskady Wodospadów Studeneckich",
+      "🌲 Drewniane mostki i kładki w gęstym tatrzańskim lesie",
+      "🍲 Obiad w autentycznej góralskiej karczmie",
+    ],
     attractions: [],
     timeline: [
       { time: "05:30", icon: "🚗", title: "Wyjazd z Krakowa", description: "Trasa: Kraków → Zakopane → Łysa Polana → Smokowiec" },
@@ -260,6 +298,14 @@ export const TRIPS: Trip[] = [
     maxPeople: 4,
     accent: "#d35400",
     bgAccent: "#fde6d3",
+    description: "Zakopane to nieśmiertelny klasyk polskiej turystyki — Zimowa Stolica Polski, brama do Tatr i miejsce, które każdy musi zobaczyć przynajmniej raz w życiu. Nasza wycieczka łączy wszystkie najważniejsze atrakcje miasta z wyborem jednej z dwóch ikonicznych destynacji górskich: Kasprowego Wierchu lub Morskiego Oka.\n\nWyjeżdżamy z Krakowa o 7:00 słynną Zakopianką. Po około 2-2,5 godziny dojeżdżamy do serca Podhala. Pierwszy punkt to spacer po Krupówkach — najbardziej znanym deptaku w Polsce. Drewniane chałupy stylu zakopiańskiego, stragany z oscypkiem, regionalne sklepy i muzyka góralska na żywo tworzą niepowtarzalną atmosferę.\n\nNastępnie wjeżdżamy zabytkową kolejką linowo-terenową na Gubałówkę (1126 m n.p.m.). Z tarasu widokowego rozpościera się klasyczna panorama Tatr — fotografia, która musi się znaleźć w każdym albumie z Polski. Na szczycie można skosztować regionalnych przysmaków lub przejść się grzbietem do Butorowego Wierchu.\n\nObiad zarezerwujemy w jednej z najlepszych góralskich karczm — proponujemy Karczmę „Po Zbóju\" z autorską kwaśnicą, moskolami (placki z ziemniaków), oscypkiem z żurawiną i tradycyjnymi plackami po zbójnicku. To kuchnia, której nie znajdziesz w żadnym sieciowym lokalu.\n\nPopołudniem wybierasz jedną z dwóch opcji:\n\n🚡 KASPROWY WIERCH (1985 m n.p.m., czynny od 6 czerwca) — kolejka linowa z Kuźnic, panorama na 360°, granica polsko-słowacka pod stopami, pasmo Tatr Wysokich na wyciągnięcie ręki. Wjazd + pobyt + zjazd zajmuje 2-3 godziny.\n\n🏞️ MORSKIE OKO (1395 m n.p.m., dostępne cały rok) — najsłynniejsze jezioro polskich Tatr. Z Palenicy Białczańskiej idziemy asfaltową drogą około 2-2,5 godziny w jedną stronę. Po drodze schronisko PTTK i Wodospad Mickiewicza. Można też wynająć fasiągi (góralski wóz konny).\n\nW cenie 600 zł za samochód (do 4 osób) — prywatny transport tam i z powrotem, kierowca, czekanie podczas zwiedzania, rezerwacja stolika w karczmie, pomoc w zakupie biletów i (przy wyborze Morskiego Oka) dowóz do Palenicy Białczańskiej. Wybór Kasprowy/Morskie Oko ustalimy przed wyjazdem — w zależności od pogody i Twoich preferencji.",
+    highlights: [
+      "🛍️ Spacer po legendarnych Krupówkach",
+      "🚞 Kolejka linowo-terenowa na Gubałówkę",
+      "🍲 Obiad w autentycznej Karczmie Po Zbóju",
+      "🚡 Wybór: Kasprowy Wierch (1985 m) lub Morskie Oko (1395 m)",
+      "📸 Klasyczna panorama Tatr z tarasu Gubałówki",
+    ],
     attractions: [],
     timeline: [
       { time: "07:00", icon: "🚗", title: "Wyjazd z Krakowa", description: "Trasa: Kraków → Zakopianka → Zakopane (~2-2.5h)" },

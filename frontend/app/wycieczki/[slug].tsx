@@ -1,15 +1,19 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, StatusBar } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, StatusBar, Modal, Dimensions, Pressable } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getTripBySlug } from "../../data/trips";
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 export default function TripDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const slug = (params.slug as string) || "";
   const trip = getTripBySlug(slug);
+
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   if (!trip) {
     return (
@@ -24,6 +28,17 @@ export default function TripDetail() {
 
   const handleReserve = () => {
     router.push(`/wycieczki/${trip.slug}/rezerwacja` as any);
+  };
+
+  const openLightbox = (i: number) => setLightboxIndex(i);
+  const closeLightbox = () => setLightboxIndex(null);
+  const showPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex - 1 + trip.gallery.length) % trip.gallery.length);
+  };
+  const showNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex + 1) % trip.gallery.length);
   };
 
   return (
@@ -71,10 +86,31 @@ export default function TripDetail() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📖 O wycieczce</Text>
+          {trip.description.split("\n\n").map((para, i) => (
+            <Text key={i} style={styles.descPara}>{para}</Text>
+          ))}
+          {trip.highlights && trip.highlights.length > 0 && (
+            <View style={[styles.highlightsBox, { backgroundColor: trip.bgAccent, borderColor: trip.accent }]}>
+              <Text style={[styles.highlightsTitle, { color: trip.accent }]}>✨ W skrócie</Text>
+              {trip.highlights.map((h, i) => (
+                <Text key={i} style={styles.highlightItem}>{h}</Text>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>📸 Galeria ({trip.gallery.length} zdjęć)</Text>
+          <Text style={styles.galleryHint}>💡 Kliknij w zdjęcie, aby powiększyć</Text>
           <View style={styles.gallery}>
             {trip.gallery.map((url, i) => (
-              <Image key={i} source={{ uri: url }} style={styles.galleryImg} />
+              <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => openLightbox(i)} style={styles.galleryItem}>
+                <Image source={{ uri: url }} style={styles.galleryImg} />
+                <View style={styles.galleryZoomBadge}>
+                  <Ionicons name="expand" size={14} color="#fff" />
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -135,6 +171,51 @@ export default function TripDetail() {
           <Text style={styles.ctaBtnText}>Zarezerwuj teraz — {trip.price} zł / samochód</Text>
         </TouchableOpacity>
       </SafeAreaView>
+
+      {/* LIGHTBOX MODAL */}
+      <Modal
+        visible={lightboxIndex !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={closeLightbox}
+        statusBarTranslucent
+      >
+        <View style={styles.lightboxBackdrop}>
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={closeLightbox} />
+
+          {lightboxIndex !== null && (
+            <>
+              <Image
+                source={{ uri: trip.gallery[lightboxIndex] }}
+                style={styles.lightboxImage}
+                resizeMode="contain"
+              />
+
+              <SafeAreaView edges={["top"]} style={styles.lightboxTopBar} pointerEvents="box-none">
+                <View style={styles.lightboxCounter}>
+                  <Text style={styles.lightboxCounterText}>
+                    {lightboxIndex + 1} / {trip.gallery.length}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={closeLightbox} style={styles.lightboxCloseBtn}>
+                  <Ionicons name="close" size={26} color="#fff" />
+                </TouchableOpacity>
+              </SafeAreaView>
+
+              {trip.gallery.length > 1 && (
+                <>
+                  <TouchableOpacity onPress={showPrev} style={[styles.lightboxNavBtn, styles.lightboxNavLeft]}>
+                    <Ionicons name="chevron-back" size={28} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={showNext} style={[styles.lightboxNavBtn, styles.lightboxNavRight]}>
+                    <Ionicons name="chevron-forward" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </>
+              )}
+            </>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -173,7 +254,23 @@ const styles = StyleSheet.create({
   mapImage: { width: "100%", height: 220, borderRadius: 12 },
   mapLegend: { marginTop: 10, fontSize: 11, color: "#8e8e93", textAlign: "center" },
   gallery: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
-  galleryImg: { width: "32.5%", aspectRatio: 1, borderRadius: 8 },
+  galleryItem: { width: "32.5%", aspectRatio: 1, position: "relative" },
+  galleryImg: { width: "100%", height: "100%", borderRadius: 8 },
+  galleryZoomBadge: { position: "absolute", bottom: 6, right: 6, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 10, padding: 4 },
+  galleryHint: { fontSize: 12, color: "#8e8e93", marginBottom: 10, marginTop: -8 },
+  descPara: { fontSize: 14, color: "#3a3a3c", lineHeight: 22, marginBottom: 12 },
+  highlightsBox: { marginTop: 8, padding: 14, borderRadius: 12, borderWidth: 1 },
+  highlightsTitle: { fontSize: 14, fontWeight: "700", marginBottom: 8 },
+  highlightItem: { fontSize: 13, color: "#1c1c1e", paddingVertical: 3, lineHeight: 19 },
+  lightboxBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.96)", alignItems: "center", justifyContent: "center" },
+  lightboxImage: { width: SCREEN_W, height: SCREEN_H * 0.85 },
+  lightboxTopBar: { position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 8 },
+  lightboxCounter: { backgroundColor: "rgba(255,255,255,0.15)", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
+  lightboxCounterText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  lightboxCloseBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
+  lightboxNavBtn: { position: "absolute", top: "50%", marginTop: -24, width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center" },
+  lightboxNavLeft: { left: 12 },
+  lightboxNavRight: { right: 12 },
   climateSubtitle: { fontSize: 13, color: "#1c1c1e", marginBottom: 12, lineHeight: 18 },
   climateItem: { fontSize: 13, color: "#6e6e73", marginVertical: 2, lineHeight: 19 },
   climateHighlight: { padding: 12, borderRadius: 10, marginTop: 14 },

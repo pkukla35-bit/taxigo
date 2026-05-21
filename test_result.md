@@ -235,3 +235,15 @@ agent_communication:
         9. DELETE /api/trips/reservations/{id} -> usuwa
         10. GET /api/trips/blocked-dates/{slug} -> publiczny endpoint, zwraca też "all"-blokady
         Pliki: /app/backend/server.py linie ~498-608. Modele linie ~99-138.
+    - agent: "main"
+      message: |
+        FRONTEND TYLKO — bez konieczności testowania.
+        Dodano w module Wycieczki:
+        1. Profesjonalne, długie opisy PL (paragrafy) dla wszystkich 5 wycieczek w /app/frontend/data/trips.ts
+           (pola `description` + `highlights`).
+        2. Nowe sekcję "📖 O wycieczce" w /app/frontend/app/wycieczki/[slug].tsx — renderuje opis + box "✨ W skrócie".
+        3. Dodano 2 nowe zdjęcia do galerii Pieniny (Czorsztyn) i 2 nowe do Słowacja (Bachledova).
+        4. Implementowany lightbox (Modal) — kliknięcie w kafelek galerii otwiera fullscreen viewer
+           z licznikiem (X / N), przyciskiem zamknięcia oraz strzałkami ← → do nawigacji między zdjęciami.
+        Wizualnie zweryfikowane przez screenshot tool: lightbox działa, opisy renderują się poprawnie.
+        BRAK zmian w backendzie. Nie wymaga retest.
