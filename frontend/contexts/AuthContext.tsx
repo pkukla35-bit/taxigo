@@ -56,6 +56,7 @@ type Ctx = {
   token: string | null;
   loading: boolean;
   signInWithSession: (sessionId: string, role: Role) => Promise<AppUser | null>;
+  signInAsGuest: (role: Role) => Promise<AppUser>;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
   setRole: (role: Role, car_model?: string, plate?: string) => Promise<void>;
@@ -147,6 +148,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Guest sign-in — no Google login required. Creates a local guest user with a stable UUID
+  // stored in AsyncStorage. Used mainly for passengers who want to skip the login step.
+  const signInAsGuest = async (role: Role): Promise<AppUser> => {
+    let guestId = await AsyncStorage.getItem("guest_user_id");
+    if (!guestId) {
+      guestId = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      await AsyncStorage.setItem("guest_user_id", guestId);
+    }
+    const guestUser: AppUser = {
+      user_id: guestId,
+      email: `${guestId}@guest.taxigo.pl`,
+      name: role === "passenger" ? "Gość" : "Guest driver",
+      role,
+    };
+    // Store guest token — used for authFetch to include X-Guest-Id header
+    await AsyncStorage.setItem("session_token", `guest:${guestId}`);
+    setToken(`guest:${guestId}`);
+    setUser(guestUser);
+    return guestUser;
+  };
+
   const logout = async () => {
     try {
       if (token) {
@@ -174,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, token, loading, signInWithSession, refresh, logout, setRole, authFetch }}>
+    <AuthCtx.Provider value={{ user, token, loading, signInWithSession, signInAsGuest, refresh, logout, setRole, authFetch }}>
       {children}
     </AuthCtx.Provider>
   );

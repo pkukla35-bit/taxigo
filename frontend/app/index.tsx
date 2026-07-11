@@ -11,7 +11,7 @@ const BG = "https://images.unsplash.com/photo-1763865454099-0a3566bdc030?crop=en
 
 export default function Index() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, signInAsGuest } = useAuth();
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -22,6 +22,13 @@ export default function Index() {
   }, [user, loading, router]);
 
   const choose = async (role: "passenger" | "driver") => {
+    if (role === "passenger") {
+      // Passengers skip Google login — enter as guest right away
+      await signInAsGuest("passenger");
+      router.replace("/passenger/home");
+      return;
+    }
+    // Drivers still go through Google login for verification
     await AsyncStorage.setItem("pending_role", role);
     router.push({ pathname: "/login", params: { role } });
   };
