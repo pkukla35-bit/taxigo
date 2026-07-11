@@ -159,8 +159,6 @@ export const TRIPS: Trip[] = [
   {
     slug: "slowacja",
     gallery: [
-      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/rlag7woo_o4iOU0ZZp9tykdSrta9PV4ePzSRbv0b2cH4xfeqhEe9prQb9ZNHPQqimYd9M5aZLj3Uo0vA7-d4vQiGfWhqgz7wo39xzjHk50mBSDSOqGHOH3obqhIECyyIvZe_J2Ju_koaFz-JWF7gxP5V0Nggi9GCsDz6zm4bR5jkU-S7fuxooqdlclwSGOZgqHuknZ45c.jpg",
-      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/3xkad3d9_bt92QcohJS5fdf8EeO3UA_Y57zbhyLzkh83NX_i4cYgXpk1difajx5EX2-iMOrjoTrUOQW69Cxq8qsqhSp6iGJnpKb8Z6rgsqXGpGcBAet2JHcAHdOtGXL42E0jU2uziZnd7QkxU8ywAvxSffOirKk2Ccy2rX2N1dSd_agty66pUQsF6kDefrTty4zcxarWn.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/91hl9eiq_ChatGPT%20Image%2019%20maj%202026%2C%2011_20_31.png",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/0c8gtkwl_K-Or_DvV0gzZFPQpbs1HDNcjRt0hUXVFHLGt_KVkJJQfz8X9nWLJaWROA0d4avvHNX1_Mpuxd__kmvmYpzzWBh8LVv3bbgbEPorvrJbl7XRhVwF164paIeaWcgWzay8lN4gGoUvLnDQdu5_rk-2Yt9oAq7VuKl7pafG1WZ9_MnVm7U5qCI2RwcsGs4-oKF4x.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/jp0wjqga_i5C0P59CGNWKdxEDEmSZTOEYZvp7FOZyaNBFMgUa81igdWZNJjfYLi58GQPZhF_VORIX1sLUVoAW9zXlpSth6CvQH2hE5u3EATTvd-JxLzV53XgAK1V_jK1-QPXcBimcaJo6zYiPjHjMuSDaYk6wSWf3Vgtrpd0ewQxP0uNGABS-8C0ZhJUj6Whs-l7p3Aeo.jpg",
