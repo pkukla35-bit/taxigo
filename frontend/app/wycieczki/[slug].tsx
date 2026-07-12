@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, StatusBar, Modal, Dimensions, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, StatusBar, Modal, Dimensions, Pressable, useWindowDimensions } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +19,8 @@ export default function TripDetail() {
   const params = useLocalSearchParams();
   const slug = (params.slug as string) || "";
   const { lang, t } = useLanguage();
+  const { width: winW } = useWindowDimensions();
+  const isDesktop = winW >= 900;
   const baseTrip = getTripBySlug(slug);
   const trip = baseTrip ? localizeTrip(baseTrip, lang) : undefined;
 
@@ -79,7 +81,7 @@ export default function TripDetail() {
           </View>
         </View>
 
-        <View style={styles.priceBar}>
+        <View style={[styles.priceBar, isDesktop && styles.wideCenter]}>
           <View>
             <Text style={styles.priceLabel}>{fmt(t("trip.price_label"), { n: trip.maxPeople || 4 })}</Text>
             <Text style={[styles.priceValue, { color: trip.accent }]}>{trip.price} zł</Text>
@@ -89,7 +91,7 @@ export default function TripDetail() {
           </View>
         </View>
 
-        <View style={styles.transportBadge}>
+        <View style={[styles.transportBadge, isDesktop && { maxWidth: 1200, alignSelf: "center", width: "100%", marginHorizontal: 0 }]}>
           <Ionicons name="car-sport" size={18} color="#1565c0" />
           <View style={{ flex: 1 }}>
             <Text style={styles.transportTitle}>{t("trip.transport_title")}</Text>
@@ -97,7 +99,7 @@ export default function TripDetail() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trip.about_title")}</Text>
           {trip.description.split("\n\n").map((para, i) => (
             <Text key={i} style={styles.descPara}>{para}</Text>
@@ -112,12 +114,12 @@ export default function TripDetail() {
           )}
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{fmt(t("trip.gallery_title"), { n: trip.gallery.length })}</Text>
           <Text style={styles.galleryHint}>{t("trip.gallery_hint")}</Text>
           <View style={styles.gallery}>
             {trip.gallery.map((url, i) => (
-              <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => openLightbox(i)} style={styles.galleryItem}>
+              <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => openLightbox(i)} style={[styles.galleryItem, isDesktop && { width: "19%" }]}>
                 <Image source={{ uri: url }} style={styles.galleryImg} />
                 <View style={styles.galleryZoomBadge}>
                   <Ionicons name="expand" size={14} color="#fff" />
@@ -127,7 +129,7 @@ export default function TripDetail() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trip.plan_title")}</Text>
           <View style={styles.timeline}>
             <View style={[styles.timelineLine, { backgroundColor: "#e5e5ea" }]} />
@@ -144,13 +146,13 @@ export default function TripDetail() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trip.map_title")}</Text>
-          <Image source={{ uri: trip.mapImage }} style={styles.mapImage} resizeMode="cover" />
+          <Image source={{ uri: trip.mapImage }} style={[styles.mapImage, isDesktop && { height: 400 }]} resizeMode="cover" />
           <Text style={styles.mapLegend}>{trip.mapLegend}</Text>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trip.character_title")}</Text>
           <Text style={styles.climateSubtitle}>{trip.climateSubtitle}</Text>
           {trip.climateList.map((item, i) => (
@@ -161,7 +163,7 @@ export default function TripDetail() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{fmt(t("trip.included_title"), { price: trip.price })}</Text>
           <View style={styles.includedBox}>
             {trip.included.map((item, i) => (
@@ -255,6 +257,8 @@ const styles = StyleSheet.create({
   transportTitle: { fontSize: 14, fontWeight: "700", color: "#1565c0" },
   transportSub: { fontSize: 11, color: "#1976d2", marginTop: 2 },
   section: { padding: 20, backgroundColor: "#fff", borderTopWidth: 8, borderTopColor: "#f5f5f7" },
+  sectionDesktop: { maxWidth: 1200, alignSelf: "center", width: "100%", paddingHorizontal: 40, paddingVertical: 32 },
+  wideCenter: { maxWidth: 1200, alignSelf: "center", width: "100%", paddingHorizontal: 32 },
   sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 14, color: "#1c1c1e" },
   timeline: { position: "relative", paddingLeft: 12 },
   timelineLine: { position: "absolute", left: 18, top: 8, bottom: 8, width: 2 },

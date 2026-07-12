@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +12,11 @@ import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 export default function WycieczkiIndex() {
   const router = useRouter();
   const { lang, t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+  const isTablet = width >= 640 && width < 900;
+  const cardsPerRow = isDesktop ? 3 : isTablet ? 2 : 1;
+  const cardWidth = isDesktop || isTablet ? `${100 / cardsPerRow - 2}%` as any : "100%";
 
   const localized = TRIPS.map((trip) => localizeTrip(trip, lang));
 
@@ -54,9 +59,9 @@ export default function WycieczkiIndex() {
               </View>
             </View>
           </SafeAreaView>
-          <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>{t("trips.hero_title")}</Text>
-            <Text style={styles.heroSubtitle}>{t("trips.hero_subtitle")}</Text>
+          <View style={[styles.heroContent, isDesktop && { maxWidth: 1200, alignSelf: "center", width: "100%", left: 0, right: 0, paddingHorizontal: 32 }]}>
+            <Text style={[styles.heroTitle, isDesktop && { fontSize: 48, lineHeight: 54 }]}>{t("trips.hero_title")}</Text>
+            <Text style={[styles.heroSubtitle, isDesktop && { fontSize: 16, marginTop: 14, maxWidth: 600 }]}>{t("trips.hero_subtitle")}</Text>
           </View>
         </View>
 
@@ -66,14 +71,15 @@ export default function WycieczkiIndex() {
           <View style={styles.stat}><Text style={styles.statNum}>100%</Text><Text style={styles.statLabel}>{t("trips.stat_personal")}</Text></View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trips.section_title")}</Text>
           <Text style={styles.sectionSubtitle}>{t("trips.section_subtitle")}</Text>
+          <View style={[styles.cardsGrid, (isDesktop || isTablet) && styles.cardsGridRow]}>
           {sorted.map((trip) => (
             <TouchableOpacity
               key={trip.slug}
               activeOpacity={0.85}
-              style={styles.tripCard}
+              style={[styles.tripCard, (isDesktop || isTablet) && { width: cardWidth, marginBottom: 20 }]}
               onPress={() => router.push(`/wycieczki/${trip.slug}` as any)}
             >
               <View style={styles.cardImageWrap}>
@@ -105,6 +111,7 @@ export default function WycieczkiIndex() {
               </View>
             </TouchableOpacity>
           ))}
+          </View>
         </View>
 
         <View style={styles.whyUs}>
@@ -141,6 +148,9 @@ const styles = StyleSheet.create({
   statNum: { fontSize: 22, fontWeight: "800", color: "#2E7D32" },
   statLabel: { fontSize: 10, color: "#8e8e93", marginTop: 2, fontWeight: "600" },
   section: { padding: 20 },
+  sectionDesktop: { maxWidth: 1200, alignSelf: "center", width: "100%", paddingHorizontal: 32 },
+  cardsGrid: {},
+  cardsGridRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   sectionTitle: { fontSize: 20, fontWeight: "800", marginBottom: 4, color: "#1c1c1e" },
   sectionSubtitle: { fontSize: 13, color: "#6e6e73", marginBottom: 16 },
   tripCard: { backgroundColor: "#fff", borderRadius: 16, marginBottom: 16, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
