@@ -175,7 +175,7 @@ export const TRIPS: Trip[] = [
     flag: "SK",
     title: "Najpiękniejsza Słowacja z Krakowa",
     subtitle: "Bachledova • Jaskinia Bielańska • Strbskie Pleso",
-    heroImage: "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/b46ami7f_NXDe23akMPXdq-H2Ce_SJ03Oqqm8y2vxAinetxp1xeSjizepkczMNmNpinNeZvf0OYF7iGxu1qKBGiy2DxEuHiqGwhEVQ8xFZgvjFBpaaLHGGomCwZGEs4u5M6FtxI00MX0vwu4o3UCbEUEeJxpmN5uWHuLbEdvkczPvWkRbxIfOp791RHs_-sLAAHQeDYtv.jpg",
+    heroImage: "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/m6cagd6h_jlG41Vbbpf-iORsFJtjADOmcQkO432x8Jdff6DXKgUZmGSXEFcxz0ONeMBWeXqJCeiQ9uDqFEgPdXBDsrdXEZi_6hkxRnUJ8m0xRt7EqrcwCXZ_wF0V9vvQ7JxQiQcULq1KnJEYgAyTT2-r2nej0KOQg-B3ZaCW5SXXMnM-1en2pyuUJyBuFwW7fzhLoU0PE.jpg",
     price: 890,
     duration: "~14h",
     attractionsCount: 3,
