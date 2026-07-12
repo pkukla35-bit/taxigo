@@ -49,8 +49,6 @@ export const TRIPS: Trip[] = [
   {
     slug: "pieniny",
     gallery: [
-      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/b46ami7f_NXDe23akMPXdq-H2Ce_SJ03Oqqm8y2vxAinetxp1xeSjizepkczMNmNpinNeZvf0OYF7iGxu1qKBGiy2DxEuHiqGwhEVQ8xFZgvjFBpaaLHGGomCwZGEs4u5M6FtxI00MX0vwu4o3UCbEUEeJxpmN5uWHuLbEdvkczPvWkRbxIfOp791RHs_-sLAAHQeDYtv.jpg",
-      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/uhh3sfta_kT-C3IsQFp03-lEpo3PH5qyaxgNNVlbmAFruyscXC6zAmVSAPJeQpgUvZ0pxFRGPviTw2_-pAD4AkVSd5eEzgP7B03YnGRs4I_0bEw2kZHP3YrLdzBlQws-GTMwLgr4u-MT-UHlluw6EPV77CqnT7P3XK5Vwm-9mUEi0aI9SOejtDxGaxz0jqPDv9edRx49L.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/1u4lylr3_fKcxwfwiG4eMDe8rfrx7J4b-rBcqNz9Cr5JPHTQqZWybIaSRBCS7Zvnz98PGp-lu8nRflpiOkvQ61xTqZfPxg0b8QtQAJDzzDLJSRz2W4CWEkzj9p-s3ChqXkPaiGB7z9J0to3RzHERd3GR9mfDgWANPHR5b2uQv05fIVBnuGCuad4CX4CF32Ze9MCfMLRaz.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/bo8omojz__WODmwSyszXYHGkICPkZBVdUtOU7o71COs1MSAr71Eh-K5vM7pNs8XfANys9F9coqmsYaVQzKmB7DaXZ3ESRdqQnoneGy0Gw2iNEXV9-LLq5tqXliXlATwvROZQYRODnLvFgXHpz3hfb9iZf5p0_7HeeCfLzzsjTTMPxk5Na4fGL8Ep51mFYURjgb1EP85kQ.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/d1l74zt9_M5rFJ58PPxAE6o6JMcfnCCX7sP0IbFm-7bC9G8AXpk2pMF1Zrw5QcP9Du_tUvnR1ZTFNECXlzFFXcY7BFslk5wkRlun_3zzv2h0j9TKqmG1k1HyRIttW0tAhIqghfbnqx8DuG3hE2PK0fMBuLWwp6Eh2zCt0QwSE7-dJU_vKku2W1594g4c-DyzUW2F6nhCd.jpg",
@@ -102,6 +100,7 @@ export const TRIPS: Trip[] = [
   // 2. DUNAJEC
   {
     slug: "dunajec",    gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/34uj9hu6_HHTnSgCGcEFTbPldMPTRIySyKTbdDlc4qN3qVHdb0tejTohnAwYyheX6Tng-4iuJHcN1c2_N11ppOY3zMe_LRyNB7UWRhYFMcTZd6lqfuxTz46Xs-rnc713isSheWsz0Tf_2cjhwxxA4ZFGUSUsOv2ldrgQ2Bf3JCVxOaw9R_GU17YxS121arik7pFBNfOCp.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2mi92ztn_QUmIsxuA5lytTAb4xt6ab5exOLH9JUpxJ4uLuMZmSxXfv1o0iMB6Q0AFiqk5FqNrCn2TuTIHPejhEq-OGnUIJAFiavpJazub97waeMYXvUR8Mkjl5nxNsI1frwCCabavCp5lIZw3g2zbC0_O5oZSMLMMIIVU700vkilw702YRA_66y2fTNs0LEtnJFUbI7qV.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/3vw9nkxw_WbrLcz0A-g0f9PF2pvBUGbFRYaMAzmls65UYS0o733ksfD4dDc9T5xVsuZ5aJQGDcrtSA5PbQzSYKTQOyDoINUVKmtuVbHy10rxi4cMAkkdl63BgcpOs1zq0kxFVAESiIeDle0XM-poR5DGq9oDMXVUtcdMCtnVMaye8k3j8APP7T564kKCeRg_lnkL5u0HJ.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/61f1lfen_FJWYzel5YTKp9BXO8Pu5OYyBpCv3GZO7VlhH6WALNAmYhibr6JJkQ0yxRWEHH3NO2g_vtUKGIruYBKquxdOqD_k1s1VufFsaNtY9l8hEw5Yx2VntpXStEfR35iIe51rmZdTdvy82BClCWrF8bYINJKYvI6ILMwdq-ln1vX50jfkubs8epPSqUuDTRCqTp1b8.jpg",
@@ -159,6 +158,8 @@ export const TRIPS: Trip[] = [
   {
     slug: "slowacja",
     gallery: [
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/b46ami7f_NXDe23akMPXdq-H2Ce_SJ03Oqqm8y2vxAinetxp1xeSjizepkczMNmNpinNeZvf0OYF7iGxu1qKBGiy2DxEuHiqGwhEVQ8xFZgvjFBpaaLHGGomCwZGEs4u5M6FtxI00MX0vwu4o3UCbEUEeJxpmN5uWHuLbEdvkczPvWkRbxIfOp791RHs_-sLAAHQeDYtv.jpg",
+      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/uhh3sfta_kT-C3IsQFp03-lEpo3PH5qyaxgNNVlbmAFruyscXC6zAmVSAPJeQpgUvZ0pxFRGPviTw2_-pAD4AkVSd5eEzgP7B03YnGRs4I_0bEw2kZHP3YrLdzBlQws-GTMwLgr4u-MT-UHlluw6EPV77CqnT7P3XK5Vwm-9mUEi0aI9SOejtDxGaxz0jqPDv9edRx49L.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/91hl9eiq_ChatGPT%20Image%2019%20maj%202026%2C%2011_20_31.png",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/0c8gtkwl_K-Or_DvV0gzZFPQpbs1HDNcjRt0hUXVFHLGt_KVkJJQfz8X9nWLJaWROA0d4avvHNX1_Mpuxd__kmvmYpzzWBh8LVv3bbgbEPorvrJbl7XRhVwF164paIeaWcgWzay8lN4gGoUvLnDQdu5_rk-2Yt9oAq7VuKl7pafG1WZ9_MnVm7U5qCI2RwcsGs4-oKF4x.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/jp0wjqga_i5C0P59CGNWKdxEDEmSZTOEYZvp7FOZyaNBFMgUa81igdWZNJjfYLi58GQPZhF_VORIX1sLUVoAW9zXlpSth6CvQH2hE5u3EATTvd-JxLzV53XgAK1V_jK1-QPXcBimcaJo6zYiPjHjMuSDaYk6wSWf3Vgtrpd0ewQxP0uNGABS-8C0ZhJUj6Whs-l7p3Aeo.jpg",
@@ -268,7 +269,6 @@ export const TRIPS: Trip[] = [
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/3jt6s7ow_f33003e02c4f3d86e655d8876a3f88b3.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/bmdgvqyd_aS7ONH7LRMKo5vBTbxxivVD8JgLoMbnI94sm72sCr5JrWRy2_7ymMvA8bSLNxJjQPSgS-qNaDiqxkiKxjeGQO9liAB3GoRwmixlYeMK_InSNEhjKVq0h2L77MXUgdTSOnAVSjbRv80QAvMLKb9WeCIWm_5fiyE_ZFDCvQZ4Bpp9DuMiLpjK4I0UT9e61SI-3.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/2ex177xi_HiFZm8GYzW0d-RDpBSxJ7pa3aioSNkoz4n6lv68f97k5PEB--LW84q2ZgxgZymprEBuSBLRRg_AyT6OzbFk386QGDBEO7LUv2sF2xmWuouStVRCOWQKclexRw12beant3kjE5qANpa87AvWMIkLx1lI56k4SFXGK5_8UqXtNICIdsWmnyHGh2q3weFS9YCww.jpg",
-      "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/34uj9hu6_HHTnSgCGcEFTbPldMPTRIySyKTbdDlc4qN3qVHdb0tejTohnAwYyheX6Tng-4iuJHcN1c2_N11ppOY3zMe_LRyNB7UWRhYFMcTZd6lqfuxTz46Xs-rnc713isSheWsz0Tf_2cjhwxxA4ZFGUSUsOv2ldrgQ2Bf3JCVxOaw9R_GU17YxS121arik7pFBNfOCp.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/7bxtprdy_ytiqWfoHF2tuJZW8L0onIKO9_cHZ6WOlsqEoZO8jWjEaUejpZJp_svKIso1ZY5BnRm72YRDdsyvT4SLUzZGyR4595bQuByDCx_96ru5Ilsu6me2cXTHQ4B_T9TZH3_H4mafn2x30RR_1x7sST4bT5ZNlop5K2HM7fz6Iq39ME6JuIxBmSggSY6QWW-iNHGJ7.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/dm10vjl1_PKMfrd5SWiGV7ThIl4UjFl1r5rvTjefPP2OJvmSbvIqpbvUBcsZhM0CTZFPVXzVae0P1HfdWgkshaJQreiiFr8k7w_nULvmuSPH955k3uuxXorLvKd7t-jqyX-36G5eLLkvIfQIOjWGszDuENhWEdm-vD56bqALS0olEDLuB5yt1AV8TlngMQMxwJaK-K52k.jpg",
       "https://customer-assets.emergentagent.com/job_mobility-platform-130/artifacts/ea4s6qjy_NqgXfh4Ns5k1_xWTGloIj4kLGm4wo1coggUNgUXw9IKTNKQOBPLKVGuSQMViBlETfbARamdimmnq4Uoy8ngJZAX_LAa9FNUMq0Es-I97XNpwQTnaLGF2zkaNmCED8NB-k06HDoQxpxR8fy1aAEWnJ12l5axCs5Ay1t5ZXFsIMbaxYcnnyhI-nt8XAL_rx0U3.jpg",
