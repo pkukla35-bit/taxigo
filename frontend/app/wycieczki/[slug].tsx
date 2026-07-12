@@ -56,7 +56,7 @@ export default function TripDetail() {
     <View style={{ flex: 1, backgroundColor: "#fafafa" }}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
+        <View style={[styles.hero, isDesktop && { height: 600 }]}>
           <Image source={{ uri: trip.heroImage }} style={styles.heroImage} />
           <View style={styles.heroOverlay} />
           <SafeAreaView edges={["top"]} style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }}>
