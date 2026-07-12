@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Activity
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function Pay() {
   const router = useRouter();
   const { ride_id } = useLocalSearchParams<{ ride_id: string }>();
   const { authFetch } = useAuth();
+  const { t } = useLanguage();
   const [ride, setRide] = useState<any>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -25,9 +27,9 @@ export default function Pay() {
   useEffect(() => { load(); }, [load]);
 
   const pay = async () => {
-    if (code.length !== 6) return Alert.alert("BLIK", "Wpisz 6-cyfrowy kod BLIK.");
+    if (code.length !== 6) return Alert.alert(t("pay.blik"), t("pay.blik_err"));
     setBusy(true);
-    setStatus("Przetwarzanie...");
+    setStatus(t("pay.processing"));
     try {
       const r = await authFetch("/api/payments/blik/create", {
         method: "POST",
@@ -35,12 +37,11 @@ export default function Pay() {
       });
       const data = await r.json();
       if (!r.ok) {
-        setStatus("Błąd: " + (data.detail || "Nieznany błąd"));
+        setStatus(t("common.error") + ": " + (data.detail || ""));
         setBusy(false);
         return;
       }
-      // BLIK: poll for status (passenger needs to confirm in bank app)
-      setStatus("Potwierdź w aplikacji bankowej (60 sekund)...");
+      setStatus(t("pay.blik_confirm_in_app"));
       let attempts = 0;
       const interval = setInterval(async () => {
         attempts++;
@@ -49,17 +50,17 @@ export default function Pay() {
           const sd = await sr.json();
           if (sd.status === "succeeded") {
             clearInterval(interval);
-            setStatus("✅ Płatność zaakceptowana!");
+            setStatus(t("pay.success"));
             setTimeout(() => router.replace({ pathname: "/passenger/receipt", params: { ride_id: ride_id! } }), 1200);
           } else if (["canceled", "requires_payment_method"].includes(sd.status) || attempts > 30) {
             clearInterval(interval);
-            setStatus("❌ Płatność nie udała się. Spróbuj ponownie.");
+            setStatus(t("pay.blik_fail"));
             setBusy(false);
           }
         } catch {}
       }, 2000);
     } catch (e: any) {
-      setStatus("Błąd: " + e.message);
+      setStatus(t("common.error") + ": " + e.message);
       setBusy(false);
     }
   };
@@ -78,14 +79,14 @@ export default function Pay() {
         <TouchableOpacity onPress={() => router.replace("/passenger/home")} style={styles.back}>
           <Ionicons name="close" size={26} color="#0F0F0F" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Płatność BLIK</Text>
+        <Text style={styles.headerTitle}>{t("pay.blik_title")}</Text>
         <View style={{ width: 44 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.amountBox}>
-          <Text style={styles.amountLabel}>DO ZAPŁATY</Text>
-          <Text style={styles.amount}>{ride.price_pln?.toFixed(2)} zł</Text>
+          <Text style={styles.amountLabel}>{t("pay.amount")}</Text>
+          <Text style={styles.amount}>{ride.price_pln?.toFixed(2)} {t("common.pln")}</Text>
           <Text style={styles.from}>{ride.pickup_address} → {ride.dest_address}</Text>
         </View>
 
@@ -95,15 +96,15 @@ export default function Pay() {
               <Text style={styles.blikLogoText}>BLIK</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.blikTitle}>Wpisz kod BLIK</Text>
-              <Text style={styles.blikSub}>6 cyfr z aplikacji bankowej</Text>
+              <Text style={styles.blikTitle}>{t("pay.blik_enter")}</Text>
+              <Text style={styles.blikSub}>{t("pay.blik_sub")}</Text>
             </View>
           </View>
 
           <TextInput
             testID="blik-code-input"
             value={code}
-            onChangeText={(t) => setCode(t.replace(/[^0-9]/g, "").slice(0, 6))}
+            onChangeText={(tt) => setCode(tt.replace(/[^0-9]/g, "").slice(0, 6))}
             placeholder="123 456"
             placeholderTextColor="#A3A3A3"
             keyboardType="number-pad"
@@ -124,15 +125,15 @@ export default function Pay() {
             disabled={code.length !== 6 || busy}
             onPress={pay}
           >
-            {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.payBtnText}>Zapłać {ride.price_pln?.toFixed(2)} zł</Text>}
+            {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.payBtnText}>{t("pay.pay_with_amount").replace("{amount}", ride.price_pln?.toFixed(2))}</Text>}
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.skipBtn} onPress={skipToReceipt}>
-          <Text style={styles.skipText}>Zapłacę gotówką → przejdź do paragonu</Text>
+          <Text style={styles.skipText}>{t("pay.skip_cash")}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footer}>🔒 Płatność obsługiwana przez Stripe</Text>
+        <Text style={styles.footer}>{t("pay.stripe_note")}</Text>
       </ScrollView>
     </View>
   );

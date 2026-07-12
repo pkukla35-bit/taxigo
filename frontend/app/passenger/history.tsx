@@ -3,18 +3,20 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Refresh
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
-const STATUS: Record<string, { label: string; color: string }> = {
-  completed: { label: "Zakończony", color: "#00E676" },
-  cancelled: { label: "Anulowany", color: "#FF3B30" },
-  pending: { label: "W trakcie", color: "#FFD600" },
-  accepted: { label: "Zaakceptowany", color: "#FFD600" },
-  in_progress: { label: "W trakcie", color: "#FFD600" },
+const STATUS_COLORS: Record<string, string> = {
+  completed: "#00E676",
+  cancelled: "#FF3B30",
+  pending: "#FFD600",
+  accepted: "#FFD600",
+  in_progress: "#FFD600",
 };
 
 export default function History() {
   const router = useRouter();
   const { authFetch } = useAuth();
+  const { t, lang } = useLanguage();
   const [rides, setRides] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -25,13 +27,19 @@ export default function History() {
 
   useEffect(() => { load(); }, [load]);
 
+  const statusLabel = (s: string) => {
+    const key = `history.status.${s}` as any;
+    const val = t(key);
+    return val === key ? s : val;
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity testID="hist-back-btn" onPress={() => router.back()} style={styles.back}>
           <Ionicons name="chevron-back" size={26} color="#0F0F0F" />
         </TouchableOpacity>
-        <Text style={styles.title}>Historia</Text>
+        <Text style={styles.title}>{t("history.title")}</Text>
         <View style={{ width: 44 }} />
       </View>
       <ScrollView
@@ -41,7 +49,7 @@ export default function History() {
         {rides.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color="#A3A3A3" />
-            <Text style={styles.emptyText}>Brak historii przejazdów</Text>
+            <Text style={styles.emptyText}>{t("history.empty")}</Text>
           </View>
         ) : (
           rides.map((r) => (
@@ -57,9 +65,9 @@ export default function History() {
               }}
             >
               <View style={styles.rowTop}>
-                <Text style={styles.date}>{new Date(r.created_at).toLocaleString("pl-PL")}</Text>
-                <View style={[styles.badge, { backgroundColor: (STATUS[r.status]?.color || "#A3A3A3") + "33" }]}>
-                  <Text style={[styles.badgeText, { color: STATUS[r.status]?.color || "#A3A3A3" }]}>{STATUS[r.status]?.label || r.status}</Text>
+                <Text style={styles.date}>{new Date(r.created_at).toLocaleString(lang === "en" ? "en-GB" : "pl-PL")}</Text>
+                <View style={[styles.badge, { backgroundColor: (STATUS_COLORS[r.status] || "#A3A3A3") + "33" }]}>
+                  <Text style={[styles.badgeText, { color: STATUS_COLORS[r.status] || "#A3A3A3" }]}>{statusLabel(r.status)}</Text>
                 </View>
               </View>
               <View style={styles.route}>
@@ -74,7 +82,7 @@ export default function History() {
               <View style={styles.bottom}>
                 <Text style={styles.km}>{r.distance_km?.toFixed?.(1)} km</Text>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <Text style={styles.price}>{r.price_pln?.toFixed(2)} zł</Text>
+                  <Text style={styles.price}>{r.price_pln?.toFixed(2)} {t("common.pln")}</Text>
                   {r.status === "completed" && <Ionicons name="receipt-outline" size={16} color="#525252" />}
                 </View>
               </View>

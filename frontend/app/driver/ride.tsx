@@ -3,17 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator, 
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
-
-const LABEL: Record<string, string> = {
-  accepted: "Jedź po pasażera",
-  in_progress: "Wieziesz pasażera",
-};
 
 export default function DriverRide() {
   const router = useRouter();
   const { authFetch } = useAuth();
+  const { t, lang } = useLanguage();
   const [ride, setRide] = useState<any>(null);
+
+  const LABEL: Record<string, string> = {
+    accepted: lang === "en" ? "Pick up passenger" : "Jedź po pasażera",
+    in_progress: lang === "en" ? "Passenger on board" : "Wieziesz pasażera",
+  };
 
   const load = useCallback(async () => {
     const r = await authFetch("/api/rides/active");
@@ -39,17 +41,18 @@ export default function DriverRide() {
   };
   const complete = async () => {
     await authFetch(`/api/rides/${ride.ride_id}/complete`, { method: "POST" });
-    Alert.alert("Świetnie!", "Przejazd zakończony. +" + ride.price_pln + " zł");
+    Alert.alert(lang === "en" ? "Great!" : "Świetnie!", (lang === "en" ? "Ride completed. +" : "Przejazd zakończony. +") + ride.price_pln + " " + t("common.pln"));
     router.replace("/driver/home");
   };
   const cancel = async () => {
+    const msg = t("tracking.cancel_confirm_title");
     const confirmed =
       Platform.OS === "web"
-        ? (typeof window !== "undefined" && window.confirm("Anulować przejazd?"))
+        ? (typeof window !== "undefined" && window.confirm(msg))
         : await new Promise<boolean>((resolve) => {
-            Alert.alert("Anulować przejazd?", "", [
-              { text: "Nie", style: "cancel", onPress: () => resolve(false) },
-              { text: "Tak", style: "destructive", onPress: () => resolve(true) },
+            Alert.alert(msg, "", [
+              { text: t("tracking.cancel_no"), style: "cancel", onPress: () => resolve(false) },
+              { text: t("tracking.cancel_yes"), style: "destructive", onPress: () => resolve(true) },
             ]);
           });
     if (!confirmed) return;
@@ -68,8 +71,8 @@ export default function DriverRide() {
       <View style={styles.mapWrap}>
         <MapView
           dark
-          pickup={{ lat: ride.pickup_lat, lng: ride.pickup_lng, label: "Odbiór" }}
-          destination={{ lat: ride.dest_lat, lng: ride.dest_lng, label: "Cel" }}
+          pickup={{ lat: ride.pickup_lat, lng: ride.pickup_lng, label: t("tracking.pickup_label") }}
+          destination={{ lat: ride.dest_lat, lng: ride.dest_lng, label: t("tracking.dest_label") }}
         />
         <View style={styles.topBar}>
           <View style={styles.brandPill}>
@@ -88,11 +91,11 @@ export default function DriverRide() {
             <Text style={styles.avatarText}>{(ride.passenger_name || "P")[0]}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.eyebrow}>PASAŻER</Text>
+            <Text style={styles.eyebrow}>{t("driver.passenger").toUpperCase()}</Text>
             <Text style={styles.name}>{ride.passenger_name}</Text>
           </View>
           <View style={styles.priceBadge}>
-            <Text style={styles.priceBadgeText}>{ride.price_pln?.toFixed(2)} zł</Text>
+            <Text style={styles.priceBadgeText}>{ride.price_pln?.toFixed(2)} {t("common.pln")}</Text>
           </View>
         </View>
 
@@ -110,16 +113,16 @@ export default function DriverRide() {
 
         {isAccepted ? (
           <TouchableOpacity testID="start-ride-btn" style={styles.primaryBtn} onPress={start}>
-            <Text style={styles.primaryBtnText}>Rozpocznij przejazd</Text>
+            <Text style={styles.primaryBtnText}>{t("driver.start_ride")}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity testID="complete-ride-btn" style={styles.primaryBtn} onPress={complete}>
-            <Text style={styles.primaryBtnText}>Zakończ przejazd</Text>
+            <Text style={styles.primaryBtnText}>{t("driver.complete_ride")}</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity testID="d-cancel-btn" style={styles.cancelBtn} onPress={cancel}>
-          <Text style={styles.cancelText}>Anuluj</Text>
+          <Text style={styles.cancelText}>{t("common.cancel")}</Text>
         </TouchableOpacity>
       </View>
     </View>

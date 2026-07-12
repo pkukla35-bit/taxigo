@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert } 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function Rate() {
   const router = useRouter();
   const { ride_id } = useLocalSearchParams<{ ride_id: string }>();
   const { authFetch } = useAuth();
+  const { t } = useLanguage();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
@@ -17,7 +19,7 @@ export default function Rate() {
       body: JSON.stringify({ rating, comment }),
     });
     if (r.ok) router.replace("/passenger/home");
-    else Alert.alert("Błąd", "Nie udało się wysłać oceny.");
+    else Alert.alert(t("common.error"), t("rate.err"));
   };
 
   return (
@@ -29,8 +31,8 @@ export default function Rate() {
         <View style={styles.checkmark}>
           <Ionicons name="checkmark" size={48} color="#0F0F0F" />
         </View>
-        <Text style={styles.title}>Dziękujemy{"\n"}za przejazd!</Text>
-        <Text style={styles.sub}>Jak oceniasz swojego kierowcę?</Text>
+        <Text style={styles.title}>{t("rate.thanks")}</Text>
+        <Text style={styles.sub}>{t("rate.rate_driver")}</Text>
 
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((n) => (
@@ -53,18 +55,18 @@ export default function Rate() {
           testID="comment-input"
           value={comment}
           onChangeText={setComment}
-          placeholder="Dodaj komentarz (opcjonalnie)"
+          placeholder={t("rate.comment_ph")}
           placeholderTextColor="#A3A3A3"
           multiline
           style={styles.input}
         />
 
         <TouchableOpacity testID="submit-rating-btn" style={styles.cta} onPress={send}>
-          <Text style={styles.ctaText}>Wyślij ocenę</Text>
+          <Text style={styles.ctaText}>{t("rate.send")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.replace("/passenger/home")}>
-          <Text style={styles.skip}>Pomiń</Text>
+          <Text style={styles.skip}>{t("rate.skip")}</Text>
         </TouchableOpacity>
       </View>
     </View>

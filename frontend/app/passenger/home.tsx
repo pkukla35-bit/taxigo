@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { searchAddress, getRoute, reverseGeocode, GeoSuggestion, RouteResult } from "../../services/mapbox";
 import { useLiveLocation } from "../../hooks/useLiveLocation";
@@ -19,6 +20,7 @@ type Reservation = {
   time: string; // HH:MM
   name: string;
   phone: string;
+  email: string;
   notes: string;
   createdAt: string;
 };
@@ -26,6 +28,7 @@ type Reservation = {
 export default function PassengerHome() {
   const router = useRouter();
   const { user, authFetch, logout } = useAuth();
+  const { t, lang, setLang } = useLanguage();
   const [pickup, setPickup] = useState<Place | null>(null);
   const [dest, setDest] = useState<Place | null>(null);
   const [pickupQ, setPickupQ] = useState("");
@@ -42,10 +45,11 @@ export default function PassengerHome() {
 
   // Reservation modal state
   const [resvOpen, setResvOpen] = useState(false);
-  const [resvDate, setResvDate] = useState(""); // YYYY-MM-DD
-  const [resvTime, setResvTime] = useState(""); // HH:MM
+  const [resvDate, setResvDate] = useState("");
+  const [resvTime, setResvTime] = useState("");
   const [resvName, setResvName] = useState("");
   const [resvPhone, setResvPhone] = useState("");
+  const [resvEmail, setResvEmail] = useState("");
   const [resvNotes, setResvNotes] = useState("");
   const [resvSaving, setResvSaving] = useState(false);
 
@@ -57,12 +61,12 @@ export default function PassengerHome() {
       if (addr) {
         setPickup({ name: addr.name, lat: addr.lat, lng: addr.lng });
       } else {
-        setPickup({ name: "Twoja aktualna lokalizacja", lat: myLoc.lat, lng: myLoc.lng });
+        setPickup({ name: lang === "en" ? "Your current location" : "Twoja aktualna lokalizacja", lat: myLoc.lat, lng: myLoc.lng });
       }
       setAutoPickupDone(true);
-      setActiveField("dest"); // jump focus to destination
+      setActiveField("dest");
     })();
-  }, [myLoc, pickup, autoPickupDone]);
+  }, [myLoc, pickup, autoPickupDone, lang]);
 
   const loadActive = useCallback(async () => {
     const r = await authFetch("/api/rides/active");
@@ -86,7 +90,6 @@ export default function PassengerHome() {
     return () => clearInterval(i);
   }, [loadActive, loadDrivers]);
 
-  // Debounced address search
   useEffect(() => {
     const q = activeField === "pickup" ? pickupQ : activeField === "dest" ? destQ : "";
     if (!activeField || q.trim().length < 2) {
@@ -103,7 +106,6 @@ export default function PassengerHome() {
     return () => debounceRef.current && clearTimeout(debounceRef.current);
   }, [pickupQ, destQ, activeField]);
 
-  // Compute route when both points selected
   useEffect(() => {
     if (pickup && dest) {
       getRoute(pickup, dest).then(setRoute);
@@ -130,7 +132,7 @@ export default function PassengerHome() {
   };
 
   const order = async () => {
-    if (!pickup || !dest || !route) return Alert.alert("Brak danych", "Wybierz miejsce odbioru i docelowe.");
+    if (!pickup || !dest || !route) return Alert.alert(t("passenger.err_missing_data"), t("passenger.err_missing_data_msg"));
     setLoading(true);
     const r = await authFetch("/api/rides", {
       method: "POST",
@@ -150,25 +152,25 @@ export default function PassengerHome() {
       const data = await r.json();
       router.replace({ pathname: "/passenger/tracking", params: { ride_id: data.ride_id } });
     } else {
-      Alert.alert("Błąd", "Nie udało się zamówić.");
+      Alert.alert(t("common.error"), t("passenger.err_order_failed"));
     }
   };
 
   const openReservation = () => {
     if (!pickup || !dest || !route) {
-      Alert.alert("Brak trasy", "Najpierw wybierz miejsce odbioru i docelowe.");
+      Alert.alert(t("reservation.err_no_route"), t("reservation.err_no_route_msg"));
       return;
     }
-    // Default to tomorrow 10:00
-    const t = new Date();
-    t.setDate(t.getDate() + 1);
-    const yyyy = t.getFullYear();
-    const mm = String(t.getMonth() + 1).padStart(2, "0");
-    const dd = String(t.getDate()).padStart(2, "0");
+    const tm = new Date();
+    tm.setDate(tm.getDate() + 1);
+    const yyyy = tm.getFullYear();
+    const mm = String(tm.getMonth() + 1).padStart(2, "0");
+    const dd = String(tm.getDate()).padStart(2, "0");
     setResvDate(`${yyyy}-${mm}-${dd}`);
     setResvTime("10:00");
-    setResvName("");
+    setResvName(user?.name || "");
     setResvPhone("");
+    setResvEmail(user?.email || "");
     setResvNotes("");
     setResvOpen(true);
   };
@@ -176,20 +178,19 @@ export default function PassengerHome() {
   const saveReservation = async () => {
     if (!pickup || !dest || !route) return;
     if (!resvDate || !resvTime) {
-      Alert.alert("Uzupełnij dane", "Podaj datę i godzinę rezerwacji.");
+      Alert.alert(t("reservation.err_missing"), t("reservation.err_datetime"));
       return;
     }
     if (!resvName.trim() || !resvPhone.trim()) {
-      Alert.alert("Uzupełnij dane", "Imię i numer telefonu są wymagane.");
+      Alert.alert(t("reservation.err_missing"), t("reservation.err_contact"));
       return;
     }
-    // Validate date format YYYY-MM-DD and time HH:MM
     if (!/^\d{4}-\d{2}-\d{2}$/.test(resvDate)) {
-      Alert.alert("Zła data", "Format daty: YYYY-MM-DD, np. 2025-06-15");
+      Alert.alert(t("reservation.err_date_format"), t("reservation.err_date_format_msg"));
       return;
     }
     if (!/^\d{2}:\d{2}$/.test(resvTime)) {
-      Alert.alert("Zła godzina", "Format godziny: HH:MM, np. 10:00");
+      Alert.alert(t("reservation.err_time_format"), t("reservation.err_time_format_msg"));
       return;
     }
     const resv: Reservation = {
@@ -202,31 +203,35 @@ export default function PassengerHome() {
       time: resvTime,
       name: resvName.trim(),
       phone: resvPhone.trim(),
+      email: resvEmail.trim(),
       notes: resvNotes.trim(),
       createdAt: new Date().toISOString(),
     };
     setResvSaving(true);
     try {
-      // 1) Store locally so passenger sees it in "My reservations"
+      // 1) Store locally
       const existing = await AsyncStorage.getItem("passenger_reservations");
       const list: Reservation[] = existing ? JSON.parse(existing) : [];
       list.unshift(resv);
       await AsyncStorage.setItem("passenger_reservations", JSON.stringify(list));
 
-      // 2) Try to send to backend (non-blocking — reservations work even if API is down)
+      // 2) Send to backend for email confirmation (non-blocking)
+      let emailSent = false;
       try {
-        await authFetch("/api/rides/reservations", {
+        const r = await authFetch("/api/rides/reservations", {
           method: "POST",
-          body: JSON.stringify(resv),
+          body: JSON.stringify({ ...resv, lang }),
         });
-      } catch { /* backend not required for reservation */ }
+        if (r.ok) {
+          const data = await r.json();
+          emailSent = data?.email_sent === true;
+        }
+      } catch { /* backend not required */ }
 
       setResvOpen(false);
-      Alert.alert(
-        "✅ Rezerwacja zapisana",
-        `Kierowca odezwie się na ${resv.phone} przed przejazdem.\n\n📅 ${resv.date} o ${resv.time}\n📍 ${resv.pickup.name}\n➡️ ${resv.dest.name}\n💰 ${resv.price_pln.toFixed(2)} zł`,
-        [{ text: "OK" }]
-      );
+      const savedMsg = t("reservation.saved_msg").replace("{phone}", resv.phone);
+      const details = `\n\n📅 ${resv.date} • ${resv.time}\n📍 ${resv.pickup.name}\n➡️ ${resv.dest.name}\n💰 ${resv.price_pln.toFixed(2)} ${t("common.pln")}${emailSent ? `\n\n${t("reservation.email_sent")}` : ""}`;
+      Alert.alert(t("reservation.saved_title"), savedMsg + details, [{ text: t("common.ok") }]);
     } finally {
       setResvSaving(false);
     }
@@ -234,7 +239,7 @@ export default function PassengerHome() {
 
   const driverMarkers = drivers
     .filter((d) => d.last_lat && d.last_lng)
-    .map((d) => ({ lat: d.last_lat, lng: d.last_lng, label: "Kierowca" }));
+    .map((d) => ({ lat: d.last_lat, lng: d.last_lng, label: t("passenger.driver") }));
 
   const showList = activeField && (activeField === "pickup" ? pickupQ.length >= 2 : destQ.length >= 2);
 
@@ -249,25 +254,34 @@ export default function PassengerHome() {
           <View style={styles.brandPill}>
             <Text style={styles.brandPillText}>TAXIGO</Text>
           </View>
-          <TouchableOpacity testID="history-btn" style={styles.iconBtn} onPress={() => router.push("/passenger/history")}>
-            <Ionicons name="time-outline" size={20} color="#0F0F0F" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              style={styles.langBtn}
+              onPress={() => setLang(lang === "pl" ? "en" : "pl")}
+              testID="lang-toggle"
+            >
+              <Text style={styles.langBtnText}>{lang === "pl" ? "EN" : "PL"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity testID="history-btn" style={styles.iconBtn} onPress={() => router.push("/passenger/history")}>
+              <Ionicons name="time-outline" size={20} color="#0F0F0F" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
       <View style={styles.sheet}>
         <View style={styles.handle} />
-        <Text style={styles.greeting}>Cześć, {user?.name?.split(" ")[0] || "podróżniku"} 👋</Text>
-        <Text style={styles.h1}>Dokąd jedziemy?</Text>
+        <Text style={styles.greeting}>{t("passenger.hello")}, {user?.name?.split(" ")[0] || t("passenger.traveller")} 👋</Text>
+        <Text style={styles.h1}>{t("passenger.where_to")}</Text>
 
         <View style={styles.routeRow}>
           <View style={styles.dotA} />
           <TextInput
             testID="pickup-input"
             value={pickupQ || pickup?.name || ""}
-            onChangeText={(t) => { setPickupQ(t); setPickup(null); setActiveField("pickup"); }}
+            onChangeText={(tt) => { setPickupQ(tt); setPickup(null); setActiveField("pickup"); }}
             onFocus={() => setActiveField("pickup")}
-            placeholder="Skąd jedziemy?"
+            placeholder={t("passenger.where_from")}
             placeholderTextColor="#A3A3A3"
             style={styles.input}
             numberOfLines={1}
@@ -279,9 +293,9 @@ export default function PassengerHome() {
           <TextInput
             testID="dest-input"
             value={destQ || dest?.name || ""}
-            onChangeText={(t) => { setDestQ(t); setDest(null); setActiveField("dest"); }}
+            onChangeText={(tt) => { setDestQ(tt); setDest(null); setActiveField("dest"); }}
             onFocus={() => setActiveField("dest")}
-            placeholder="Dokąd jedziemy?"
+            placeholder={t("passenger.where_to")}
             placeholderTextColor="#A3A3A3"
             style={styles.input}
             numberOfLines={1}
@@ -293,13 +307,13 @@ export default function PassengerHome() {
             {searching && (
               <View style={styles.listItem}>
                 <ActivityIndicator size="small" color="#525252" />
-                <Text style={styles.listText}>Szukam adresów...</Text>
+                <Text style={styles.listText}>{t("passenger.searching_addresses")}</Text>
               </View>
             )}
             {!searching && suggestions.length === 0 && (
               <View style={styles.listItem}>
                 <Ionicons name="alert-circle-outline" size={18} color="#A3A3A3" />
-                <Text style={styles.listText}>Brak wyników</Text>
+                <Text style={styles.listText}>{t("passenger.no_results")}</Text>
               </View>
             )}
             {suggestions.map((s) => (
@@ -323,24 +337,24 @@ export default function PassengerHome() {
           <>
             <View style={styles.summary}>
               <View>
-                <Text style={styles.summaryLabel}>DYSTANS</Text>
+                <Text style={styles.summaryLabel}>{t("passenger.distance")}</Text>
                 <Text style={styles.summaryVal}>{distance.toFixed(1)} km</Text>
               </View>
               <View style={styles.vSep} />
               <View>
-                <Text style={styles.summaryLabel}>CZAS</Text>
+                <Text style={styles.summaryLabel}>{t("passenger.time")}</Text>
                 <Text style={styles.summaryVal}>~{Math.round(route.duration_min)} min</Text>
               </View>
               <View style={styles.vSep} />
               <View>
-                <Text style={styles.summaryLabel}>CENA</Text>
-                <Text style={[styles.summaryVal, { color: "#0F0F0F" }]}>{price.toFixed(2)} zł</Text>
+                <Text style={styles.summaryLabel}>{t("passenger.price")}</Text>
+                <Text style={[styles.summaryVal, { color: "#0F0F0F" }]}>{price.toFixed(2)} {t("common.pln")}</Text>
               </View>
             </View>
             <View style={styles.breakdown} testID="price-breakdown">
-              <Text style={styles.breakdownLine}>Opłata: <Text style={styles.breakdownVal}>{BASE_FEE.toFixed(2)} zł</Text></Text>
+              <Text style={styles.breakdownLine}>{t("passenger.fee")}: <Text style={styles.breakdownVal}>{BASE_FEE.toFixed(2)} {t("common.pln")}</Text></Text>
               <Text style={styles.breakdownDot}>•</Text>
-              <Text style={styles.breakdownLine}>{PRICE_PER_KM} zł/km × {distance.toFixed(1)} = <Text style={styles.breakdownVal}>{(distance * PRICE_PER_KM).toFixed(2)} zł</Text></Text>
+              <Text style={styles.breakdownLine}>{PRICE_PER_KM} {t("common.pln")}/km × {distance.toFixed(1)} = <Text style={styles.breakdownVal}>{(distance * PRICE_PER_KM).toFixed(2)} {t("common.pln")}</Text></Text>
             </View>
           </>
         )}
@@ -353,7 +367,7 @@ export default function PassengerHome() {
             onPress={openReservation}
           >
             <Ionicons name="calendar-outline" size={18} color="#0F0F0F" />
-            <Text style={styles.ctaSecondaryText}>Rezerwuj</Text>
+            <Text style={styles.ctaSecondaryText}>{t("passenger.reserve")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="order-ride-btn"
@@ -361,7 +375,7 @@ export default function PassengerHome() {
             disabled={!pickup || !dest || !route || loading}
             onPress={order}
           >
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Zamów teraz</Text>}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>{t("passenger.order_ride")}</Text>}
           </TouchableOpacity>
         </View>
       </View>
@@ -371,32 +385,32 @@ export default function PassengerHome() {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>📅 Zarezerwuj przejazd</Text>
+              <Text style={styles.modalTitle}>{t("reservation.title")}</Text>
               <TouchableOpacity onPress={() => setResvOpen(false)}>
                 <Ionicons name="close" size={26} color="#0F0F0F" />
               </TouchableOpacity>
             </View>
             <ScrollView style={{ maxHeight: 500 }} keyboardShouldPersistTaps="handled">
               <View style={styles.resvSummary}>
-                <Text style={styles.resvSummaryLine}>📍 <Text style={styles.b}>Odbiór:</Text> {pickup?.name}</Text>
-                <Text style={styles.resvSummaryLine}>➡️ <Text style={styles.b}>Cel:</Text> {dest?.name}</Text>
-                <Text style={styles.resvSummaryLine}>💰 <Text style={styles.b}>Cena:</Text> {price.toFixed(2)} zł ({distance.toFixed(1)} km)</Text>
+                <Text style={styles.resvSummaryLine}>📍 <Text style={styles.b}>{t("reservation.pickup_label")}:</Text> {pickup?.name}</Text>
+                <Text style={styles.resvSummaryLine}>➡️ <Text style={styles.b}>{t("reservation.dest_label")}:</Text> {dest?.name}</Text>
+                <Text style={styles.resvSummaryLine}>💰 <Text style={styles.b}>{t("reservation.price_label")}:</Text> {price.toFixed(2)} {t("common.pln")} ({distance.toFixed(1)} km)</Text>
               </View>
 
               <View style={styles.resvRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resvLabel}>📅 Data</Text>
+                  <Text style={styles.resvLabel}>{t("reservation.date")}</Text>
                   <TextInput
                     style={styles.resvInput}
                     value={resvDate}
                     onChangeText={setResvDate}
-                    placeholder="2025-06-15"
+                    placeholder="2026-06-15"
                     placeholderTextColor="#A3A3A3"
                   />
                 </View>
                 <View style={{ width: 12 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resvLabel}>🕐 Godzina</Text>
+                  <Text style={styles.resvLabel}>{t("reservation.time")}</Text>
                   <TextInput
                     style={styles.resvInput}
                     value={resvTime}
@@ -407,7 +421,7 @@ export default function PassengerHome() {
                 </View>
               </View>
 
-              <Text style={styles.resvLabel}>👤 Imię *</Text>
+              <Text style={styles.resvLabel}>{t("reservation.name")}</Text>
               <TextInput
                 style={styles.resvInput}
                 value={resvName}
@@ -416,7 +430,7 @@ export default function PassengerHome() {
                 placeholderTextColor="#A3A3A3"
               />
 
-              <Text style={styles.resvLabel}>📞 Telefon *</Text>
+              <Text style={styles.resvLabel}>{t("reservation.phone")}</Text>
               <TextInput
                 style={styles.resvInput}
                 value={resvPhone}
@@ -426,12 +440,23 @@ export default function PassengerHome() {
                 keyboardType="phone-pad"
               />
 
-              <Text style={styles.resvLabel}>📝 Uwagi (opcjonalne)</Text>
+              <Text style={styles.resvLabel}>{t("reservation.email")}</Text>
+              <TextInput
+                style={styles.resvInput}
+                value={resvEmail}
+                onChangeText={setResvEmail}
+                placeholder="jan@example.com"
+                placeholderTextColor="#A3A3A3"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.resvLabel}>{t("reservation.notes")}</Text>
               <TextInput
                 style={[styles.resvInput, { height: 80, textAlignVertical: "top" }]}
                 value={resvNotes}
                 onChangeText={setResvNotes}
-                placeholder="Np. lot LO123, hotel Ibis..."
+                placeholder={t("reservation.notes_ph")}
                 placeholderTextColor="#A3A3A3"
                 multiline
               />
@@ -441,11 +466,12 @@ export default function PassengerHome() {
               style={[styles.resvSaveBtn, resvSaving && { opacity: 0.6 }]}
               onPress={saveReservation}
               disabled={resvSaving}
+              testID="save-reservation-btn"
             >
               {resvSaving ? <ActivityIndicator color="#0F0F0F" /> : (
                 <>
                   <Ionicons name="checkmark-circle" size={20} color="#0F0F0F" />
-                  <Text style={styles.resvSaveText}>Zapisz rezerwację</Text>
+                  <Text style={styles.resvSaveText}>{t("reservation.save")}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -461,6 +487,8 @@ const styles = StyleSheet.create({
   mapWrap: { flex: 1.05, backgroundColor: "#E5E5E5" },
   topBar: { position: "absolute", top: Platform.OS === "ios" ? 56 : 40, left: 16, right: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.95)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)" },
+  langBtn: { height: 36, minWidth: 44, paddingHorizontal: 10, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.95)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)", alignSelf: "center" },
+  langBtnText: { color: "#0F0F0F", fontWeight: "900", fontSize: 12, letterSpacing: 1 },
   brandPill: { backgroundColor: "#FFD600", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 },
   brandPillText: { fontWeight: "900", color: "#0F0F0F", letterSpacing: 1 },
   sheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 22, paddingBottom: Platform.OS === "ios" ? 32 : 22, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: -8 }, elevation: 12 },

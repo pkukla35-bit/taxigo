@@ -3,17 +3,19 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Refresh
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
-const STATUS: Record<string, { label: string; color: string }> = {
-  completed: { label: "Zakończony", color: "#00E676" },
-  cancelled: { label: "Anulowany", color: "#FF3B30" },
-  accepted: { label: "W trakcie", color: "#FFD600" },
-  in_progress: { label: "W trakcie", color: "#FFD600" },
+const STATUS_COLORS: Record<string, string> = {
+  completed: "#00E676",
+  cancelled: "#FF3B30",
+  accepted: "#FFD600",
+  in_progress: "#FFD600",
 };
 
 export default function DriverHistory() {
   const router = useRouter();
   const { authFetch, user } = useAuth();
+  const { t, lang } = useLanguage();
   const [rides, setRides] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -27,13 +29,19 @@ export default function DriverHistory() {
   const totalEarned = rides.filter(r => r.status === "completed").reduce((s, r) => s + (r.price_pln || 0), 0);
   const completedCount = rides.filter(r => r.status === "completed").length;
 
+  const statusLabel = (s: string) => {
+    const key = `history.status.${s}` as any;
+    const val = t(key);
+    return val === key ? s : val;
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity testID="dh-back" onPress={() => router.back()} style={styles.back}>
           <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>Historia</Text>
+        <Text style={styles.title}>{t("history.title")}</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -43,15 +51,15 @@ export default function DriverHistory() {
       >
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>ZAROBKI</Text>
-            <Text style={styles.statVal}>{totalEarned.toFixed(2)} zł</Text>
+            <Text style={styles.statLabel}>{t("driver.earnings").toUpperCase()}</Text>
+            <Text style={styles.statVal}>{totalEarned.toFixed(2)} {t("common.pln")}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>KURSY</Text>
+            <Text style={styles.statLabel}>{lang === "en" ? "RIDES" : "KURSY"}</Text>
             <Text style={styles.statVal}>{completedCount}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>OCENA</Text>
+            <Text style={styles.statLabel}>{lang === "en" ? "RATING" : "OCENA"}</Text>
             <Text style={styles.statVal}>{(user?.rating_avg ?? 5).toFixed(1)} ⭐</Text>
           </View>
         </View>
@@ -59,15 +67,15 @@ export default function DriverHistory() {
         {rides.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color="#A3A3A3" />
-            <Text style={styles.emptyText}>Brak historii przejazdów</Text>
+            <Text style={styles.emptyText}>{t("history.empty")}</Text>
           </View>
         ) : (
           rides.map((r) => (
             <View key={r.ride_id} style={styles.card} testID={`d-ride-${r.ride_id}`}>
               <View style={styles.rowTop}>
-                <Text style={styles.date}>{new Date(r.created_at).toLocaleString("pl-PL")}</Text>
-                <View style={[styles.badge, { backgroundColor: (STATUS[r.status]?.color || "#A3A3A3") + "22" }]}>
-                  <Text style={[styles.badgeText, { color: STATUS[r.status]?.color || "#A3A3A3" }]}>{STATUS[r.status]?.label || r.status}</Text>
+                <Text style={styles.date}>{new Date(r.created_at).toLocaleString(lang === "en" ? "en-GB" : "pl-PL")}</Text>
+                <View style={[styles.badge, { backgroundColor: (STATUS_COLORS[r.status] || "#A3A3A3") + "22" }]}>
+                  <Text style={[styles.badgeText, { color: STATUS_COLORS[r.status] || "#A3A3A3" }]}>{statusLabel(r.status)}</Text>
                 </View>
               </View>
               <Text style={styles.passenger}>{r.passenger_name}</Text>
@@ -82,7 +90,7 @@ export default function DriverHistory() {
               </View>
               <View style={styles.bottom}>
                 <Text style={styles.km}>{r.distance_km?.toFixed?.(1)} km</Text>
-                <Text style={styles.price}>+{r.price_pln?.toFixed(2)} zł</Text>
+                <Text style={styles.price}>+{r.price_pln?.toFixed(2)} {t("common.pln")}</Text>
               </View>
             </View>
           ))

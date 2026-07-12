@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Activit
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { useLiveLocation } from "../../hooks/useLiveLocation";
 
@@ -11,6 +12,7 @@ const DEFAULT_LOC = { lat: 50.0617, lng: 19.9373 };
 export default function DriverHome() {
   const router = useRouter();
   const { user, authFetch, logout, setRole } = useAuth();
+  const { t, lang, setLang } = useLanguage();
   const [online, setOnline] = useState(false);
   const [pending, setPending] = useState<any[]>([]);
   const [active, setActive] = useState<any>(null);
@@ -20,7 +22,6 @@ export default function DriverHome() {
   const [plate, setPlate] = useState("");
   const live = useLiveLocation(online);
 
-  // Push live location to backend periodically while online
   useEffect(() => {
     if (!online || !live) return;
     const send = async () => {
@@ -92,12 +93,11 @@ export default function DriverHome() {
   };
 
   const saveSetup = async () => {
-    if (!car.trim() || !plate.trim()) return Alert.alert("Uzupełnij dane", "Wpisz model auta i numer rejestracyjny.");
+    if (!car.trim() || !plate.trim()) return Alert.alert(t("driver.err_setup_title"), t("driver.err_setup"));
     await setRole("driver", car.trim(), plate.trim().toUpperCase());
     setSetupOpen(false);
   };
 
-  // Auto-redirect if active accepted ride
   useEffect(() => {
     if (active && (active.status === "accepted" || active.status === "in_progress")) {
       router.replace("/driver/ride");
@@ -107,7 +107,7 @@ export default function DriverHome() {
   return (
     <View style={styles.container}>
       <View style={styles.mapWrap}>
-        <MapView dark center={live || DEFAULT_LOC} drivers={online && live ? [{ lat: live.lat, lng: live.lng, label: "Kierowca" }] : []} />
+        <MapView dark center={live || DEFAULT_LOC} drivers={online && live ? [{ lat: live.lat, lng: live.lng, label: t("passenger.driver") }] : []} />
         <View style={styles.topBar}>
           <TouchableOpacity testID="d-logout" style={styles.iconBtn} onPress={() => { logout(); router.replace("/"); }}>
             <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
@@ -115,18 +115,23 @@ export default function DriverHome() {
           <View style={styles.brandPill}>
             <Text style={styles.brandPillText}>TAXIGO PRO</Text>
           </View>
-          <TouchableOpacity testID="d-history" style={styles.iconBtn} onPress={() => router.push("/driver/history")}>
-            <Ionicons name="time-outline" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity style={styles.langBtn} onPress={() => setLang(lang === "pl" ? "en" : "pl")}>
+              <Text style={styles.langBtnText}>{lang === "pl" ? "EN" : "PL"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity testID="d-history" style={styles.iconBtn} onPress={() => router.push("/driver/history")}>
+              <Ionicons name="time-outline" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
       <View style={styles.panel}>
         <View style={styles.toggleRow}>
           <View>
-            <Text style={styles.eyebrow}>STATUS KIEROWCY</Text>
+            <Text style={styles.eyebrow}>{t("driver.status")}</Text>
             <Text style={[styles.status, { color: online ? "#00E676" : "#FF3B30" }]} testID="driver-status-text">
-              {online ? "Szukam przejazdów..." : "Jesteś Offline"}
+              {online ? t("driver.you_are_online") : t("driver.you_are_offline")}
             </Text>
             <Text style={styles.statusSub}>{user?.name} {user?.plate ? `• ${user.plate}` : ""}</Text>
           </View>
@@ -145,19 +150,19 @@ export default function DriverHome() {
 
         <View style={styles.divider} />
 
-        <Text style={styles.h2}>{online ? "Dostępne przejazdy" : "Włącz status, aby zacząć"}</Text>
+        <Text style={styles.h2}>{online ? t("driver.available_rides") : t("driver.turn_on_hint")}</Text>
 
         {!online ? (
           <View style={styles.offlineBox}>
             <Ionicons name="moon-outline" size={28} color="#A3A3A3" />
-            <Text style={styles.offlineText}>Przejdź na Online aby zacząć otrzymywać zlecenia</Text>
+            <Text style={styles.offlineText}>{t("driver.offline_msg")}</Text>
           </View>
         ) : (
           <ScrollView style={{ maxHeight: 260 }}>
             {pending.length === 0 ? (
               <View style={styles.offlineBox}>
                 <ActivityIndicator color="#00E676" />
-                <Text style={styles.offlineText}>Oczekiwanie na zlecenia...</Text>
+                <Text style={styles.offlineText}>{t("driver.waiting")}</Text>
               </View>
             ) : (
               pending.map((r) => (
@@ -168,7 +173,7 @@ export default function DriverHome() {
                       <Text style={styles.km}>{r.distance_km?.toFixed?.(1)} km</Text>
                     </View>
                     <View style={styles.priceBadge}>
-                      <Text style={styles.priceBadgeText}>{r.price_pln?.toFixed(2)} zł</Text>
+                      <Text style={styles.priceBadgeText}>{r.price_pln?.toFixed(2)} {t("common.pln")}</Text>
                     </View>
                   </View>
                   <View style={styles.routeRow}>
@@ -186,7 +191,7 @@ export default function DriverHome() {
                     onPress={() => accept(r.ride_id)}
                   >
                     <Ionicons name="checkmark-circle" size={20} color="#0A0A0A" />
-                    <Text style={styles.acceptText}>Akceptuj przejazd</Text>
+                    <Text style={styles.acceptText}>{t("driver.accept")}</Text>
                   </TouchableOpacity>
                 </View>
               ))
@@ -198,15 +203,15 @@ export default function DriverHome() {
       <Modal visible={setupOpen} transparent animationType="slide" onRequestClose={() => {}}>
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
-            <Text style={styles.eyebrow}>KONFIGURACJA POJAZDU</Text>
-            <Text style={styles.modalTitle}>Uzupełnij dane pojazdu</Text>
-            <Text style={styles.modalSub}>Te informacje zobaczy pasażer.</Text>
-            <Text style={styles.label}>Model auta</Text>
-            <TextInput testID="car-input" value={car} onChangeText={setCar} placeholder="np. Toyota Prius Biała" placeholderTextColor="#525252" style={styles.modalInput} />
-            <Text style={styles.label}>Numer rejestracyjny</Text>
-            <TextInput testID="plate-input" value={plate} onChangeText={setPlate} placeholder="np. KR9KF93" placeholderTextColor="#525252" autoCapitalize="characters" style={styles.modalInput} />
+            <Text style={styles.eyebrow}>{t("driver.car_config")}</Text>
+            <Text style={styles.modalTitle}>{t("driver.setup_title")}</Text>
+            <Text style={styles.modalSub}>{t("driver.setup_sub")}</Text>
+            <Text style={styles.label}>{t("driver.car_model")}</Text>
+            <TextInput testID="car-input" value={car} onChangeText={setCar} placeholder={t("driver.car_ph")} placeholderTextColor="#525252" style={styles.modalInput} />
+            <Text style={styles.label}>{t("driver.plate")}</Text>
+            <TextInput testID="plate-input" value={plate} onChangeText={setPlate} placeholder={t("driver.plate_ph")} placeholderTextColor="#525252" autoCapitalize="characters" style={styles.modalInput} />
             <TouchableOpacity testID="save-vehicle-btn" style={styles.saveBtn} onPress={saveSetup}>
-              <Text style={styles.saveText}>Zapisz i zaczynaj</Text>
+              <Text style={styles.saveText}>{t("driver.save_start")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -220,6 +225,8 @@ const styles = StyleSheet.create({
   mapWrap: { flex: 1, backgroundColor: "#171717" },
   topBar: { position: "absolute", top: Platform.OS === "ios" ? 56 : 40, left: 16, right: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" },
+  langBtn: { height: 36, minWidth: 44, paddingHorizontal: 10, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignSelf: "center" },
+  langBtnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12, letterSpacing: 1 },
   brandPill: { backgroundColor: "#00E676", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 },
   brandPillText: { fontWeight: "900", color: "#0A0A0A", letterSpacing: 1 },
   panel: { backgroundColor: "#0A0A0A", padding: 20, paddingBottom: Platform.OS === "ios" ? 32 : 20, borderTopWidth: 1, borderTopColor: "#262626" },
@@ -230,7 +237,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: "#262626", marginVertical: 16 },
   h2: { color: "#FFFFFF", fontSize: 18, fontWeight: "900", marginBottom: 10 },
   offlineBox: { padding: 20, alignItems: "center", gap: 10, backgroundColor: "#171717", borderRadius: 12, borderWidth: 1, borderColor: "#262626" },
-  offlineText: { color: "#A3A3A3", fontSize: 13, fontWeight: "600" },
+  offlineText: { color: "#A3A3A3", fontSize: 13, fontWeight: "600", textAlign: "center" },
   rideCard: { backgroundColor: "#171717", borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#262626" },
   rideTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   passenger: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },

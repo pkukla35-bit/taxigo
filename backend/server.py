@@ -745,6 +745,73 @@ async def trip_payment_status(reservation_id: str):
     return {"payment_status": new_status, "reservation_status": res.get("status", "pending")}
 
 
+# ============== RIDE RESERVATIONS (passenger books for future date) ==============
+class RideReservationPayload(BaseModel):
+    id: Optional[str] = None
+    pickup: dict
+    dest: dict
+    distance_km: float
+    price_pln: float
+    date: str
+    time: str
+    name: str
+    phone: str
+    email: Optional[str] = ""
+    notes: Optional[str] = ""
+    createdAt: Optional[str] = None
+    lang: Optional[str] = "pl"
+
+@api_router.post("/rides/reservations")
+async def create_ride_reservation(payload: RideReservationPayload):
+    """Zapisuje rezerwację przejazdu (dla przyszłej daty) i wysyła email potwierdzający."""
+    from email_service import send_ride_reservation_emails
+
+    reservation_id = payload.id or f"rsv_{uuid.uuid4().hex[:10]}"
+    doc = {
+        "reservation_id": reservation_id,
+        "pickup": payload.pickup,
+        "dest": payload.dest,
+        "distance_km": payload.distance_km,
+        "price_pln": payload.price_pln,
+        "date": payload.date,
+        "time": payload.time,
+        "name": payload.name,
+        "phone": payload.phone,
+        "email": payload.email or "",
+        "notes": payload.notes or "",
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db.ride_reservations.insert_one(doc.copy())
+    logger.info(f"📅 Rezerwacja przejazdu {reservation_id}: {payload.date} {payload.time} • {payload.name} • {payload.phone}")
+
+    # Send emails (owner always + passenger if email provided)
+    email_status = send_ride_reservation_emails(doc, lang=payload.lang or "pl")
+    logger.info(f"📧 Email status: {email_status}")
+
+    doc.pop("_id", None)
+    doc["created_at"] = doc["created_at"].isoformat()
+    return {
+        "ok": True,
+        "reservation_id": reservation_id,
+        "email_sent": email_status.get("passenger_sent", False) or email_status.get("owner_sent", False),
+        "owner_notified": email_status.get("owner_sent", False),
+        "passenger_confirmed": email_status.get("passenger_sent", False),
+    }
+
+
+@api_router.get("/rides/reservations")
+async def list_ride_reservations(x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Lista wszystkich rezerwacji przejazdów (panel admina)."""
+    check_admin(x_admin_passcode)
+    cursor = db.ride_reservations.find({}, {"_id": 0}).sort("created_at", -1)
+    items = await cursor.to_list(500)
+    for it in items:
+        if isinstance(it.get("created_at"), datetime):
+            it["created_at"] = it["created_at"].isoformat()
+    return items
+
+
 app.include_router(api_router)
 
 

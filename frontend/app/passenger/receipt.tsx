@@ -3,17 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, ScrollView, Activit
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const VAT_RATE = 0.08;
 
-function fmtPLN(v: number) {
+function fmtMoney(v: number, lang: string) {
+  if (lang === "en") return v.toFixed(2) + " PLN";
   return v.toFixed(2).replace(".", ",") + " zł";
 }
 
-function fmtDate(iso?: string) {
+function fmtDate(iso: string | undefined, lang: string) {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleString("pl-PL", { dateStyle: "long", timeStyle: "short" });
+    return new Date(iso).toLocaleString(lang === "en" ? "en-GB" : "pl-PL", { dateStyle: "long", timeStyle: "short" });
   } catch { return iso; }
 }
 
@@ -21,6 +23,7 @@ export default function Receipt() {
   const router = useRouter();
   const { ride_id } = useLocalSearchParams<{ ride_id: string }>();
   const { authFetch, user } = useAuth();
+  const { t, lang } = useLanguage();
   const [ride, setRide] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,27 +41,23 @@ export default function Receipt() {
 
   const handleShare = async () => {
     if (!ride) return;
-    const text = `🧾 Paragon TAXIGO\nNr: ${ride.ride_id}\nData: ${fmtDate(ride.completed_at || ride.created_at)}\n${ride.pickup_address} → ${ride.dest_address}\nDystans: ${ride.distance_km?.toFixed(1)} km\nDo zapłaty (brutto): ${fmtPLN(ride.price_pln)}`;
+    const text = `🧾 TAXIGO ${t("receipt.title")}\nNr: ${ride.ride_id}\n${fmtDate(ride.completed_at || ride.created_at, lang)}\n${ride.pickup_address} → ${ride.dest_address}\n${ride.distance_km?.toFixed(1)} km\n${fmtMoney(ride.price_pln, lang)}`;
     if (Platform.OS === "web" && typeof navigator !== "undefined" && (navigator as any).share) {
-      try {
-        await (navigator as any).share({ title: "Paragon TAXIGO", text });
-      } catch {}
+      try { await (navigator as any).share({ title: "TAXIGO " + t("receipt.title"), text }); } catch {}
     } else if (Platform.OS === "web") {
       try {
         await navigator.clipboard.writeText(text);
-        Alert.alert("Skopiowano", "Treść paragonu została skopiowana do schowka.");
+        Alert.alert(t("receipt.copied"), t("receipt.copied_msg"));
       } catch {
-        Alert.alert("Paragon", text);
+        Alert.alert(t("receipt.title"), text);
       }
     } else {
-      Alert.alert("Paragon", text);
+      Alert.alert(t("receipt.title"), text);
     }
   };
 
   const handlePrint = () => {
-    if (Platform.OS === "web" && typeof window !== "undefined") {
-      window.print();
-    }
+    if (Platform.OS === "web" && typeof window !== "undefined") window.print();
   };
 
   if (loading) {
@@ -67,9 +66,9 @@ export default function Receipt() {
   if (!ride) {
     return (
       <View style={[styles.container, styles.center]}>
-        <Text style={styles.errorText}>Nie znaleziono paragonu</Text>
+        <Text style={styles.errorText}>{t("receipt.not_found")}</Text>
         <TouchableOpacity style={styles.errorBtn} onPress={() => router.replace("/passenger/home")}>
-          <Text style={styles.errorBtnText}>Powrót</Text>
+          <Text style={styles.errorBtnText}>{t("receipt.back")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -85,7 +84,7 @@ export default function Receipt() {
         <TouchableOpacity testID="receipt-back-btn" onPress={() => router.replace("/passenger/home")} style={styles.back}>
           <Ionicons name="close" size={26} color="#0F0F0F" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Paragon</Text>
+        <Text style={styles.headerTitle}>{t("receipt.title")}</Text>
         <TouchableOpacity testID="receipt-share-btn" onPress={handleShare} style={styles.back}>
           <Ionicons name="share-outline" size={22} color="#0F0F0F" />
         </TouchableOpacity>
@@ -94,24 +93,22 @@ export default function Receipt() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.card} testID="receipt-card">
           <View style={styles.brandRow}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoBadgeText}>T</Text>
-            </View>
+            <View style={styles.logoBadge}><Text style={styles.logoBadgeText}>T</Text></View>
             <View style={{ flex: 1 }}>
               <Text style={styles.brand}>TAXIGO</Text>
-              <Text style={styles.brandSub}>Twoja taksówka w Krakowie</Text>
+              <Text style={styles.brandSub}>{t("receipt.brand_sub")}</Text>
             </View>
           </View>
 
           <View style={styles.dashedLine} />
 
-          <Text style={styles.eyebrow}>NUMER PARAGONU</Text>
+          <Text style={styles.eyebrow}>{t("receipt.number")}</Text>
           <Text style={styles.receiptNo}>{ride.ride_id.toUpperCase()}</Text>
-          <Text style={styles.date}>{fmtDate(ride.completed_at || ride.created_at)}</Text>
+          <Text style={styles.date}>{fmtDate(ride.completed_at || ride.created_at, lang)}</Text>
 
           <View style={styles.dashedLine} />
 
-          <Text style={styles.eyebrow}>TRASA</Text>
+          <Text style={styles.eyebrow}>{t("receipt.route")}</Text>
           <View style={styles.routeRow}>
             <View style={styles.dotA} />
             <Text style={styles.routeText}>{ride.pickup_address}</Text>
@@ -124,57 +121,57 @@ export default function Receipt() {
 
           <View style={styles.statsRow}>
             <View>
-              <Text style={styles.statLabel}>DYSTANS</Text>
+              <Text style={styles.statLabel}>{t("receipt.distance")}</Text>
               <Text style={styles.statVal}>{ride.distance_km?.toFixed(1)} km</Text>
             </View>
             <View>
-              <Text style={styles.statLabel}>KIEROWCA</Text>
+              <Text style={styles.statLabel}>{t("receipt.driver")}</Text>
               <Text style={styles.statVal}>{ride.driver_name || "—"}</Text>
             </View>
             <View>
-              <Text style={styles.statLabel}>POJAZD</Text>
+              <Text style={styles.statLabel}>{t("receipt.vehicle")}</Text>
               <Text style={styles.statVal}>{ride.driver_plate || "—"}</Text>
             </View>
           </View>
 
           <View style={styles.dashedLine} />
 
-          <Text style={styles.eyebrow}>ROZLICZENIE</Text>
+          <Text style={styles.eyebrow}>{t("receipt.summary")}</Text>
           <View style={styles.lineItem}>
-            <Text style={styles.lineLabel}>Opłata wstępna</Text>
-            <Text style={styles.lineValue}>{fmtPLN(5)}</Text>
+            <Text style={styles.lineLabel}>{t("receipt.base_fee")}</Text>
+            <Text style={styles.lineValue}>{fmtMoney(5, lang)}</Text>
           </View>
           <View style={styles.lineItem}>
-            <Text style={styles.lineLabel}>Przejazd ({ride.distance_km?.toFixed(1)} km × 3,00 zł)</Text>
-            <Text style={styles.lineValue}>{fmtPLN(ride.distance_km * 3)}</Text>
+            <Text style={styles.lineLabel}>{t("receipt.ride_line").replace("{km}", ride.distance_km?.toFixed(1))}</Text>
+            <Text style={styles.lineValue}>{fmtMoney(ride.distance_km * 3, lang)}</Text>
           </View>
 
           <View style={styles.thinLine} />
 
           <View style={styles.lineItem}>
-            <Text style={styles.netLabel}>Wartość netto</Text>
-            <Text style={styles.netValue}>{fmtPLN(netto)}</Text>
+            <Text style={styles.netLabel}>{t("receipt.net")}</Text>
+            <Text style={styles.netValue}>{fmtMoney(netto, lang)}</Text>
           </View>
           <View style={styles.lineItem}>
-            <Text style={styles.netLabel}>VAT 8%</Text>
-            <Text style={styles.netValue}>{fmtPLN(vat)}</Text>
+            <Text style={styles.netLabel}>{t("receipt.vat")}</Text>
+            <Text style={styles.netValue}>{fmtMoney(vat, lang)}</Text>
           </View>
 
           <View style={styles.totalBox}>
-            <Text style={styles.totalLabel}>DO ZAPŁATY (BRUTTO)</Text>
-            <Text style={styles.totalValue}>{fmtPLN(brutto)}</Text>
+            <Text style={styles.totalLabel}>{t("receipt.total")}</Text>
+            <Text style={styles.totalValue}>{fmtMoney(brutto, lang)}</Text>
           </View>
 
           <View style={styles.dashedLine} />
 
-          <Text style={styles.footer}>Dziękujemy za skorzystanie z TAXIGO!{"\n"}Zapraszamy ponownie 🚖</Text>
-          <Text style={styles.footerSmall}>Paragon wystawiony dla: {user?.name}</Text>
+          <Text style={styles.footer}>{t("receipt.thanks")}</Text>
+          <Text style={styles.footerSmall}>{t("receipt.issued_for")}: {user?.name}</Text>
         </View>
 
         {Platform.OS === "web" && (
           <TouchableOpacity testID="receipt-print-btn" style={styles.printBtn} onPress={handlePrint}>
             <Ionicons name="print-outline" size={18} color="#0F0F0F" />
-            <Text style={styles.printBtnText}>Drukuj / zapisz PDF</Text>
+            <Text style={styles.printBtnText}>{t("receipt.print")}</Text>
           </TouchableOpacity>
         )}
 
@@ -183,12 +180,12 @@ export default function Receipt() {
           style={styles.rateBtn}
           onPress={() => router.replace({ pathname: "/passenger/rate", params: { ride_id: ride.ride_id } })}
         >
-          <Text style={styles.rateBtnText}>Oceń kierowcę</Text>
+          <Text style={styles.rateBtnText}>{t("receipt.rate_btn")}</Text>
           <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
         <TouchableOpacity testID="receipt-home-btn" style={styles.homeBtn} onPress={() => router.replace("/passenger/home")}>
-          <Text style={styles.homeBtnText}>Powrót do ekranu głównego</Text>
+          <Text style={styles.homeBtnText}>{t("receipt.home_btn")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

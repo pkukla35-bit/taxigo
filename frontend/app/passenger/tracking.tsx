@@ -3,18 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator, 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { useLiveLocation } from "../../hooks/useLiveLocation";
 
-const STATUS_TEXT: Record<string, string> = {
-  pending: "Szukamy kierowcy...",
-  accepted: "Twój kierowca jest w drodze",
-  in_progress: "W trakcie przejazdu",
-  completed: "Przejazd zakończony",
-  cancelled: "Przejazd anulowany",
-};
-
-// Haversine distance in km
 function haversine(a: any, b: any) {
   if (!a || !b) return 0;
   const R = 6371;
@@ -29,6 +21,7 @@ export default function Tracking() {
   const router = useRouter();
   const { ride_id } = useLocalSearchParams<{ ride_id: string }>();
   const { authFetch } = useAuth();
+  const { t, lang } = useLanguage();
   const [ride, setRide] = useState<any>(null);
   const passengerLoc = useLiveLocation(true);
 
@@ -39,7 +32,6 @@ export default function Tracking() {
       if (data) {
         setRide(data);
       } else {
-        // No active ride anymore — back to home
         router.replace("/passenger/home");
       }
     }
@@ -63,11 +55,11 @@ export default function Tracking() {
   const cancel = async () => {
     const confirmed =
       Platform.OS === "web"
-        ? (typeof window !== "undefined" && window.confirm("Anulować przejazd? Tej akcji nie można cofnąć."))
+        ? (typeof window !== "undefined" && window.confirm(t("tracking.cancel_confirm_title") + " " + t("tracking.cancel_confirm_msg")))
         : await new Promise<boolean>((resolve) => {
-            Alert.alert("Anulować przejazd?", "Tej akcji nie można cofnąć.", [
-              { text: "Nie", style: "cancel", onPress: () => resolve(false) },
-              { text: "Tak, anuluj", style: "destructive", onPress: () => resolve(true) },
+            Alert.alert(t("tracking.cancel_confirm_title"), t("tracking.cancel_confirm_msg"), [
+              { text: t("tracking.cancel_no"), style: "cancel", onPress: () => resolve(false) },
+              { text: t("tracking.cancel_yes"), style: "destructive", onPress: () => resolve(true) },
             ]);
           });
     if (!confirmed) return;
@@ -83,35 +75,45 @@ export default function Tracking() {
     );
   }
 
-  const driverPos = ride.driver_lat && ride.driver_lng ? { lat: ride.driver_lat, lng: ride.driver_lng, label: "Kierowca" } : null;
+  const driverPos = ride.driver_lat && ride.driver_lng ? { lat: ride.driver_lat, lng: ride.driver_lng, label: t("passenger.driver") } : null;
 
-  // Dynamic ETA
+  const minutesLabel = (min: number) => {
+    if (lang === "en") return `${min} min`;
+    if (min === 1) return `1 minutę`;
+    if (min < 5) return `${min} minuty`;
+    return `${min} minut`;
+  };
+
   let etaText = "—";
   if (driverPos) {
     if (ride.status === "accepted") {
       const km = haversine(driverPos, { lat: ride.pickup_lat, lng: ride.pickup_lng });
-      const min = Math.max(1, Math.round(km / 0.5)); // ~30 km/h city
-      etaText = `Za ${min} ${min === 1 ? "minutę" : min < 5 ? "minuty" : "minut"}`;
+      const min = Math.max(1, Math.round(km / 0.5));
+      etaText = `${t("tracking.eta_in")} ${minutesLabel(min)}`;
     } else if (ride.status === "in_progress") {
       const km = haversine(driverPos, { lat: ride.dest_lat, lng: ride.dest_lng });
       const min = Math.max(1, Math.round(km / 0.5));
-      etaText = `Do celu ~${min} min`;
+      etaText = `${t("tracking.eta_to_dest")}${min} min`;
     }
   } else if (ride.status === "accepted") {
-    etaText = "Za 3 minuty";
+    etaText = `${t("tracking.eta_in")} ${minutesLabel(3)}`;
   } else if (ride.status === "in_progress") {
-    etaText = "Do celu ~8 min";
+    etaText = `${t("tracking.eta_to_dest")}8 min`;
   }
+
+  const statusKey = `tracking.status.${ride.status}` as any;
+  const statusVal = t(statusKey);
+  const statusText = statusVal === statusKey ? ride.status : statusVal;
 
   return (
     <View style={styles.container}>
       <View style={styles.mapWrap}>
         <MapView
-          pickup={{ lat: ride.pickup_lat, lng: ride.pickup_lng, label: "Odbiór" }}
-          destination={{ lat: ride.dest_lat, lng: ride.dest_lng, label: "Cel" }}
+          pickup={{ lat: ride.pickup_lat, lng: ride.pickup_lng, label: t("tracking.pickup_label") }}
+          destination={{ lat: ride.dest_lat, lng: ride.dest_lng, label: t("tracking.dest_label") }}
           drivers={[
             ...(driverPos ? [driverPos] : []),
-            ...(passengerLoc ? [{ lat: passengerLoc.lat, lng: passengerLoc.lng, label: "Ty" }] : []),
+            ...(passengerLoc ? [{ lat: passengerLoc.lat, lng: passengerLoc.lng, label: t("tracking.you") }] : []),
           ]}
         />
         <View style={styles.topBar}>
@@ -120,7 +122,7 @@ export default function Tracking() {
           </TouchableOpacity>
           <View style={styles.statusPill}>
             <View style={[styles.dotLive, ride.status === "pending" && { backgroundColor: "#FFD600" }]} />
-            <Text style={styles.statusPillText} testID="ride-status">{STATUS_TEXT[ride.status] || ride.status}</Text>
+            <Text style={styles.statusPillText} testID="ride-status">{statusText}</Text>
           </View>
           <View style={{ width: 44 }} />
         </View>
@@ -131,7 +133,7 @@ export default function Tracking() {
         {ride.status === "pending" ? (
           <View style={styles.searchBox}>
             <ActivityIndicator color="#0F0F0F" />
-            <Text style={styles.searchText}>Szukamy najlepszego kierowcy w Twojej okolicy...</Text>
+            <Text style={styles.searchText}>{t("tracking.searching_best")}</Text>
           </View>
         ) : (
           <>
@@ -140,8 +142,8 @@ export default function Tracking() {
                 <Text style={styles.avatarText}>{(ride.driver_name || "K")[0]}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.driverName}>{ride.driver_name || "Kierowca"}</Text>
-                <Text style={styles.driverSub}>{ride.driver_car || "Pojazd"} • {ride.driver_plate || "—"}</Text>
+                <Text style={styles.driverName}>{ride.driver_name || t("passenger.driver")}</Text>
+                <Text style={styles.driverSub}>{ride.driver_car || t("tracking.vehicle")} • {ride.driver_plate || "—"}</Text>
               </View>
               <View style={styles.rating}>
                 <Ionicons name="star" size={14} color="#FFD600" />
@@ -150,7 +152,7 @@ export default function Tracking() {
             </View>
 
             <View style={styles.etaBox}>
-              <Text style={styles.etaLabel}>SZACOWANY CZAS</Text>
+              <Text style={styles.etaLabel}>{t("tracking.eta_label")}</Text>
               <Text style={styles.etaValue}>{etaText}</Text>
             </View>
           </>
@@ -169,12 +171,12 @@ export default function Tracking() {
         </View>
 
         <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Do zapłaty</Text>
-          <Text style={styles.priceVal}>{ride.price_pln?.toFixed(2)} zł</Text>
+          <Text style={styles.priceLabel}>{t("tracking.to_pay")}</Text>
+          <Text style={styles.priceVal}>{ride.price_pln?.toFixed(2)} {t("common.pln")}</Text>
         </View>
 
         <TouchableOpacity testID="cancel-ride-btn" style={styles.cancelBtn} onPress={cancel}>
-          <Text style={styles.cancelText}>Anuluj przejazd</Text>
+          <Text style={styles.cancelText}>{t("passenger.cancel_ride")}</Text>
         </TouchableOpacity>
       </View>
     </View>
