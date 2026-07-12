@@ -56,7 +56,7 @@ export default function TripDetail() {
     <View style={{ flex: 1, backgroundColor: "#fafafa" }}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        <View style={[styles.hero, isDesktop && { height: 600 }]}>
+        <View style={[styles.hero, isDesktop && { height: 320 }]}>
           <Image source={{ uri: trip.heroImage }} style={styles.heroImage} />
           <View style={styles.heroOverlay} />
           <SafeAreaView edges={["top"]} style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }}>
@@ -119,7 +119,7 @@ export default function TripDetail() {
           <Text style={styles.galleryHint}>{t("trip.gallery_hint")}</Text>
           <View style={styles.gallery}>
             {trip.gallery.map((url, i) => (
-              <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => openLightbox(i)} style={[styles.galleryItem, isDesktop && { width: "19%" }]}>
+              <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => openLightbox(i)} style={[styles.galleryItem, isDesktop && { width: "32%", aspectRatio: 4/3, marginBottom: 8 }, !isDesktop && { width: "49%", aspectRatio: 4/3 }]}>
                 <Image source={{ uri: url }} style={styles.galleryImg} />
                 <View style={styles.galleryZoomBadge}>
                   <Ionicons name="expand" size={14} color="#fff" />
@@ -269,9 +269,9 @@ const styles = StyleSheet.create({
   stepDesc: { fontSize: 13, color: "#6e6e73" },
   mapImage: { width: "100%", height: 220, borderRadius: 12 },
   mapLegend: { marginTop: 10, fontSize: 11, color: "#8e8e93", textAlign: "center" },
-  gallery: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
-  galleryItem: { width: "32.5%", aspectRatio: 1, position: "relative" },
-  galleryImg: { width: "100%", height: "100%", borderRadius: 8 },
+  gallery: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" },
+  galleryItem: { width: "49%", aspectRatio: 4/3, position: "relative", marginBottom: 8 },
+  galleryImg: { width: "100%", height: "100%", borderRadius: 10 },
   galleryZoomBadge: { position: "absolute", bottom: 6, right: 6, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 10, padding: 4 },
   galleryHint: { fontSize: 12, color: "#8e8e93", marginBottom: 10, marginTop: -8 },
   descPara: { fontSize: 14, color: "#3a3a3c", lineHeight: 22, marginBottom: 12 },

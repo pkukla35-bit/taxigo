@@ -15,7 +15,7 @@ export default function WycieczkiIndex() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1100;
   const isTablet = width >= 640 && width < 1100;
-  const cardsPerRow = isDesktop ? 4 : isTablet ? 2 : 2;
+  const cardsPerRow = isDesktop ? 3 : isTablet ? 2 : 2;
   const gap = 16;
   const cardWidth = width >= 640 ? `${100 / cardsPerRow - 2}%` as any : "48%";
 
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 20, fontWeight: "800", marginBottom: 4, color: "#1c1c1e" },
   sectionSubtitle: { fontSize: 13, color: "#6e6e73", marginBottom: 16 },
   tripCard: { backgroundColor: "#fff", borderRadius: 8, marginBottom: 24, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  cardImageWrap: { position: "relative", aspectRatio: 3/4, width: "100%" },
+  cardImageWrap: { position: "relative", aspectRatio: 4/3, width: "100%" },
   cardImage: { width: "100%", height: "100%" },
   cardImageOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0)" },
   badge: { position: "absolute", top: 12, left: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
