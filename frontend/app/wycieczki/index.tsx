@@ -13,10 +13,11 @@ export default function WycieczkiIndex() {
   const router = useRouter();
   const { lang, t } = useLanguage();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 900;
-  const isTablet = width >= 640 && width < 900;
-  const cardsPerRow = isDesktop ? 3 : isTablet ? 2 : 1;
-  const cardWidth = isDesktop || isTablet ? `${100 / cardsPerRow - 2}%` as any : "100%";
+  const isDesktop = width >= 1100;
+  const isTablet = width >= 640 && width < 1100;
+  const cardsPerRow = isDesktop ? 4 : isTablet ? 2 : 2;
+  const gap = 16;
+  const cardWidth = width >= 640 ? `${100 / cardsPerRow - 2}%` as any : "48%";
 
   const localized = TRIPS.map((trip) => localizeTrip(trip, lang));
 
@@ -74,37 +75,33 @@ export default function WycieczkiIndex() {
         <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trips.section_title")}</Text>
           <Text style={styles.sectionSubtitle}>{t("trips.section_subtitle")}</Text>
-          <View style={[styles.cardsGrid, (isDesktop || isTablet) && styles.cardsGridRow]}>
+          <View style={styles.cardsGridRow}>
           {sorted.map((trip) => (
             <TouchableOpacity
               key={trip.slug}
               activeOpacity={0.85}
-              style={[styles.tripCard, (isDesktop || isTablet) && { width: cardWidth, marginBottom: 20 }]}
+              style={[styles.tripCard, { width: cardWidth }]}
               onPress={() => router.push(`/wycieczki/${trip.slug}` as any)}
             >
               <View style={styles.cardImageWrap}>
                 <Image source={{ uri: trip.heroImage }} style={styles.cardImage} />
-                <View style={styles.cardImageOverlay} />
                 <View style={[styles.badge, { backgroundColor: trip.badgeColors[0] }]}>
                   <Text style={styles.badgeText}>{trip.badge}</Text>
                 </View>
                 <View style={styles.flagMini}>
-                  <Text style={styles.flagMiniText}>{trip.flag === "PL" ? "🇵🇱 PL" : "🇸🇰 SK"}</Text>
-                </View>
-                <View style={styles.cardImageContent}>
-                  <Text style={styles.cardTitle}>
-                    {trip.title.replace(" z Krakowa", "").replace(" from Krakow", "")}
-                  </Text>
-                  <Text style={styles.cardSubtitle}>{trip.subtitle}</Text>
+                  <Text style={styles.flagMiniText}>{trip.flag === "PL" ? "🇵🇱" : "🇸🇰"}</Text>
                 </View>
               </View>
               <View style={styles.cardBody}>
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardInfoText}>⏱️ {trip.duration}</Text>
-                  <Text style={styles.cardInfoText}>📍 {trip.attractionsCount} {t("trips.card_attractions")}</Text>
-                  <Text style={styles.cardInfoText}>👥 {t("trips.card_max_people")} {trip.maxPeople} {t("trips.card_people_short")}</Text>
+                <Text style={styles.cardTitle} numberOfLines={2}>
+                  {trip.title.replace(" z Krakowa", "").replace(" from Krakow", "").toUpperCase()}
+                </Text>
+                <Text style={styles.cardSubtitle} numberOfLines={2}>{trip.subtitle}</Text>
+                <View style={styles.cardMetaRow}>
+                  <Text style={styles.cardMetaText}>⏱️ {trip.duration}</Text>
+                  <Text style={styles.cardMetaText}>👥 max {trip.maxPeople}</Text>
                 </View>
-                <View style={styles.cardPrice}>
+                <View style={styles.cardPriceRow}>
                   <Text style={[styles.cardPriceValue, { color: trip.accent }]}>{trip.price} zł</Text>
                   <Text style={styles.cardPriceUnit}>{t("trips.card_per_car")}</Text>
                 </View>
@@ -153,23 +150,26 @@ const styles = StyleSheet.create({
   cardsGridRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   sectionTitle: { fontSize: 20, fontWeight: "800", marginBottom: 4, color: "#1c1c1e" },
   sectionSubtitle: { fontSize: 13, color: "#6e6e73", marginBottom: 16 },
-  tripCard: { backgroundColor: "#fff", borderRadius: 16, marginBottom: 16, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
-  cardImageWrap: { position: "relative", height: 200 },
+  tripCard: { backgroundColor: "#fff", borderRadius: 8, marginBottom: 24, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  cardImageWrap: { position: "relative", aspectRatio: 3/4, width: "100%" },
   cardImage: { width: "100%", height: "100%" },
-  cardImageOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" },
-  badge: { position: "absolute", top: 12, left: 12, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
-  badgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  flagMini: { position: "absolute", top: 12, right: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.5)" },
-  flagMiniText: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  cardImageContent: { position: "absolute", bottom: 14, left: 16, right: 16 },
-  cardTitle: { color: "#fff", fontSize: 18, fontWeight: "700", marginBottom: 4 },
-  cardSubtitle: { color: "rgba(255,255,255,0.95)", fontSize: 12 },
-  cardBody: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 14 },
-  cardInfo: { flexDirection: "row", gap: 10, flexWrap: "wrap", flex: 1 },
-  cardInfoText: { fontSize: 11, color: "#6e6e73" },
+  cardImageOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0)" },
+  badge: { position: "absolute", top: 12, left: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
+  badgeText: { color: "#fff", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
+  flagMini: { position: "absolute", top: 12, right: 12, width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
+  flagMiniText: { fontSize: 16 },
+  cardImageContent: { display: "none" },
+  cardTitle: { color: "#1c1c1e", fontSize: 15, fontWeight: "800", marginBottom: 6, letterSpacing: 0.3, lineHeight: 20 },
+  cardSubtitle: { color: "#8e8e93", fontSize: 12, lineHeight: 16, marginBottom: 10 },
+  cardBody: { padding: 16, backgroundColor: "#fff" },
+  cardInfo: { display: "none" },
+  cardInfoText: { display: "none" as any },
+  cardMetaRow: { flexDirection: "row", gap: 12, marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
+  cardMetaText: { fontSize: 11, color: "#6e6e73", fontWeight: "500" },
+  cardPriceRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   cardPrice: { flexDirection: "row", alignItems: "baseline" },
-  cardPriceValue: { fontSize: 18, fontWeight: "800" },
-  cardPriceUnit: { fontSize: 11, color: "#8e8e93", marginLeft: 2 },
+  cardPriceValue: { fontSize: 22, fontWeight: "800" },
+  cardPriceUnit: { fontSize: 12, color: "#8e8e93", marginLeft: 2, fontWeight: "500" },
   whyUs: { backgroundColor: "#2E7D32", padding: 22 },
   whyTitle: { color: "#fff", fontSize: 20, fontWeight: "800", marginBottom: 18 },
   feature: { flexDirection: "row", gap: 12, marginBottom: 14, alignItems: "flex-start" },
