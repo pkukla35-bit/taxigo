@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Switch, Alert, TextInput, Modal } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Switch, Alert, TextInput, Modal, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
@@ -9,12 +9,32 @@ import { useLiveLocation } from "../../hooks/useLiveLocation";
 
 const DEFAULT_LOC = { lat: 50.0617, lng: 19.9373 };
 
+type Reservation = {
+  reservation_id: string;
+  pickup: { name: string; lat: number; lng: number };
+  dest: { name: string; lat: number; lng: number };
+  distance_km: number;
+  price_pln: number;
+  date: string;
+  time: string;
+  name: string;
+  phone: string;
+  email?: string;
+  notes?: string;
+  status: string;
+  driver_name?: string;
+  created_at?: string;
+};
+
 export default function DriverHome() {
   const router = useRouter();
   const { user, authFetch, logout, setRole } = useAuth();
   const { t, lang, setLang } = useLanguage();
+  const [tab, setTab] = useState<"now" | "resv">("now");
   const [online, setOnline] = useState(false);
   const [pending, setPending] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [busyResvId, setBusyResvId] = useState<string | null>(null);
   const [active, setActive] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -51,6 +71,57 @@ export default function DriverHome() {
     if (r.ok) setPending(await r.json());
   }, [authFetch]);
 
+  const loadReservations = useCallback(async () => {
+    try {
+      const r = await authFetch("/api/rides/reservations");
+      if (r.ok) setReservations(await r.json());
+    } catch { /* ignore */ }
+  }, [authFetch]);
+
+  const confirmReservation = async (resv: Reservation) => {
+    setBusyResvId(resv.reservation_id);
+    try {
+      const r = await authFetch(`/api/rides/reservations/${resv.reservation_id}/confirm`, {
+        method: "POST",
+        body: JSON.stringify({ lang }),
+      });
+      if (r.ok) {
+        Alert.alert(t("driver.resv_confirm_success"), `📅 ${resv.date} • ${resv.time}\n📍 ${resv.pickup.name}\n➡️ ${resv.dest.name}\n📞 ${resv.phone}`);
+        loadReservations();
+      } else {
+        const data = await r.json().catch(() => ({}));
+        Alert.alert(t("common.error"), data.detail || "Failed");
+      }
+    } finally {
+      setBusyResvId(null);
+    }
+  };
+
+  const rejectReservation = async (resv: Reservation) => {
+    const confirmed = Platform.OS === "web"
+      ? (typeof window !== "undefined" && window.confirm(t("driver.resv_reject_confirm")))
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert(t("driver.resv_reject_confirm"), "", [
+            { text: t("tracking.cancel_no"), style: "cancel", onPress: () => resolve(false) },
+            { text: t("tracking.cancel_yes"), style: "destructive", onPress: () => resolve(true) },
+          ]);
+        });
+    if (!confirmed) return;
+    setBusyResvId(resv.reservation_id);
+    try {
+      await authFetch(`/api/rides/reservations/${resv.reservation_id}/reject`, { method: "POST" });
+      loadReservations();
+    } finally {
+      setBusyResvId(null);
+    }
+  };
+
+  const callPassenger = (phone: string) => {
+    if (!phone) return;
+    const url = `tel:${phone.replace(/\s/g, "")}`;
+    Linking.openURL(url).catch(() => {});
+  };
+
   const loadActive = useCallback(async () => {
     const r = await authFetch("/api/rides/active");
     if (r.ok) {
@@ -63,10 +134,18 @@ export default function DriverHome() {
     loadActive();
     if (online && !active) {
       loadPending();
-      const i = setInterval(loadPending, 5000);
+      loadReservations();
+      const i = setInterval(() => { loadPending(); loadReservations(); }, 5000);
       return () => clearInterval(i);
     }
-  }, [online, active, loadPending, loadActive]);
+  }, [online, active, loadPending, loadActive, loadReservations]);
+
+  // Load reservations even when offline (drivers can see & confirm anytime)
+  useEffect(() => {
+    loadReservations();
+    const i = setInterval(loadReservations, 30000);
+    return () => clearInterval(i);
+  }, [loadReservations]);
 
   useEffect(() => {
     const i = setInterval(loadActive, 4000);
@@ -150,51 +229,163 @@ export default function DriverHome() {
 
         <View style={styles.divider} />
 
-        <Text style={styles.h2}>{online ? t("driver.available_rides") : t("driver.turn_on_hint")}</Text>
+        {/* Tabs */}
+        <View style={styles.tabsRow}>
+          <TouchableOpacity
+            style={[styles.tabBtn, tab === "now" && styles.tabBtnActive]}
+            onPress={() => setTab("now")}
+            testID="tab-now"
+          >
+            <Text style={[styles.tabText, tab === "now" && styles.tabTextActive]}>{t("driver.tab_now")}</Text>
+            {pending.length > 0 && <View style={styles.badgeDot}><Text style={styles.badgeDotText}>{pending.length}</Text></View>}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, tab === "resv" && styles.tabBtnActive]}
+            onPress={() => setTab("resv")}
+            testID="tab-resv"
+          >
+            <Text style={[styles.tabText, tab === "resv" && styles.tabTextActive]}>{t("driver.tab_reservations")}</Text>
+            {reservations.filter((r) => r.status === "pending").length > 0 && (
+              <View style={styles.badgeDot}><Text style={styles.badgeDotText}>{reservations.filter((r) => r.status === "pending").length}</Text></View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-        {!online ? (
-          <View style={styles.offlineBox}>
-            <Ionicons name="moon-outline" size={28} color="#A3A3A3" />
-            <Text style={styles.offlineText}>{t("driver.offline_msg")}</Text>
-          </View>
-        ) : (
-          <ScrollView style={{ maxHeight: 260 }}>
-            {pending.length === 0 ? (
+        {tab === "now" ? (
+          <>
+            <Text style={styles.h2}>{online ? t("driver.available_rides") : t("driver.turn_on_hint")}</Text>
+            {!online ? (
               <View style={styles.offlineBox}>
-                <ActivityIndicator color="#00E676" />
-                <Text style={styles.offlineText}>{t("driver.waiting")}</Text>
+                <Ionicons name="moon-outline" size={28} color="#A3A3A3" />
+                <Text style={styles.offlineText}>{t("driver.offline_msg")}</Text>
               </View>
             ) : (
-              pending.map((r) => (
-                <View key={r.ride_id} style={styles.rideCard} testID={`pending-${r.ride_id}`}>
-                  <View style={styles.rideTop}>
-                    <View>
-                      <Text style={styles.passenger}>{r.passenger_name}</Text>
-                      <Text style={styles.km}>{r.distance_km?.toFixed?.(1)} km</Text>
+              <ScrollView style={{ maxHeight: 260 }}>
+                {pending.length === 0 ? (
+                  <View style={styles.offlineBox}>
+                    <ActivityIndicator color="#00E676" />
+                    <Text style={styles.offlineText}>{t("driver.waiting")}</Text>
+                  </View>
+                ) : (
+                  pending.map((r) => (
+                    <View key={r.ride_id} style={styles.rideCard} testID={`pending-${r.ride_id}`}>
+                      <View style={styles.rideTop}>
+                        <View>
+                          <Text style={styles.passenger}>{r.passenger_name}</Text>
+                          <Text style={styles.km}>{r.distance_km?.toFixed?.(1)} km</Text>
+                        </View>
+                        <View style={styles.priceBadge}>
+                          <Text style={styles.priceBadgeText}>{r.price_pln?.toFixed(2)} {t("common.pln")}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.routeRow}>
+                        <View style={styles.dotG} />
+                        <Text numberOfLines={1} style={styles.routeText}>{r.pickup_address}</Text>
+                      </View>
+                      <View style={styles.routeLine} />
+                      <View style={styles.routeRow}>
+                        <View style={styles.dotW} />
+                        <Text numberOfLines={1} style={styles.routeText}>{r.dest_address}</Text>
+                      </View>
+                      <TouchableOpacity
+                        testID={`accept-${r.ride_id}`}
+                        style={styles.acceptBtn}
+                        onPress={() => accept(r.ride_id)}
+                      >
+                        <Ionicons name="checkmark-circle" size={20} color="#0A0A0A" />
+                        <Text style={styles.acceptText}>{t("driver.accept")}</Text>
+                      </TouchableOpacity>
                     </View>
-                    <View style={styles.priceBadge}>
-                      <Text style={styles.priceBadgeText}>{r.price_pln?.toFixed(2)} {t("common.pln")}</Text>
+                  ))
+                )}
+              </ScrollView>
+            )}
+          </>
+        ) : (
+          <ScrollView style={{ maxHeight: 340 }}>
+            {reservations.length === 0 ? (
+              <View style={styles.offlineBox}>
+                <Ionicons name="calendar-outline" size={28} color="#A3A3A3" />
+                <Text style={styles.offlineText}>{t("driver.no_reservations")}</Text>
+              </View>
+            ) : (
+              reservations.map((r) => {
+                const isConfirmed = r.status === "confirmed";
+                const isPending = r.status === "pending";
+                const isBusy = busyResvId === r.reservation_id;
+                return (
+                  <View key={r.reservation_id} style={styles.resvCard} testID={`resv-${r.reservation_id}`}>
+                    <View style={styles.resvTopRow}>
+                      <View style={styles.resvDateBox}>
+                        <Text style={styles.resvDate}>{r.date}</Text>
+                        <Text style={styles.resvTime}>{r.time}</Text>
+                      </View>
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <Text style={styles.resvName}>{r.name}</Text>
+                        <Text style={styles.resvPrice}>{r.price_pln?.toFixed(2)} {t("common.pln")} • {r.distance_km?.toFixed(1)} km</Text>
+                      </View>
+                      <View style={[styles.statusBadge, isConfirmed ? styles.statusConfirmed : (isPending ? styles.statusPending : styles.statusRejected)]}>
+                        <Text style={[styles.statusText, isConfirmed && { color: "#0A0A0A" }]}>
+                          {isConfirmed ? t("driver.resv_status_confirmed") : (isPending ? t("driver.resv_status_pending") : t("driver.resv_status_rejected"))}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.resvRoute}>
+                      <View style={styles.routeRow}>
+                        <View style={styles.dotG} />
+                        <Text numberOfLines={1} style={styles.routeText}>{r.pickup?.name}</Text>
+                      </View>
+                      <View style={styles.routeLine} />
+                      <View style={styles.routeRow}>
+                        <View style={styles.dotW} />
+                        <Text numberOfLines={1} style={styles.routeText}>{r.dest?.name}</Text>
+                      </View>
+                    </View>
+
+                    {r.notes ? (
+                      <Text style={styles.resvNotes} numberOfLines={2}>📝 {r.notes}</Text>
+                    ) : null}
+
+                    <View style={styles.resvActions}>
+                      <TouchableOpacity
+                        style={[styles.resvBtn, styles.resvCallBtn]}
+                        onPress={() => callPassenger(r.phone)}
+                        testID={`call-${r.reservation_id}`}
+                      >
+                        <Ionicons name="call-outline" size={18} color="#FFFFFF" />
+                        <Text style={styles.resvCallText}>{r.phone}</Text>
+                      </TouchableOpacity>
+                      {isPending && (
+                        <>
+                          <TouchableOpacity
+                            style={[styles.resvBtn, styles.resvRejectBtn, isBusy && { opacity: 0.4 }]}
+                            onPress={() => rejectReservation(r)}
+                            disabled={isBusy}
+                            testID={`reject-${r.reservation_id}`}
+                          >
+                            <Ionicons name="close" size={18} color="#FF3B30" />
+                            <Text style={styles.resvRejectText}>{t("driver.resv_reject")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.resvBtn, styles.resvConfirmBtn, isBusy && { opacity: 0.4 }]}
+                            onPress={() => confirmReservation(r)}
+                            disabled={isBusy}
+                            testID={`confirm-${r.reservation_id}`}
+                          >
+                            {isBusy ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
+                              <>
+                                <Ionicons name="checkmark-circle" size={18} color="#0A0A0A" />
+                                <Text style={styles.resvConfirmText}>{t("driver.resv_confirm")}</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </>
+                      )}
                     </View>
                   </View>
-                  <View style={styles.routeRow}>
-                    <View style={styles.dotG} />
-                    <Text numberOfLines={1} style={styles.routeText}>{r.pickup_address}</Text>
-                  </View>
-                  <View style={styles.routeLine} />
-                  <View style={styles.routeRow}>
-                    <View style={styles.dotW} />
-                    <Text numberOfLines={1} style={styles.routeText}>{r.dest_address}</Text>
-                  </View>
-                  <TouchableOpacity
-                    testID={`accept-${r.ride_id}`}
-                    style={styles.acceptBtn}
-                    onPress={() => accept(r.ride_id)}
-                  >
-                    <Ionicons name="checkmark-circle" size={20} color="#0A0A0A" />
-                    <Text style={styles.acceptText}>{t("driver.accept")}</Text>
-                  </TouchableOpacity>
-                </View>
-              ))
+                );
+              })
             )}
           </ScrollView>
         )}
@@ -259,4 +450,37 @@ const styles = StyleSheet.create({
   modalInput: { backgroundColor: "#171717", borderWidth: 1, borderColor: "#262626", borderRadius: 12, padding: 14, color: "#FFFFFF", fontSize: 15, fontWeight: "600", marginBottom: 8 },
   saveBtn: { marginTop: 16, height: 54, backgroundColor: "#00E676", borderRadius: 12, alignItems: "center", justifyContent: "center" },
   saveText: { color: "#0A0A0A", fontWeight: "900", fontSize: 16 },
+
+  // Tabs
+  tabsRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+  tabBtn: { flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: "#171717", borderWidth: 1, borderColor: "#262626" },
+  tabBtnActive: { backgroundColor: "#00E676", borderColor: "#00E676" },
+  tabText: { color: "#A3A3A3", fontWeight: "800", fontSize: 13 },
+  tabTextActive: { color: "#0A0A0A" },
+  badgeDot: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: "#FF3B30", paddingHorizontal: 5, alignItems: "center", justifyContent: "center" },
+  badgeDotText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900" },
+
+  // Reservation cards
+  resvCard: { backgroundColor: "#171717", borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#262626" },
+  resvTopRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  resvDateBox: { backgroundColor: "#00E676", paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, alignItems: "center", minWidth: 70 },
+  resvDate: { color: "#0A0A0A", fontSize: 11, fontWeight: "900" },
+  resvTime: { color: "#0A0A0A", fontSize: 14, fontWeight: "900", marginTop: 1 },
+  resvName: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
+  resvPrice: { color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginTop: 2 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1 },
+  statusText: { fontSize: 10, fontWeight: "900", color: "#FFFFFF" },
+  statusPending: { backgroundColor: "rgba(255,214,0,0.15)", borderColor: "#FFD600" },
+  statusConfirmed: { backgroundColor: "#00E676", borderColor: "#00E676" },
+  statusRejected: { backgroundColor: "rgba(255,59,48,0.15)", borderColor: "#FF3B30" },
+  resvRoute: { paddingVertical: 6 },
+  resvNotes: { color: "#A3A3A3", fontSize: 12, marginTop: 6, fontStyle: "italic" },
+  resvActions: { flexDirection: "row", gap: 6, marginTop: 12, flexWrap: "wrap" },
+  resvBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10, flexGrow: 1, flexShrink: 1 },
+  resvCallBtn: { backgroundColor: "#0F0F0F", borderWidth: 1, borderColor: "#00E676" },
+  resvCallText: { color: "#FFFFFF", fontWeight: "800", fontSize: 12 },
+  resvRejectBtn: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#FF3B30" },
+  resvRejectText: { color: "#FF3B30", fontWeight: "900", fontSize: 13 },
+  resvConfirmBtn: { backgroundColor: "#00E676" },
+  resvConfirmText: { color: "#0A0A0A", fontWeight: "900", fontSize: 13 },
 });

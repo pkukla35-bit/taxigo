@@ -801,15 +801,112 @@ async def create_ride_reservation(payload: RideReservationPayload):
 
 
 @api_router.get("/rides/reservations")
-async def list_ride_reservations(x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
-    """Lista wszystkich rezerwacji przejazdów (panel admina)."""
-    check_admin(x_admin_passcode)
-    cursor = db.ride_reservations.find({}, {"_id": 0}).sort("created_at", -1)
-    items = await cursor.to_list(500)
+async def list_ride_reservations(request: Request, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Lista rezerwacji przejazdów: dla kierowcy (wszystkie pending) lub admina (wszystkie)."""
+    # Admin path
+    if x_admin_passcode:
+        check_admin(x_admin_passcode)
+        cursor = db.ride_reservations.find({}, {"_id": 0}).sort("created_at", -1)
+        items = await cursor.to_list(500)
+    else:
+        # Driver path — auth required
+        user = await get_current_user(request)
+        if user.role != "driver":
+            raise HTTPException(status_code=403, detail="Drivers only")
+        # Drivers see all pending + their own confirmed/completed
+        cursor = db.ride_reservations.find(
+            {"$or": [
+                {"status": "pending"},
+                {"driver_id": user.user_id},
+            ]},
+            {"_id": 0},
+        ).sort("created_at", -1)
+        items = await cursor.to_list(200)
+
     for it in items:
         if isinstance(it.get("created_at"), datetime):
             it["created_at"] = it["created_at"].isoformat()
+        if isinstance(it.get("confirmed_at"), datetime):
+            it["confirmed_at"] = it["confirmed_at"].isoformat()
     return items
+
+
+class ReservationActionPayload(BaseModel):
+    lang: Optional[str] = "pl"
+
+
+@api_router.post("/rides/reservations/{reservation_id}/confirm")
+async def confirm_ride_reservation(reservation_id: str, payload: Optional[ReservationActionPayload] = None, request: Request = None):
+    """Kierowca potwierdza rezerwację - status: confirmed, wysyła email."""
+    from email_service import _send, _html_reservation, OWNER_CC
+
+    user = await get_current_user(request)
+    if user.role != "driver":
+        raise HTTPException(status_code=403, detail="Drivers only")
+
+    resv = await db.ride_reservations.find_one({"reservation_id": reservation_id})
+    if not resv:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    if resv.get("status") == "confirmed":
+        raise HTTPException(status_code=400, detail="Already confirmed")
+    if resv.get("status") == "rejected":
+        raise HTTPException(status_code=400, detail="Reservation was rejected")
+
+    lang = (payload.lang if payload else None) or "pl"
+
+    await db.ride_reservations.update_one(
+        {"reservation_id": reservation_id},
+        {"$set": {
+            "status": "confirmed",
+            "driver_id": user.user_id,
+            "driver_name": user.name,
+            "driver_car": user.car_model,
+            "driver_plate": user.plate,
+            "confirmed_at": datetime.now(timezone.utc),
+        }},
+    )
+
+    # Send confirmation emails: owner (always) + passenger (if verified domain)
+    updated = await db.ride_reservations.find_one({"reservation_id": reservation_id}, {"_id": 0})
+    try:
+        driver_info = f"{user.name} • {user.car_model or ''} • {user.plate or ''}"
+        subj_owner = f"✅ Rezerwacja POTWIERDZONA — {updated.get('name','')} {updated.get('date','')} {updated.get('time','')}"
+        html = _html_reservation(updated, lang="pl", passenger_view=False)
+        html = html.replace("📥 Nowa rezerwacja przejazdu — TAXIGO",
+                            f"✅ POTWIERDZONA — kierowca: {driver_info}")
+        _send(OWNER_CC, subj_owner, html)
+
+        pass_email = (updated.get("email") or "").strip().lower()
+        if pass_email and pass_email != OWNER_CC.lower():
+            subj_pass = ("✅ TAXIGO — Twoja rezerwacja potwierdzona" if lang == "pl"
+                         else "✅ TAXIGO — Your reservation is confirmed")
+            html_pass = _html_reservation(updated, lang=lang, passenger_view=True)
+            confirm_line = (f"<div style='margin-top:14px;padding:12px;background:#00E676;border-radius:10px;color:#0F0F0F;font-weight:900;text-align:center;'>"
+                            f"{'✅ Potwierdzona przez kierowcę' if lang=='pl' else '✅ Confirmed by driver'}: {driver_info}"
+                            f"</div>")
+            html_pass = html_pass.replace("<div style=\"margin-top:24px;", confirm_line + "<div style=\"margin-top:24px;")
+            _send(pass_email, subj_pass, html_pass)
+    except Exception as e:
+        logger.error(f"Confirm email failed: {e}")
+
+    updated["confirmed_at"] = updated["confirmed_at"].isoformat() if isinstance(updated.get("confirmed_at"), datetime) else updated.get("confirmed_at")
+    updated["created_at"] = updated["created_at"].isoformat() if isinstance(updated.get("created_at"), datetime) else updated.get("created_at")
+    return {"ok": True, "reservation": updated}
+
+
+@api_router.post("/rides/reservations/{reservation_id}/reject")
+async def reject_ride_reservation(reservation_id: str, request: Request = None):
+    """Kierowca odrzuca rezerwację (może zostawić dla innego kierowcy)."""
+    user = await get_current_user(request)
+    if user.role != "driver":
+        raise HTTPException(status_code=403, detail="Drivers only")
+    result = await db.ride_reservations.update_one(
+        {"reservation_id": reservation_id},
+        {"$set": {"status": "rejected", "rejected_at": datetime.now(timezone.utc)}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True}
 
 
 app.include_router(api_router)
