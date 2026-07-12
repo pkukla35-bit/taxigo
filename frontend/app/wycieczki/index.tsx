@@ -75,16 +75,16 @@ export default function WycieczkiIndex() {
         <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
           <Text style={styles.sectionTitle}>{t("trips.section_title")}</Text>
           <Text style={styles.sectionSubtitle}>{t("trips.section_subtitle")}</Text>
-          <View style={styles.cardsGridRow}>
+          <View style={styles.cardsGridCol}>
           {sorted.map((trip) => (
             <TouchableOpacity
               key={trip.slug}
               activeOpacity={0.85}
-              style={[styles.tripCard, { width: cardWidth }]}
+              style={styles.tripCardHorizontal}
               onPress={() => router.push(`/wycieczki/${trip.slug}` as any)}
             >
-              <View style={styles.cardImageWrap}>
-                <Image source={{ uri: trip.heroImage }} style={styles.cardImage} />
+              <View style={styles.hCardImageWrap}>
+                <Image source={{ uri: trip.heroImage }} style={styles.hCardImage} />
                 <View style={[styles.badge, { backgroundColor: trip.badgeColors[0] }]}>
                   <Text style={styles.badgeText}>{trip.badge}</Text>
                 </View>
@@ -92,18 +92,24 @@ export default function WycieczkiIndex() {
                   <Text style={styles.flagMiniText}>{trip.flag === "PL" ? "🇵🇱" : "🇸🇰"}</Text>
                 </View>
               </View>
-              <View style={styles.cardBody}>
-                <Text style={styles.cardTitle} numberOfLines={2}>
+              <View style={styles.hCardBody}>
+                <Text style={styles.hCardTitle} numberOfLines={2}>
                   {trip.title.replace(" z Krakowa", "").replace(" from Krakow", "").toUpperCase()}
                 </Text>
-                <Text style={styles.cardSubtitle} numberOfLines={2}>{trip.subtitle}</Text>
-                <View style={styles.cardMetaRow}>
-                  <Text style={styles.cardMetaText}>⏱️ {trip.duration}</Text>
-                  <Text style={styles.cardMetaText}>👥 max {trip.maxPeople}</Text>
+                <Text style={styles.hCardSubtitle} numberOfLines={2}>{trip.subtitle}</Text>
+                <View style={styles.hCardMetaRow}>
+                  <Text style={styles.hCardMetaText}>⏱️ {trip.duration}</Text>
+                  <Text style={styles.hCardMetaText}>📍 {trip.attractionsCount} {t("trips.card_attractions")}</Text>
+                  <Text style={styles.hCardMetaText}>👥 max {trip.maxPeople}</Text>
                 </View>
-                <View style={styles.cardPriceRow}>
-                  <Text style={[styles.cardPriceValue, { color: trip.accent }]}>{trip.price} zł</Text>
-                  <Text style={styles.cardPriceUnit}>{t("trips.card_per_car")}</Text>
+                <View style={styles.hCardBottom}>
+                  <View>
+                    <Text style={[styles.hCardPriceValue, { color: trip.accent }]}>{trip.price} zł</Text>
+                    <Text style={styles.hCardPriceUnit}>{t("trips.card_per_car")}</Text>
+                  </View>
+                  <View style={[styles.hCardCta, { backgroundColor: trip.accent }]}>
+                    <Text style={styles.hCardCtaText}>{lang === "en" ? "Details →" : "Szczegóły →"}</Text>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -149,6 +155,20 @@ const styles = StyleSheet.create({
   sectionDesktop: { maxWidth: 1200, alignSelf: "center", width: "100%", paddingHorizontal: 32 },
   cardsGrid: {},
   cardsGridRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+  cardsGridCol: { flexDirection: "column", gap: 16 },
+  tripCardHorizontal: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 12, overflow: "hidden", marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
+  hCardImageWrap: { position: "relative", width: 280, minHeight: 200 },
+  hCardImage: { width: "100%", height: "100%" },
+  hCardBody: { flex: 1, padding: 20, justifyContent: "space-between" },
+  hCardTitle: { color: "#1c1c1e", fontSize: 20, fontWeight: "900", letterSpacing: 0.4, marginBottom: 6 },
+  hCardSubtitle: { color: "#6e6e73", fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  hCardMetaRow: { flexDirection: "row", gap: 16, flexWrap: "wrap", marginBottom: 14 },
+  hCardMetaText: { fontSize: 13, color: "#525252", fontWeight: "500" },
+  hCardBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: "auto", borderTopWidth: 1, borderTopColor: "#f0f0f0", paddingTop: 14 },
+  hCardPriceValue: { fontSize: 26, fontWeight: "900", lineHeight: 30 },
+  hCardPriceUnit: { fontSize: 12, color: "#8e8e93", fontWeight: "500" },
+  hCardCta: { paddingHorizontal: 22, paddingVertical: 12, borderRadius: 8 },
+  hCardCtaText: { color: "#fff", fontWeight: "800", fontSize: 14, letterSpacing: 0.3 },
   sectionTitle: { fontSize: 20, fontWeight: "800", marginBottom: 4, color: "#1c1c1e" },
   sectionSubtitle: { fontSize: 13, color: "#6e6e73", marginBottom: 16 },
   tripCard: { backgroundColor: "#fff", borderRadius: 8, marginBottom: 24, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
