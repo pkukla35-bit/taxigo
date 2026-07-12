@@ -18,7 +18,14 @@ except Exception as e:
     _RESEND_READY = False
     resend = None
 
-FROM = os.environ.get("RESEND_FROM", "TAXIGO <onboarding@resend.dev>")
+FROM_RAW = os.environ.get("RESEND_FROM", "onboarding@resend.dev").strip()
+# Accept either "Name <email>" format or just "email" — auto-wrap plain email
+if "<" in FROM_RAW and ">" in FROM_RAW:
+    FROM = FROM_RAW
+elif "@" in FROM_RAW:
+    FROM = f"TAXIGO Wycieczki <{FROM_RAW}>"
+else:
+    FROM = f"TAXIGO Wycieczki <onboarding@resend.dev>"
 REPLY_TO = os.environ.get("RESEND_REPLY_TO", "pkukla35@gmail.com")
 OWNER_CC = os.environ.get("RESEND_OWNER_CC", "pkukla35@gmail.com")
 
