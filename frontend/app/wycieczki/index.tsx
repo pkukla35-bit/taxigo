@@ -80,10 +80,10 @@ export default function WycieczkiIndex() {
             <TouchableOpacity
               key={trip.slug}
               activeOpacity={0.85}
-              style={styles.tripCardHorizontal}
+              style={[styles.tripCardHorizontal, !isDesktop && !isTablet && { flexDirection: "column" }]}
               onPress={() => router.push(`/wycieczki/${trip.slug}` as any)}
             >
-              <View style={styles.hCardImageWrap}>
+              <View style={[styles.hCardImageWrap, !isDesktop && !isTablet && { width: "100%", height: 220 }]}>
                 <Image source={{ uri: trip.heroImage }} style={styles.hCardImage} />
                 <View style={[styles.badge, { backgroundColor: trip.badgeColors[0] }]}>
                   <Text style={styles.badgeText}>{trip.badge}</Text>
@@ -92,26 +92,51 @@ export default function WycieczkiIndex() {
                   <Text style={styles.flagMiniText}>{trip.flag === "PL" ? "🇵🇱" : "🇸🇰"}</Text>
                 </View>
               </View>
+
               <View style={styles.hCardBody}>
-                <Text style={styles.hCardTitle} numberOfLines={2}>
-                  {trip.title.replace(" z Krakowa", "").replace(" from Krakow", "").toUpperCase()}
-                </Text>
-                <Text style={styles.hCardSubtitle} numberOfLines={2}>{trip.subtitle}</Text>
-                <View style={styles.hCardMetaRow}>
-                  <Text style={styles.hCardMetaText}>⏱️ {trip.duration}</Text>
-                  <Text style={styles.hCardMetaText}>📍 {trip.attractionsCount} {t("trips.card_attractions")}</Text>
-                  <Text style={styles.hCardMetaText}>👥 max {trip.maxPeople}</Text>
+                <View style={styles.ratingRow}>
+                  <Text style={styles.ratingStar}>⭐ 4.9</Text>
+                  <Text style={styles.ratingCategory}>• {lang === "en" ? "Guided tour" : "Wycieczka z przewodnikiem"}</Text>
                 </View>
-                <View style={styles.hCardBottom}>
-                  <View>
-                    <Text style={[styles.hCardPriceValue, { color: trip.accent }]}>{trip.price} zł</Text>
-                    <Text style={styles.hCardPriceUnit}>{t("trips.card_per_car")}</Text>
-                  </View>
-                  <View style={[styles.hCardCta, { backgroundColor: trip.accent }]}>
-                    <Text style={styles.hCardCtaText}>{lang === "en" ? "Details →" : "Szczegóły →"}</Text>
-                  </View>
+                <Text style={styles.hCardTitle} numberOfLines={2}>
+                  {trip.title.replace(" z Krakowa", " z Krakowa").replace(" from Krakow", " from Krakow")}
+                </Text>
+                <Text style={styles.hCardShortDesc} numberOfLines={2}>
+                  <Text style={{ fontWeight: "700" }}>{trip.subtitle}</Text>
+                </Text>
+                <View style={styles.bulletsBox}>
+                  {trip.highlights?.slice(0, 3).map((h, i) => (
+                    <Text key={i} style={styles.bulletItem} numberOfLines={2}>• {h}</Text>
+                  ))}
                 </View>
               </View>
+
+              {(isDesktop || isTablet) && (
+                <View style={styles.priceColumn}>
+                  <Text style={styles.fromLabel}>{lang === "en" ? "from" : "od"}</Text>
+                  <Text style={[styles.bigPrice, { color: trip.accent }]}>{trip.price} zł</Text>
+                  <Text style={styles.priceUnit}>{t("trips.card_per_car")}</Text>
+                  <View style={[styles.bigCta, { backgroundColor: trip.accent }]}>
+                    <Text style={styles.bigCtaText}>{lang === "en" ? "Check availability" : "Sprawdź dostępność"}</Text>
+                  </View>
+                  <View style={styles.rightMetaBox}>
+                    <Text style={styles.rightMetaItem}>⏱️ {trip.duration}</Text>
+                    <Text style={styles.rightMetaItem}>🚗 {lang === "en" ? "Private transport" : "Transport prywatny"}</Text>
+                    <Text style={styles.rightMetaItem}>👥 {lang === "en" ? "up to" : "max"} {trip.maxPeople}</Text>
+                  </View>
+                </View>
+              )}
+              {!(isDesktop || isTablet) && (
+                <View style={styles.mobilePriceBar}>
+                  <View>
+                    <Text style={[styles.bigPrice, { color: trip.accent, fontSize: 22 }]}>{trip.price} zł</Text>
+                    <Text style={styles.priceUnit}>{t("trips.card_per_car")}</Text>
+                  </View>
+                  <View style={[styles.bigCta, { backgroundColor: trip.accent, paddingVertical: 10, paddingHorizontal: 16 }]}>
+                    <Text style={styles.bigCtaText}>{lang === "en" ? "Details" : "Szczegóły"} →</Text>
+                  </View>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
           </View>
@@ -155,20 +180,27 @@ const styles = StyleSheet.create({
   sectionDesktop: { maxWidth: 1200, alignSelf: "center", width: "100%", paddingHorizontal: 32 },
   cardsGrid: {},
   cardsGridRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
-  cardsGridCol: { flexDirection: "column", gap: 16 },
-  tripCardHorizontal: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 12, overflow: "hidden", marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
-  hCardImageWrap: { position: "relative", width: 280, minHeight: 200 },
+  cardsGridCol: { flexDirection: "column", gap: 24 },
+  tripCardHorizontal: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 16, overflow: "hidden", marginBottom: 24, borderWidth: 1, borderColor: "#e5e5ea", shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
+  hCardImageWrap: { position: "relative", width: 300, minHeight: 260 },
   hCardImage: { width: "100%", height: "100%" },
-  hCardBody: { flex: 1, padding: 20, justifyContent: "space-between" },
-  hCardTitle: { color: "#1c1c1e", fontSize: 20, fontWeight: "900", letterSpacing: 0.4, marginBottom: 6 },
-  hCardSubtitle: { color: "#6e6e73", fontSize: 14, lineHeight: 20, marginBottom: 12 },
-  hCardMetaRow: { flexDirection: "row", gap: 16, flexWrap: "wrap", marginBottom: 14 },
-  hCardMetaText: { fontSize: 13, color: "#525252", fontWeight: "500" },
-  hCardBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: "auto", borderTopWidth: 1, borderTopColor: "#f0f0f0", paddingTop: 14 },
-  hCardPriceValue: { fontSize: 26, fontWeight: "900", lineHeight: 30 },
-  hCardPriceUnit: { fontSize: 12, color: "#8e8e93", fontWeight: "500" },
-  hCardCta: { paddingHorizontal: 22, paddingVertical: 12, borderRadius: 8 },
-  hCardCtaText: { color: "#fff", fontWeight: "800", fontSize: 14, letterSpacing: 0.3 },
+  hCardBody: { flex: 1, padding: 24 },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
+  ratingStar: { color: "#1c1c1e", fontSize: 13, fontWeight: "700" },
+  ratingCategory: { color: "#6e6e73", fontSize: 12, fontWeight: "500" },
+  hCardTitle: { color: "#1c1c1e", fontSize: 22, fontWeight: "800", lineHeight: 28, marginBottom: 10 },
+  hCardShortDesc: { color: "#1c1c1e", fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  bulletsBox: { gap: 6 },
+  bulletItem: { color: "#3a3a3c", fontSize: 13, lineHeight: 19 },
+  priceColumn: { width: 220, padding: 20, borderLeftWidth: 1, borderLeftColor: "#f0f0f0", justifyContent: "flex-start", alignItems: "flex-start" },
+  fromLabel: { color: "#6e6e73", fontSize: 12, fontWeight: "500" },
+  bigPrice: { fontSize: 30, fontWeight: "900", lineHeight: 34, marginTop: 4 },
+  priceUnit: { color: "#8e8e93", fontSize: 12, fontWeight: "500", marginBottom: 12 },
+  bigCta: { backgroundColor: "#7C3AED", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10, alignItems: "center", alignSelf: "stretch" },
+  bigCtaText: { color: "#fff", fontWeight: "800", fontSize: 13, letterSpacing: 0.2, textAlign: "center" },
+  rightMetaBox: { marginTop: 14, gap: 6 },
+  rightMetaItem: { color: "#3a3a3c", fontSize: 12, fontWeight: "500" },
+  mobilePriceBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderTopWidth: 1, borderTopColor: "#f0f0f0" },
   sectionTitle: { fontSize: 20, fontWeight: "800", marginBottom: 4, color: "#1c1c1e" },
   sectionSubtitle: { fontSize: 13, color: "#6e6e73", marginBottom: 16 },
   tripCard: { backgroundColor: "#fff", borderRadius: 8, marginBottom: 24, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
