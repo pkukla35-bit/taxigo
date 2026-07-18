@@ -318,6 +318,21 @@ async def create_ride(payload: RideCreate, request: Request):
     if tokens:
         await send_push(tokens, "🚖 Nowe zlecenie", f"{payload.pickup_address} → {payload.dest_address} • {payload.price_pln:.2f} zł",
                         {"type": "new_ride_request", "ride_id": ride_id})
+
+    # Also send web push to owner + subscribed drivers (PWA)
+    try:
+        from push_service import broadcast_push
+        await broadcast_push(
+            db,
+            filter_query={"role": {"$in": ["driver", "owner"]}},
+            title="🚖 Nowe zlecenie taxi!",
+            body=f"{payload.pickup_address} → {payload.dest_address} • {payload.price_pln:.2f} zł",
+            url="/driver/home",
+            tag=f"ride-{ride_id}",
+        )
+    except Exception as e:
+        logger.error(f"Web push for new ride failed: {e}")
+
     return ride
 
 @api_router.get("/rides/pending")
@@ -542,6 +557,21 @@ async def create_trip_reservation(payload: TripReservationCreate):
     await db.trip_reservations.insert_one(doc.copy())
     doc.pop("_id", None)
     logger.info(f"📅 Nowa rezerwacja {reservation_id}: {payload.trip_name} • {payload.date} • {payload.people} os • {payload.name}")
+
+    # Send web push to owner
+    try:
+        from push_service import broadcast_push
+        await broadcast_push(
+            db,
+            filter_query={"role": "owner"},
+            title=f"🚐 Rezerwacja wycieczki!",
+            body=f"{payload.trip_name} • {payload.date} • {payload.people} os • {payload.name} • {payload.phone}",
+            url="/wycieczki/admin",
+            tag=f"trip-{reservation_id}",
+        )
+    except Exception as e:
+        logger.error(f"Push for trip reservation failed: {e}")
+
     return doc
 
 
