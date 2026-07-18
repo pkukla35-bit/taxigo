@@ -1055,9 +1055,6 @@ async def reject_ride_reservation(reservation_id: str, request: Request = None):
     return {"ok": True}
 
 
-app.include_router(api_router)
-
-
 # ============== WEB PUSH ENDPOINTS ==============
 class PushSubscribePayload(BaseModel):
     subscription: dict  # {endpoint, keys: {p256dh, auth}}
@@ -1073,11 +1070,25 @@ async def get_vapid_public_key():
 
 
 @api_router.post("/push/subscribe")
-async def push_subscribe(payload: PushSubscribePayload):
+async def push_subscribe(payload: PushSubscribePayload, request: Request):
     sub = payload.subscription
     endpoint = sub.get("endpoint", "")
     if not endpoint:
         raise HTTPException(status_code=400, detail="Invalid subscription")
+    # Security: if the caller is authenticated, use their real user_id from the session
+    # (prevents a malicious client from binding a subscription to another user's id).
+    # If no auth header, we allow the client-supplied user_id (for owner/admin PWA that
+    # subscribes without a session).
+    authoritative_user_id = payload.user_id or None
+    try:
+        auth = request.headers.get("Authorization", "") or ""
+        guest = request.headers.get("X-Guest-Id", "") or ""
+        if auth.startswith("Bearer ") or guest:
+            u = await get_current_user(request)
+            authoritative_user_id = u.user_id
+    except Exception:
+        # Not authenticated — fall back to the value from the body
+        pass
     # Upsert by endpoint
     await db.push_subscriptions.update_one(
         {"endpoint": endpoint},
@@ -1086,7 +1097,7 @@ async def push_subscribe(payload: PushSubscribePayload):
             "subscription": sub,
             "role": payload.role or "owner",
             "label": payload.label or "",
-            "user_id": payload.user_id or None,
+            "user_id": authoritative_user_id,
             "created_at": datetime.now(timezone.utc),
         }},
         upsert=True,

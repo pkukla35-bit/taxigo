@@ -247,3 +247,22 @@ agent_communication:
            z licznikiem (X / N), przyciskiem zamknięcia oraz strzałkami ← → do nawigacji między zdjęciami.
         Wizualnie zweryfikowane przez screenshot tool: lightbox działa, opisy renderują się poprawnie.
         BRAK zmian w backendzie. Nie wymaga retest.
+
+
+    - agent: "main"
+      message: |
+        NEW FEATURE — Driver ↔ Passenger arrival communication (Jestem na miejscu):
+        Added 3 backend endpoints in /app/backend/server.py:
+        - POST /api/rides/{ride_id}/driver-arrived (driver only) → sets last_event on ride + web push to passenger
+        - POST /api/rides/{ride_id}/driver-cannot-find (driver only) → sets last_event + web push to passenger
+        - POST /api/rides/{ride_id}/passenger-reply (passenger only) → body {code: "coming"|"two_min"|"cant_see_car"} → sets last_event + web push to driver
+        Modified /api/push/subscribe to derive user_id from session token (security fix), removed duplicate app.include_router.
+        Frontend: added arrival action buttons in /app/frontend/app/driver/ride.tsx and reply banner in /app/frontend/app/passenger/tracking.tsx.
+        Both screens auto-subscribe to web push with user_id via new ensureSilentSubscription() helper in /app/frontend/src/utils/webpush.ts.
+    - agent: "testing"
+      message: |
+        Backend tests PASSED 21/21 in /app/backend/tests/test_driver_arrived_flow.py:
+        auth checks (3), happy path (7 — includes all 3 passenger reply codes), authorization
+        (5 — wrong driver, cross-role calls, nonexistent ride), invalid payload (2 — bad code, missing code),
+        push subscribe with user_id (4 — persist, omit, upsert dedup, missing endpoint). JUnit report at
+        /app/test_reports/pytest/driver_arrived_results.xml. Iteration report: /app/test_reports/iteration_7.json.
