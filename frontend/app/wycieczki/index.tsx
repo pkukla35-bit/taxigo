@@ -113,7 +113,6 @@ export default function WycieczkiIndex() {
 
               {(isDesktop || isTablet) && (
                 <View style={styles.priceColumn}>
-                  <Text style={styles.fromLabel}>{lang === "en" ? "from" : "od"}</Text>
                   <Text style={[styles.bigPrice, { color: trip.accent }]}>{trip.price} zł</Text>
                   <Text style={styles.priceUnit}>{t("trips.card_per_car")}</Text>
                   <View style={[styles.bigCta, { backgroundColor: trip.accent }]}>
