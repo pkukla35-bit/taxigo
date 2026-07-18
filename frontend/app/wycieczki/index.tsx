@@ -8,6 +8,7 @@ import { localizeTrip } from "../../data/trips_en";
 import { useLanguage } from "../../contexts/LanguageContext";
 import LegalFooter from "../../components/LegalFooter";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
+import PushToggle from "../../components/PushToggle";
 
 export default function WycieczkiIndex() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function WycieczkiIndex() {
                 <Text style={styles.brandPillText}>TAXI<Text style={{ color: "#1c1c1e" }}>GO</Text> Trips</Text>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <PushToggle role="owner" label="wycieczki-header" compact />
                 <LanguageSwitcher compact />
                 <TouchableOpacity onPress={() => router.push("/wycieczki/admin" as any)} style={styles.backBtn} testID="open-admin">
                   <Ionicons name="settings-outline" size={20} color="#fff" />

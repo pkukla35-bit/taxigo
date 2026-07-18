@@ -789,6 +789,21 @@ async def create_ride_reservation(payload: RideReservationPayload):
     email_status = send_ride_reservation_emails(doc, lang=payload.lang or "pl")
     logger.info(f"📧 Email status: {email_status}")
 
+    # Send web push notifications to all subscribed drivers + owner
+    try:
+        from push_service import broadcast_push
+        push_status = await broadcast_push(
+            db,
+            filter_query={"role": {"$in": ["driver", "owner"]}},
+            title="🔔 Nowa rezerwacja!" if (payload.lang or "pl") == "pl" else "🔔 New reservation!",
+            body=f"{payload.name} • {payload.date} {payload.time} • {payload.dest.get('name','')} • {payload.price_pln:.0f} zł",
+            url="/driver/home",
+            tag=f"resv-{reservation_id}",
+        )
+        logger.info(f"📢 Push notifications: {push_status}")
+    except Exception as e:
+        logger.error(f"Push notification failed: {e}")
+
     doc.pop("_id", None)
     doc["created_at"] = doc["created_at"].isoformat()
     return {
@@ -907,6 +922,67 @@ async def reject_ride_reservation(reservation_id: str, request: Request = None):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}
+
+
+app.include_router(api_router)
+
+
+# ============== WEB PUSH ENDPOINTS ==============
+class PushSubscribePayload(BaseModel):
+    subscription: dict  # {endpoint, keys: {p256dh, auth}}
+    role: Optional[str] = "owner"  # owner, driver, passenger
+    label: Optional[str] = ""
+
+
+@api_router.get("/push/vapid-public-key")
+async def get_vapid_public_key():
+    from push_service import get_public_key, is_configured
+    return {"publicKey": get_public_key(), "configured": is_configured()}
+
+
+@api_router.post("/push/subscribe")
+async def push_subscribe(payload: PushSubscribePayload):
+    sub = payload.subscription
+    endpoint = sub.get("endpoint", "")
+    if not endpoint:
+        raise HTTPException(status_code=400, detail="Invalid subscription")
+    # Upsert by endpoint
+    await db.push_subscriptions.update_one(
+        {"endpoint": endpoint},
+        {"$set": {
+            "endpoint": endpoint,
+            "subscription": sub,
+            "role": payload.role or "owner",
+            "label": payload.label or "",
+            "created_at": datetime.now(timezone.utc),
+        }},
+        upsert=True,
+    )
+    return {"ok": True}
+
+
+@api_router.post("/push/unsubscribe")
+async def push_unsubscribe(payload: dict):
+    endpoint = payload.get("endpoint", "")
+    if endpoint:
+        await db.push_subscriptions.delete_one({"endpoint": endpoint})
+    return {"ok": True}
+
+
+@api_router.post("/push/test")
+async def push_test(payload: Optional[dict] = None, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Admin sends a test push to all subscribers."""
+    check_admin(x_admin_passcode)
+    from push_service import broadcast_push
+    result = await broadcast_push(
+        db,
+        filter_query={},
+        title="🎉 TAXIGO Test",
+        body="Powiadomienia działają! To jest testowe powiadomienie.",
+        url="/",
+        tag="test",
+    )
+    return result
 
 
 app.include_router(api_router)
