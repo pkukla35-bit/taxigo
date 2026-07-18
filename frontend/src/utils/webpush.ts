@@ -27,7 +27,7 @@ export async function getSubscriptionStatus(): Promise<"granted" | "denied" | "d
   return permission;
 }
 
-export async function subscribeToPush(role: "owner" | "driver" | "passenger" = "owner", label: string = ""): Promise<{ ok: boolean; error?: string }> {
+export async function subscribeToPush(role: "owner" | "driver" | "passenger" = "owner", label: string = "", user_id?: string): Promise<{ ok: boolean; error?: string }> {
   try {
     if (!isPushSupported()) return { ok: false, error: "Twoja przeglądarka nie obsługuje powiadomień. iOS wymaga wersji 16.4+" };
     // 1) request permission
@@ -54,12 +54,41 @@ export async function subscribeToPush(role: "owner" | "driver" | "passenger" = "
     const resp = await fetch(`${BACKEND}/api/push/subscribe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subscription: sub.toJSON(), role, label }),
+      body: JSON.stringify({ subscription: sub.toJSON(), role, label, user_id: user_id || undefined }),
     });
     if (!resp.ok) return { ok: false, error: "Błąd zapisu subskrypcji" };
     return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e?.message || "Błąd" };
+  }
+}
+
+// Silently ensures the current browser is subscribed to push and tagged with the given
+// role + user_id. Never asks for permission — only runs if user already granted it.
+export async function ensureSilentSubscription(role: "driver" | "passenger", user_id?: string, label: string = ""): Promise<boolean> {
+  try {
+    if (!isPushSupported()) return false;
+    if ((Notification as any).permission !== "granted") return false;
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    const keyRes = await fetch(`${BACKEND}/api/push/vapid-public-key`);
+    const keyData = await keyRes.json();
+    if (!keyData.configured || !keyData.publicKey) return false;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
+      });
+    }
+    await fetch(`${BACKEND}/api/push/subscribe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription: sub.toJSON(), role, label, user_id: user_id || undefined }),
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 

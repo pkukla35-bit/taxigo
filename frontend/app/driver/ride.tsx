@@ -1,16 +1,32 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator, Alert, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
+import { ensureSilentSubscription } from "../../src/utils/webpush";
+
+// Passenger reply codes we listen for
+const REPLY_LABEL: Record<string, { pl: string; en: string; color: string; icon: any }> = {
+  passenger_reply_coming: { pl: "✅ Pasażer: Już schodzę", en: "✅ Passenger: I'm coming down", color: "#00E676", icon: "checkmark-circle" },
+  passenger_reply_two_min: { pl: "⏳ Pasażer: Daj mi 2 minuty", en: "⏳ Passenger: Give me 2 minutes", color: "#FFD600", icon: "time" },
+  passenger_reply_cant_see_car: { pl: "🚗 Pasażer nie widzi auta", en: "🚗 Passenger can't see the car", color: "#FF9500", icon: "help-circle" },
+};
 
 export default function DriverRide() {
   const router = useRouter();
-  const { authFetch } = useAuth();
+  const { user, authFetch } = useAuth();
   const { t, lang } = useLanguage();
   const [ride, setRide] = useState<any>(null);
+  const [arrivalBusy, setArrivalBusy] = useState<string | null>(null);
+  const [arrivedSent, setArrivedSent] = useState(false);
+
+  // Silently link this browser's push subscription to the driver's user_id
+  useEffect(() => {
+    if (Platform.OS !== "web" || !user?.user_id) return;
+    ensureSilentSubscription("driver", user.user_id, user.name || "");
+  }, [user]);
 
   const LABEL: Record<string, string> = {
     accepted: lang === "en" ? "Pick up passenger" : "Jedź po pasażera",
@@ -25,6 +41,8 @@ export default function DriverRide() {
         router.replace("/driver/home");
       } else {
         setRide(data);
+        // Reset arrival flag when ride transitions to in_progress
+        if (data.status === "in_progress") setArrivedSent(false);
       }
     }
   }, [authFetch, router]);
@@ -58,6 +76,45 @@ export default function DriverRide() {
     if (!confirmed) return;
     await authFetch(`/api/rides/${ride.ride_id}/cancel`, { method: "POST" });
     router.replace("/driver/home");
+  };
+
+  const notifyArrived = async () => {
+    if (!ride) return;
+    setArrivalBusy("arrived");
+    try {
+      const r = await authFetch(`/api/rides/${ride.ride_id}/driver-arrived`, { method: "POST" });
+      if (r.ok) {
+        setArrivedSent(true);
+        load();
+      }
+    } finally {
+      setArrivalBusy(null);
+    }
+  };
+
+  const notifyCannotFind = async () => {
+    if (!ride) return;
+    setArrivalBusy("cant_find");
+    try {
+      const r = await authFetch(`/api/rides/${ride.ride_id}/driver-cannot-find`, { method: "POST" });
+      if (r.ok) load();
+    } finally {
+      setArrivalBusy(null);
+    }
+  };
+
+  const callPassenger = () => {
+    const phone = ride?.passenger_phone;
+    if (!phone) {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.alert(lang === "en" ? "Passenger did not provide a phone number." : "Pasażer nie podał numeru telefonu.");
+      } else {
+        Alert.alert(lang === "en" ? "No phone" : "Brak numeru", lang === "en" ? "Passenger did not provide a phone number." : "Pasażer nie podał numeru telefonu.");
+      }
+      return;
+    }
+    const url = `tel:${String(phone).replace(/\s/g, "")}`;
+    Linking.openURL(url).catch(() => {});
   };
 
   if (!ride) {
@@ -111,6 +168,61 @@ export default function DriverRide() {
           </View>
         </View>
 
+        {/* Passenger reply banner (visible when passenger has replied) */}
+        {ride.last_event && ride.last_event.by === "passenger" && REPLY_LABEL[ride.last_event.kind] ? (
+          <View style={[styles.replyBanner, { borderLeftColor: REPLY_LABEL[ride.last_event.kind].color }]} testID="passenger-reply-banner">
+            <Ionicons name={REPLY_LABEL[ride.last_event.kind].icon} size={22} color={REPLY_LABEL[ride.last_event.kind].color} />
+            <Text style={styles.replyText}>{lang === "en" ? REPLY_LABEL[ride.last_event.kind].en : REPLY_LABEL[ride.last_event.kind].pl}</Text>
+          </View>
+        ) : null}
+
+        {/* Arrival action buttons — visible during pickup phase (accepted, not yet in_progress) */}
+        {isAccepted ? (
+          <View style={styles.arrivalGrid}>
+            <TouchableOpacity
+              testID="driver-arrived-btn"
+              style={[styles.arrivalBtn, styles.arrivalBtnPrimary, (arrivalBusy === "arrived" || arrivedSent) && { opacity: 0.7 }]}
+              onPress={notifyArrived}
+              disabled={arrivalBusy !== null}
+              activeOpacity={0.85}
+            >
+              {arrivalBusy === "arrived" ? (
+                <ActivityIndicator color="#0A0A0A" size="small" />
+              ) : (
+                <>
+                  <Ionicons name={arrivedSent ? "checkmark-done" : "location"} size={20} color="#0A0A0A" />
+                  <Text style={styles.arrivalBtnTextPrimary}>{arrivedSent ? (lang === "en" ? "Sent ✓" : "Wysłano ✓") : (lang === "en" ? "I've arrived" : "Jestem na miejscu")}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              testID="driver-cant-find-btn"
+              style={[styles.arrivalBtn, styles.arrivalBtnSecondary, arrivalBusy === "cant_find" && { opacity: 0.7 }]}
+              onPress={notifyCannotFind}
+              disabled={arrivalBusy !== null}
+              activeOpacity={0.85}
+            >
+              {arrivalBusy === "cant_find" ? (
+                <ActivityIndicator color="#FFD600" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="eye" size={20} color="#FFD600" />
+                  <Text style={styles.arrivalBtnTextSecondary}>{lang === "en" ? "Can't see passenger" : "Nie widzę pasażera"}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              testID="driver-call-btn"
+              style={[styles.arrivalBtn, styles.arrivalBtnSecondary]}
+              onPress={callPassenger}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="call" size={20} color="#FFD600" />
+              <Text style={styles.arrivalBtnTextSecondary}>{lang === "en" ? "Call passenger" : "Zadzwoń do pasażera"}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         {isAccepted ? (
           <TouchableOpacity testID="start-ride-btn" style={styles.primaryBtn} onPress={start}>
             <Text style={styles.primaryBtnText}>{t("driver.start_ride")}</Text>
@@ -156,4 +268,12 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: "#0A0A0A", fontSize: 16, fontWeight: "900" },
   cancelBtn: { marginTop: 10, height: 48, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#FF3B30" },
   cancelText: { color: "#FF3B30", fontWeight: "800" },
+  arrivalGrid: { gap: 8, marginBottom: 12 },
+  arrivalBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, height: 52, borderRadius: 12 },
+  arrivalBtnPrimary: { backgroundColor: "#FFD600" },
+  arrivalBtnSecondary: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#262626" },
+  arrivalBtnTextPrimary: { color: "#0A0A0A", fontSize: 15, fontWeight: "900" },
+  arrivalBtnTextSecondary: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  replyBanner: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 12, backgroundColor: "#171717", borderWidth: 1, borderColor: "#262626", borderLeftWidth: 4, marginBottom: 12 },
+  replyText: { flex: 1, color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
 });

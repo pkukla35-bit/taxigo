@@ -427,6 +427,107 @@ async def cancel_ride(ride_id: str, request: Request):
     await db.rides.update_one({"ride_id": ride_id}, {"$set": {"status": "cancelled"}})
     return {"ok": True}
 
+# ============== DRIVER ↔ PASSENGER ARRIVAL COMMUNICATION ==============
+class PassengerReplyPayload(BaseModel):
+    code: Literal["coming", "two_min", "cant_see_car"]
+
+
+def _event_title_body(kind: str, lang: str = "pl"):
+    """Returns (title, body) tuple for a given event kind."""
+    if kind == "driver_arrived":
+        return ("🚕 Kierowca dojechał!", "Twój kierowca czeka na miejscu odbioru. Wyjdź do samochodu.")
+    if kind == "driver_cannot_find":
+        return ("👀 Kierowca Cię szuka", "Kierowca jest na miejscu ale nie widzi Cię. Pokaż się lub napisz gdzie jesteś.")
+    if kind == "passenger_reply_coming":
+        return ("✅ Pasażer schodzi", 'Pasażer napisał: „Już schodzę"')
+    if kind == "passenger_reply_two_min":
+        return ("⏳ Pasażer prosi o chwilę", 'Pasażer napisał: „Daj mi 2 minuty"')
+    if kind == "passenger_reply_cant_see_car":
+        return ("🚗 Pasażer nie widzi auta", 'Pasażer napisał: „Nie widzę auta — gdzie stoisz?"')
+    return ("TAXIGO", "Powiadomienie")
+
+
+async def _push_to_user(user_id: str, title: str, body: str, url: str = "/", tag: str = "arrival"):
+    """Send web push to all subscriptions linked to a specific user_id."""
+    try:
+        from push_service import broadcast_push
+        await broadcast_push(
+            db,
+            filter_query={"user_id": user_id},
+            title=title,
+            body=body,
+            url=url,
+            tag=tag,
+        )
+    except Exception as e:
+        logger.error(f"push_to_user failed: {e}")
+
+
+@api_router.post("/rides/{ride_id}/driver-arrived")
+async def driver_arrived(ride_id: str, request: Request):
+    """Driver signals they've arrived at the pickup location."""
+    user = await get_current_user(request)
+    ride = await db.rides.find_one({"ride_id": ride_id, "driver_id": user.user_id}, {"_id": 0})
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    event = {"kind": "driver_arrived", "at": datetime.now(timezone.utc).isoformat(), "by": "driver"}
+    await db.rides.update_one({"ride_id": ride_id}, {"$set": {"last_event": event}})
+    # Legacy expo push
+    pt = await get_user_push_tokens(ride["passenger_id"])
+    if pt:
+        await send_push(pt, "🚕 Kierowca dojechał!", "Twój kierowca czeka na miejscu odbioru.",
+                        {"type": "driver_arrived", "ride_id": ride_id})
+    # Web push to passenger
+    title, body = _event_title_body("driver_arrived")
+    await _push_to_user(ride["passenger_id"], title, body, url="/passenger/tracking", tag=f"arrival-{ride_id}")
+    logger.info(f"🚕 driver_arrived ride={ride_id} passenger={ride['passenger_id']}")
+    return {"ok": True, "event": event}
+
+
+@api_router.post("/rides/{ride_id}/driver-cannot-find")
+async def driver_cannot_find(ride_id: str, request: Request):
+    """Driver signals they're at pickup but can't see the passenger."""
+    user = await get_current_user(request)
+    ride = await db.rides.find_one({"ride_id": ride_id, "driver_id": user.user_id}, {"_id": 0})
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    event = {"kind": "driver_cannot_find", "at": datetime.now(timezone.utc).isoformat(), "by": "driver"}
+    await db.rides.update_one({"ride_id": ride_id}, {"$set": {"last_event": event}})
+    pt = await get_user_push_tokens(ride["passenger_id"])
+    if pt:
+        await send_push(pt, "👀 Kierowca Cię szuka", "Kierowca jest na miejscu ale Cię nie widzi.",
+                        {"type": "driver_cannot_find", "ride_id": ride_id})
+    title, body = _event_title_body("driver_cannot_find")
+    await _push_to_user(ride["passenger_id"], title, body, url="/passenger/tracking", tag=f"arrival-{ride_id}")
+    logger.info(f"👀 driver_cannot_find ride={ride_id} passenger={ride['passenger_id']}")
+    return {"ok": True, "event": event}
+
+
+@api_router.post("/rides/{ride_id}/passenger-reply")
+async def passenger_reply(ride_id: str, payload: PassengerReplyPayload, request: Request):
+    """Passenger sends a quick reply to the driver."""
+    user = await get_current_user(request)
+    ride = await db.rides.find_one({"ride_id": ride_id, "passenger_id": user.user_id}, {"_id": 0})
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    event = {
+        "kind": f"passenger_reply_{payload.code}",
+        "at": datetime.now(timezone.utc).isoformat(),
+        "by": "passenger",
+        "code": payload.code,
+    }
+    await db.rides.update_one({"ride_id": ride_id}, {"$set": {"last_event": event}})
+    # Notify the driver (both legacy and web push)
+    if ride.get("driver_id"):
+        pt = await get_user_push_tokens(ride["driver_id"])
+        title, body = _event_title_body(event["kind"])
+        if pt:
+            await send_push(pt, title, body, {"type": event["kind"], "ride_id": ride_id})
+        await _push_to_user(ride["driver_id"], title, body, url="/driver/ride", tag=f"arrival-{ride_id}")
+    logger.info(f"💬 passenger_reply ride={ride_id} code={payload.code}")
+    return {"ok": True, "event": event}
+
+
 @api_router.post("/rides/{ride_id}/rate")
 async def rate_ride(ride_id: str, payload: RatePayload, request: Request):
     user = await get_current_user(request)
@@ -962,6 +1063,7 @@ class PushSubscribePayload(BaseModel):
     subscription: dict  # {endpoint, keys: {p256dh, auth}}
     role: Optional[str] = "owner"  # owner, driver, passenger
     label: Optional[str] = ""
+    user_id: Optional[str] = None
 
 
 @api_router.get("/push/vapid-public-key")
@@ -984,6 +1086,7 @@ async def push_subscribe(payload: PushSubscribePayload):
             "subscription": sub,
             "role": payload.role or "owner",
             "label": payload.label or "",
+            "user_id": payload.user_id or None,
             "created_at": datetime.now(timezone.utc),
         }},
         upsert=True,

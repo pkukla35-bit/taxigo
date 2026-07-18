@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { useLiveLocation } from "../../hooks/useLiveLocation";
+import { ensureSilentSubscription } from "../../src/utils/webpush";
 
 function haversine(a: any, b: any) {
   if (!a || !b) return 0;
@@ -20,10 +21,18 @@ function haversine(a: any, b: any) {
 export default function Tracking() {
   const router = useRouter();
   const { ride_id } = useLocalSearchParams<{ ride_id: string }>();
-  const { authFetch } = useAuth();
+  const { user, authFetch } = useAuth();
   const { t, lang } = useLanguage();
   const [ride, setRide] = useState<any>(null);
+  const [replyBusy, setReplyBusy] = useState<string | null>(null);
+  const [dismissedEventAt, setDismissedEventAt] = useState<string | null>(null);
   const passengerLoc = useLiveLocation(true);
+
+  // Silently link this browser's push subscription to the passenger's user_id
+  useEffect(() => {
+    if (Platform.OS !== "web" || !user?.user_id) return;
+    ensureSilentSubscription("passenger", user.user_id, user.name || "");
+  }, [user]);
 
   const load = useCallback(async () => {
     const r = await authFetch("/api/rides/active");
@@ -65,6 +74,24 @@ export default function Tracking() {
     if (!confirmed) return;
     await authFetch(`/api/rides/${ride.ride_id}/cancel`, { method: "POST" });
     router.replace("/passenger/home");
+  };
+
+  const sendReply = async (code: "coming" | "two_min" | "cant_see_car") => {
+    if (!ride) return;
+    setReplyBusy(code);
+    try {
+      const r = await authFetch(`/api/rides/${ride.ride_id}/passenger-reply`, {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      });
+      if (r.ok) {
+        // hide banner after successful reply
+        setDismissedEventAt(ride?.last_event?.at || null);
+        load();
+      }
+    } finally {
+      setReplyBusy(null);
+    }
   };
 
   if (!ride) {
@@ -130,6 +157,56 @@ export default function Tracking() {
 
       <View style={styles.sheet}>
         <View style={styles.handle} />
+
+        {/* Driver-arrived banner with quick reply buttons */}
+        {ride.last_event && (ride.last_event.kind === "driver_arrived" || ride.last_event.kind === "driver_cannot_find") && ride.last_event.at !== dismissedEventAt ? (
+          <View style={styles.arrivalBanner} testID="arrival-banner">
+            <View style={styles.arrivalHeader}>
+              <View style={styles.arrivalIconWrap}>
+                <Ionicons name={ride.last_event.kind === "driver_arrived" ? "car-sport" : "search"} size={22} color="#0F0F0F" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.arrivalTitle}>
+                  {ride.last_event.kind === "driver_arrived"
+                    ? (lang === "en" ? "Your driver has arrived!" : "Kierowca dojechał!")
+                    : (lang === "en" ? "Driver is looking for you" : "Kierowca Cię szuka")}
+                </Text>
+                <Text style={styles.arrivalSub}>
+                  {ride.last_event.kind === "driver_arrived"
+                    ? (lang === "en" ? "Head out to the car" : "Wyjdź do samochodu")
+                    : (lang === "en" ? "Please show yourself" : "Pokaż się kierowcy")}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.replyRow}>
+              <TouchableOpacity
+                testID="reply-coming"
+                style={[styles.replyBtn, styles.replyBtnPrimary, replyBusy === "coming" && { opacity: 0.6 }]}
+                onPress={() => sendReply("coming")}
+                disabled={replyBusy !== null}
+              >
+                <Text style={styles.replyBtnTextPrimary}>{replyBusy === "coming" ? "..." : (lang === "en" ? "✅ Coming" : "✅ Już schodzę")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="reply-two-min"
+                style={[styles.replyBtn, styles.replyBtnSecondary, replyBusy === "two_min" && { opacity: 0.6 }]}
+                onPress={() => sendReply("two_min")}
+                disabled={replyBusy !== null}
+              >
+                <Text style={styles.replyBtnTextSecondary}>{replyBusy === "two_min" ? "..." : (lang === "en" ? "⏳ 2 min" : "⏳ Daj 2 min")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="reply-cant-see"
+                style={[styles.replyBtn, styles.replyBtnSecondary, replyBusy === "cant_see_car" && { opacity: 0.6 }]}
+                onPress={() => sendReply("cant_see_car")}
+                disabled={replyBusy !== null}
+              >
+                <Text style={styles.replyBtnTextSecondary}>{replyBusy === "cant_see_car" ? "..." : (lang === "en" ? "🚗 Can't see car" : "🚗 Nie widzę auta")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
+
         {ride.status === "pending" ? (
           <View style={styles.searchBox}>
             <ActivityIndicator color="#0F0F0F" />
@@ -216,4 +293,15 @@ const styles = StyleSheet.create({
   priceVal: { color: "#0F0F0F", fontSize: 24, fontWeight: "900" },
   cancelBtn: { paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: "#FF3B30", alignItems: "center" },
   cancelText: { color: "#FF3B30", fontWeight: "800" },
+  arrivalBanner: { backgroundColor: "#FFD600", borderRadius: 16, padding: 14, marginBottom: 14, gap: 10 },
+  arrivalHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
+  arrivalIconWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
+  arrivalTitle: { color: "#0F0F0F", fontSize: 16, fontWeight: "900" },
+  arrivalSub: { color: "#0F0F0F", fontSize: 12, fontWeight: "600", marginTop: 2 },
+  replyRow: { flexDirection: "row", gap: 8 },
+  replyBtn: { flex: 1, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  replyBtnPrimary: { backgroundColor: "#0F0F0F" },
+  replyBtnSecondary: { backgroundColor: "rgba(15,15,15,0.08)", borderWidth: 1, borderColor: "rgba(15,15,15,0.15)" },
+  replyBtnTextPrimary: { color: "#FFD600", fontSize: 12, fontWeight: "900" },
+  replyBtnTextSecondary: { color: "#0F0F0F", fontSize: 12, fontWeight: "800" },
 });
