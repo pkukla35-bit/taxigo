@@ -40,6 +40,8 @@ export default function DriverHome() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [car, setCar] = useState("");
   const [plate, setPlate] = useState("");
+  const [arrivalBusy, setArrivalBusy] = useState<string | null>(null);
+  const [arrivedSent, setArrivedSent] = useState(false);
   const live = useLiveLocation(online);
 
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function DriverHome() {
     }
   };
 
-  const callPassenger = (phone: string) => {
+  const callPassengerPhone = (phone: string) => {
     if (!phone) return;
     const url = `tel:${phone.replace(/\s/g, "")}`;
     Linking.openURL(url).catch(() => {});
@@ -127,6 +129,9 @@ export default function DriverHome() {
     if (r.ok) {
       const data = await r.json();
       setActive(data || null);
+      // Reset arrival flag when ride transitions past accepted
+      if (data && data.status !== "accepted") setArrivedSent(false);
+      if (!data) setArrivedSent(false);
     }
   }, [authFetch]);
 
@@ -171,6 +176,47 @@ export default function DriverHome() {
     }
   };
 
+  // Uber-style quick actions for the arrival phase — usable directly from the home
+  // screen so drivers never get blocked by the /driver/ride black-screen bug.
+  const notifyArrived = async () => {
+    if (!active?.ride_id) return;
+    setArrivalBusy("arrived");
+    try {
+      const r = await authFetch(`/api/rides/${active.ride_id}/driver-arrived`, { method: "POST" });
+      if (r.ok) {
+        setArrivedSent(true);
+        loadActive();
+      }
+    } finally {
+      setArrivalBusy(null);
+    }
+  };
+
+  const notifyCannotFind = async () => {
+    if (!active?.ride_id) return;
+    setArrivalBusy("cant_find");
+    try {
+      const r = await authFetch(`/api/rides/${active.ride_id}/driver-cannot-find`, { method: "POST" });
+      if (r.ok) loadActive();
+    } finally {
+      setArrivalBusy(null);
+    }
+  };
+
+  const callPassenger = () => {
+    const phone = active?.passenger_phone;
+    if (!phone) {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.alert(lang === "en" ? "Passenger did not provide a phone number." : "Pasażer nie podał numeru telefonu.");
+      } else {
+        Alert.alert(lang === "en" ? "No phone" : "Brak numeru", lang === "en" ? "Passenger did not provide a phone number." : "Pasażer nie podał numeru telefonu.");
+      }
+      return;
+    }
+    const url = `tel:${String(phone).replace(/\s/g, "")}`;
+    Linking.openURL(url).catch(() => {});
+  };
+
   const saveSetup = async () => {
     if (!car.trim() || !plate.trim()) return Alert.alert(t("driver.err_setup_title"), t("driver.err_setup"));
     await setRole("driver", car.trim(), plate.trim().toUpperCase());
@@ -206,27 +252,95 @@ export default function DriverHome() {
       </View>
 
       <View style={styles.panel}>
-        {/* Active ride banner — visible whenever driver has an accepted/in_progress ride */}
+        {/* Active ride banner with Uber-style quick actions */}
         {active && (active.status === "accepted" || active.status === "in_progress") ? (
-          <TouchableOpacity
-            testID="active-ride-banner"
-            style={styles.activeBanner}
-            onPress={() => router.push("/driver/ride")}
-            activeOpacity={0.85}
-          >
-            <View style={styles.activeBannerIcon}>
-              <Ionicons name="car-sport" size={22} color="#0A0A0A" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.activeBannerTitle}>
-                {lang === "en" ? "You have an active ride" : "Masz aktywny przejazd"}
-              </Text>
-              <Text style={styles.activeBannerSub} numberOfLines={1}>
-                {active.pickup_address} → {active.dest_address}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="#0A0A0A" />
-          </TouchableOpacity>
+          <View style={styles.activeCard} testID="active-ride-card">
+            <TouchableOpacity
+              style={styles.activeCardHeader}
+              onPress={() => router.push("/driver/ride")}
+              activeOpacity={0.85}
+            >
+              <View style={styles.activeBannerIcon}>
+                <Ionicons name="car-sport" size={22} color="#0A0A0A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.activeBannerTitle}>
+                  {active.status === "accepted"
+                    ? (lang === "en" ? "Heading to passenger" : "Jedziesz po pasażera")
+                    : (lang === "en" ? "Passenger on board" : "Wieziesz pasażera")}
+                </Text>
+                <Text style={styles.activeBannerSub} numberOfLines={1}>
+                  📍 {active.pickup_address} → {active.dest_address}
+                </Text>
+              </View>
+              <Ionicons name="expand" size={20} color="#0A0A0A" />
+            </TouchableOpacity>
+
+            {/* Passenger reply notice (green/yellow/orange left border) */}
+            {active.last_event && active.last_event.by === "passenger" ? (
+              <View style={styles.replyLine} testID="passenger-reply-inline">
+                <Ionicons
+                  name={active.last_event.kind === "passenger_reply_coming" ? "checkmark-circle" : active.last_event.kind === "passenger_reply_two_min" ? "time" : "help-circle"}
+                  size={18}
+                  color={active.last_event.kind === "passenger_reply_coming" ? "#00A854" : active.last_event.kind === "passenger_reply_two_min" ? "#B37F00" : "#C15200"}
+                />
+                <Text style={styles.replyLineText}>
+                  {active.last_event.kind === "passenger_reply_coming"
+                    ? (lang === "en" ? "Passenger is coming down" : 'Pasażer: „Już schodzę"')
+                    : active.last_event.kind === "passenger_reply_two_min"
+                    ? (lang === "en" ? "Passenger: 2 min please" : 'Pasażer: „Daj mi 2 minuty"')
+                    : (lang === "en" ? "Passenger can't see the car" : 'Pasażer: „Nie widzę auta"')}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* 3 Uber-style quick action buttons — only during pickup phase */}
+            {active.status === "accepted" ? (
+              <View style={styles.quickRow}>
+                <TouchableOpacity
+                  testID="home-arrived-btn"
+                  style={[styles.quickBtn, styles.quickBtnPrimary, (arrivalBusy === "arrived" || arrivedSent) && { opacity: 0.7 }]}
+                  onPress={notifyArrived}
+                  disabled={arrivalBusy !== null}
+                  activeOpacity={0.85}
+                >
+                  {arrivalBusy === "arrived" ? (
+                    <ActivityIndicator color="#0A0A0A" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name={arrivedSent ? "checkmark-done" : "location"} size={18} color="#0A0A0A" />
+                      <Text style={styles.quickBtnTextPrimary} numberOfLines={1}>{arrivedSent ? (lang === "en" ? "Sent ✓" : "Wysłano ✓") : (lang === "en" ? "Arrived" : "Na miejscu")}</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="home-cant-find-btn"
+                  style={[styles.quickBtn, styles.quickBtnSecondary, arrivalBusy === "cant_find" && { opacity: 0.7 }]}
+                  onPress={notifyCannotFind}
+                  disabled={arrivalBusy !== null}
+                  activeOpacity={0.85}
+                >
+                  {arrivalBusy === "cant_find" ? (
+                    <ActivityIndicator color="#0A0A0A" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="eye" size={18} color="#0A0A0A" />
+                      <Text style={styles.quickBtnTextSecondary} numberOfLines={1}>{lang === "en" ? "Can't see" : "Nie widzę"}</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="home-call-btn"
+                  style={[styles.quickBtn, styles.quickBtnSecondary]}
+                  onPress={callPassenger}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="call" size={18} color="#0A0A0A" />
+                  <Text style={styles.quickBtnTextSecondary} numberOfLines={1}>{lang === "en" ? "Call" : "Zadzwoń"}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
         ) : null}
 
         <View style={styles.toggleRow}>
@@ -373,7 +487,7 @@ export default function DriverHome() {
                     <View style={styles.resvActions}>
                       <TouchableOpacity
                         style={[styles.resvBtn, styles.resvCallBtn]}
-                        onPress={() => callPassenger(r.phone)}
+                        onPress={() => callPassengerPhone(r.phone)}
                         testID={`call-${r.reservation_id}`}
                       >
                         <Ionicons name="call-outline" size={18} color="#FFFFFF" />
@@ -506,8 +620,18 @@ const styles = StyleSheet.create({
   resvRejectText: { color: "#FF3B30", fontWeight: "900", fontSize: 13 },
   resvConfirmBtn: { backgroundColor: "#00E676" },
   resvConfirmText: { color: "#0A0A0A", fontWeight: "900", fontSize: 13 },
+  activeCard: { backgroundColor: "#FFD600", borderRadius: 14, padding: 12, marginBottom: 12, gap: 10 },
+  activeCardHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
   activeBanner: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFD600", paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, marginBottom: 12 },
   activeBannerIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
   activeBannerTitle: { color: "#0A0A0A", fontSize: 14, fontWeight: "900" },
   activeBannerSub: { color: "#0A0A0A", fontSize: 11, fontWeight: "600", marginTop: 2 },
+  quickRow: { flexDirection: "row", gap: 6 },
+  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 10 },
+  quickBtnPrimary: { backgroundColor: "#0F0F0F" },
+  quickBtnSecondary: { backgroundColor: "rgba(15,15,15,0.08)", borderWidth: 1, borderColor: "rgba(15,15,15,0.2)" },
+  quickBtnTextPrimary: { color: "#FFD600", fontSize: 12, fontWeight: "900" },
+  quickBtnTextSecondary: { color: "#0F0F0F", fontSize: 12, fontWeight: "800" },
+  replyLine: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FFFFFF", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  replyLineText: { flex: 1, color: "#0F0F0F", fontSize: 12, fontWeight: "700" },
 });
