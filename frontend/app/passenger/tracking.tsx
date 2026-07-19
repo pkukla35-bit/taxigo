@@ -243,6 +243,28 @@ export default function Tracking() {
               </View>
             </View>
 
+            {ride.driver_phone ? (
+              <TouchableOpacity
+                testID="call-driver-btn"
+                style={styles.callDriverBtn}
+                onPress={() => {
+                  const phone = String(ride.driver_phone).replace(/\s/g, "");
+                  if (Platform.OS === "web" && typeof window !== "undefined") {
+                    window.location.href = `tel:${phone}`;
+                  } else {
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
+                    require("react-native").Linking.openURL(`tel:${phone}`).catch(() => {});
+                  }
+                }}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="call" size={20} color="#0F0F0F" />
+                <Text style={styles.callDriverText}>
+                  {lang === "en" ? "Call driver" : "Zadzwoń do kierowcy"} • {ride.driver_phone}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
             <View style={styles.etaBox}>
               <Text style={styles.etaLabel}>{t("tracking.eta_label")}</Text>
               <Text style={styles.etaValue}>{etaText}</Text>
@@ -288,6 +310,8 @@ const styles = StyleSheet.create({
   searchBox: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, backgroundColor: "#FFD600", borderRadius: 14, marginBottom: 16 },
   searchText: { flex: 1, color: "#0F0F0F", fontWeight: "700" },
   driverRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 14 },
+  callDriverBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#FFD600", height: 52, borderRadius: 12, marginBottom: 14 },
+  callDriverText: { color: "#0F0F0F", fontSize: 14, fontWeight: "900", flexShrink: 1 },
   avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#0F0F0F", alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#FFD600", fontSize: 22, fontWeight: "900" },
   driverName: { fontSize: 17, fontWeight: "900", color: "#0F0F0F" },

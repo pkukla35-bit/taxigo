@@ -28,9 +28,8 @@ export default function Index() {
       router.replace("/passenger/home");
       return;
     }
-    // Drivers still go through Google login for verification
-    await AsyncStorage.setItem("pending_role", role);
-    router.push({ pathname: "/login", params: { role } });
+    // Drivers use email+password login (admin creates accounts)
+    router.push("/driver/login");
   };
 
   return (

@@ -56,6 +56,7 @@ type Ctx = {
   token: string | null;
   loading: boolean;
   signInWithSession: (sessionId: string, role: Role) => Promise<AppUser | null>;
+  signInWithPassword: (email: string, password: string) => Promise<{ ok: boolean; error?: string; user?: AppUser }>;
   signInAsGuest: (role: Role) => Promise<AppUser>;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
@@ -148,6 +149,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Password-based driver login — uses /api/auth/driver-login
+  const signInWithPassword = async (email: string, password: string): Promise<{ ok: boolean; error?: string; user?: AppUser }> => {
+    try {
+      const r = await fetch(`${BACKEND}/api/auth/driver-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        return { ok: false, error: data?.detail || "Login failed" };
+      }
+      await AsyncStorage.setItem("session_token", data.session_token);
+      setToken(data.session_token);
+      setUser(data.user);
+      return { ok: true, user: data.user as AppUser };
+    } catch (e: any) {
+      return { ok: false, error: e?.message || "Network error" };
+    }
+  };
+
   // Guest sign-in — no Google login required. Creates a local guest user with a stable UUID
   // stored in AsyncStorage. Used mainly for passengers who want to skip the login step.
   const signInAsGuest = async (role: Role): Promise<AppUser> => {
@@ -196,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, token, loading, signInWithSession, signInAsGuest, refresh, logout, setRole, authFetch }}>
+    <AuthCtx.Provider value={{ user, token, loading, signInWithSession, signInWithPassword, signInAsGuest, refresh, logout, setRole, authFetch }}>
       {children}
     </AuthCtx.Provider>
   );

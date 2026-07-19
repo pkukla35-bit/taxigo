@@ -39,6 +39,7 @@ class User(BaseModel):
     role: Optional[Literal["passenger", "driver"]] = None
     car_model: Optional[str] = None
     plate: Optional[str] = None
+    phone: Optional[str] = None
     rating_avg: float = 5.0
     rating_count: int = 0
     is_online: bool = False
@@ -71,6 +72,7 @@ class Ride(BaseModel):
     passenger_phone: Optional[str] = None
     driver_id: Optional[str] = None
     driver_name: Optional[str] = None
+    driver_phone: Optional[str] = None
     driver_car: Optional[str] = None
     driver_plate: Optional[str] = None
     pickup_address: str
@@ -285,6 +287,132 @@ async def set_role(payload: SetRolePayload, request: Request):
     return user_doc
 
 
+# ============== DRIVER EMAIL+PASSWORD AUTH ==============
+import bcrypt
+import secrets as _secrets
+
+BCRYPT_ROUNDS = int(os.environ.get("BCRYPT_ROUNDS", "12"))
+
+
+def _hash_password(password: str) -> str:
+    if len(password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=400, detail="Password too long (max 72 bytes)")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=BCRYPT_ROUNDS)).decode("utf-8")
+
+
+def _verify_password(password: str, password_hash: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+    except Exception:
+        return False
+
+
+class AdminDriverCreatePayload(BaseModel):
+    email: str = Field(min_length=5, max_length=120)
+    password: str = Field(min_length=8, max_length=72)
+    name: str = Field(min_length=1, max_length=120)
+    phone: str = Field(min_length=6, max_length=30)
+    car_model: str = Field(min_length=1, max_length=80)
+    plate: str = Field(min_length=1, max_length=20)
+
+
+class DriverLoginPayload(BaseModel):
+    email: str
+    password: str
+
+
+@api_router.post("/admin/drivers", status_code=201)
+async def admin_create_driver(payload: AdminDriverCreatePayload, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Admin creates a driver account with email+password."""
+    check_admin(x_admin_passcode)
+    email = payload.email.strip().lower()
+    # Basic email format check (relaxed — full email-validator kept out to avoid deps)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=409, detail="A user with this email already exists")
+    user_doc = {
+        "user_id": f"drv_{_secrets.token_hex(8)}",
+        "email": email,
+        "name": payload.name.strip(),
+        "role": "driver",
+        "phone": payload.phone.strip(),
+        "car_model": payload.car_model.strip(),
+        "plate": payload.plate.strip().upper(),
+        "password_hash": _hash_password(payload.password),
+        "auth_provider": "password",
+        "created_at": datetime.now(timezone.utc),
+        "is_online": False,
+    }
+    await db.users.insert_one(user_doc)
+    user_doc.pop("password_hash", None)
+    user_doc.pop("_id", None)
+    return {"user": user_doc}
+
+
+@api_router.get("/admin/drivers")
+async def admin_list_drivers(x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Admin lists all driver accounts."""
+    check_admin(x_admin_passcode)
+    drivers = []
+    async for u in db.users.find({"role": "driver"}, {"_id": 0, "password_hash": 0}).sort("created_at", -1):
+        drivers.append(u)
+    return {"drivers": drivers, "count": len(drivers)}
+
+
+@api_router.delete("/admin/drivers/{user_id}")
+async def admin_delete_driver(user_id: str, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
+    """Admin removes a driver account (and their active sessions)."""
+    check_admin(x_admin_passcode)
+    r = await db.users.delete_one({"user_id": user_id, "role": "driver"})
+    if r.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    await db.user_sessions.delete_many({"user_id": user_id})
+    return {"ok": True}
+
+
+@api_router.post("/auth/driver-login")
+async def driver_login(payload: DriverLoginPayload):
+    """Login endpoint for password-based driver accounts."""
+    email = (payload.email or "").strip().lower()
+    user = await db.users.find_one({"email": email, "role": "driver"})
+    generic_err = HTTPException(status_code=401, detail="Invalid email or password")
+    if not user:
+        # Do a dummy bcrypt check to keep the timing profile constant (defense-in-depth)
+        _verify_password(payload.password or "", "$2b$12$" + "a" * 53)
+        raise generic_err
+    # Simple lockout — 5 wrong attempts → 15 min block
+    locked_until = user.get("locked_until")
+    if locked_until and isinstance(locked_until, datetime) and locked_until > datetime.now(timezone.utc):
+        raise HTTPException(status_code=423, detail="Account temporarily locked. Try again in a few minutes.")
+    if not _verify_password(payload.password or "", user.get("password_hash", "")):
+        fail_count = int(user.get("failed_login_count", 0)) + 1
+        update = {"failed_login_count": fail_count, "last_failed_login_at": datetime.now(timezone.utc)}
+        if fail_count >= 5:
+            update["locked_until"] = datetime.now(timezone.utc) + timedelta(minutes=15)
+            update["failed_login_count"] = 0
+        await db.users.update_one({"user_id": user["user_id"]}, {"$set": update})
+        raise generic_err
+    # Success — create a session token
+    session_token = _secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    await db.user_sessions.insert_one({
+        "session_token": session_token,
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "provider": "password",
+        "created_at": datetime.now(timezone.utc),
+        "expires_at": expires_at,
+    })
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"failed_login_count": 0, "locked_until": None, "last_login_at": datetime.now(timezone.utc)}},
+    )
+    user_pub = {k: v for k, v in user.items() if k not in ("_id", "password_hash", "failed_login_count", "locked_until", "last_failed_login_at")}
+    return {"session_token": session_token, "user": user_pub}
+
+
 # ============== DRIVER PRESENCE ==============
 @api_router.post("/driver/online")
 async def driver_online(payload: OnlinePayload, request: Request):
@@ -397,6 +525,7 @@ async def accept_ride(ride_id: str, request: Request):
         {"$set": {
             "driver_id": user.user_id,
             "driver_name": user.name,
+            "driver_phone": user.phone,
             "driver_car": user.car_model,
             "driver_plate": user.plate,
             "status": "accepted",
