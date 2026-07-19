@@ -23,6 +23,8 @@ export default function DriverRide() {
   const [ride, setRide] = useState<any>(null);
   const [arrivalBusy, setArrivalBusy] = useState<string | null>(null);
   const [arrivedSent, setArrivedSent] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempts, setAttempts] = useState(0);
   const driverLoc = useLiveLocation(true);
 
   // Route: during pickup phase go from driver→pickup, during in_progress phase from pickup→destination
@@ -61,28 +63,30 @@ export default function DriverRide() {
   };
 
   const load = useCallback(async () => {
+    setAttempts((n) => n + 1);
     try {
       const r = await authFetch("/api/rides/active");
       if (r.ok) {
         const data = await r.json();
         if (!data) {
-          router.replace("/driver/home");
+          setLoadError(lang === "en" ? "No active ride found. Returning to home…" : "Brak aktywnego przejazdu. Wracam do panelu…");
+          setTimeout(() => router.replace("/driver/home"), 800);
         } else {
           setRide(data);
+          setLoadError(null);
           // Reset arrival flag when ride transitions to in_progress
           if (data.status === "in_progress") setArrivedSent(false);
         }
       } else if (r.status === 401 || r.status === 403) {
-        // Session expired or not authenticated — go back to login
-        console.warn("[driver/ride] auth failed", r.status);
-        router.replace("/");
+        setLoadError(lang === "en" ? "Session expired — please log in again" : "Sesja wygasła — zaloguj się ponownie");
+        setTimeout(() => router.replace("/"), 1200);
       } else {
-        console.warn("[driver/ride] active fetch failed with status", r.status);
+        setLoadError((lang === "en" ? "Server error " : "Błąd serwera ") + r.status);
       }
-    } catch (e) {
-      console.warn("[driver/ride] active ride fetch error", e);
+    } catch (e: any) {
+      setLoadError((lang === "en" ? "Network error: " : "Błąd sieci: ") + (e?.message || "unknown"));
     }
-  }, [authFetch, router]);
+  }, [authFetch, router, lang]);
 
   useEffect(() => {
     load();
@@ -90,14 +94,14 @@ export default function DriverRide() {
     return () => clearInterval(i);
   }, [load]);
 
-  // Safety net: if we can't load a ride in 8 seconds, bail back to the driver home
+  // Safety net: if we can't load a ride in 12 seconds, bail back to the driver home
   // (prevents infinite black-screen spinner when session/network is broken)
   useEffect(() => {
     if (ride) return;
     const t = setTimeout(() => {
-      console.warn("[driver/ride] no ride after 8s — bailing to /driver/home");
+      console.warn("[driver/ride] no ride after 12s — bailing to /driver/home");
       router.replace("/driver/home");
-    }, 8000);
+    }, 12000);
     return () => clearTimeout(t);
   }, [ride, router]);
 
@@ -167,20 +171,39 @@ export default function DriverRide() {
 
   if (!ride) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center", gap: 16 }]}>
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }]}>
         <ActivityIndicator color="#00E676" size="large" />
-        <Text style={{ color: "#A3A3A3", fontSize: 13, fontWeight: "600" }}>
+        <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
           {lang === "en" ? "Loading ride…" : "Wczytuję przejazd…"}
         </Text>
-        <TouchableOpacity
-          testID="ride-loading-back"
-          style={{ marginTop: 16, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12, borderWidth: 1, borderColor: "#00E676" }}
-          onPress={() => router.replace("/driver/home")}
-        >
-          <Text style={{ color: "#00E676", fontWeight: "900", fontSize: 14 }}>
-            {lang === "en" ? "← Back to Home" : "← Wróć do panelu"}
-          </Text>
-        </TouchableOpacity>
+        <Text style={{ color: "#A3A3A3", fontSize: 11, fontWeight: "600" }}>
+          {lang === "en" ? "Attempt " : "Próba "}{attempts}
+        </Text>
+        {loadError ? (
+          <View style={{ backgroundColor: "rgba(255,59,48,0.15)", borderWidth: 1, borderColor: "#FF3B30", borderRadius: 10, padding: 12, marginTop: 8, maxWidth: 320 }}>
+            <Text style={{ color: "#FF3B30", fontSize: 12, fontWeight: "700", textAlign: "center" }} testID="load-error">{loadError}</Text>
+          </View>
+        ) : null}
+        <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+          <TouchableOpacity
+            testID="ride-retry"
+            style={{ paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, backgroundColor: "#00E676" }}
+            onPress={load}
+          >
+            <Text style={{ color: "#0A0A0A", fontWeight: "900", fontSize: 13 }}>
+              {lang === "en" ? "🔄 Retry" : "🔄 Spróbuj ponownie"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="ride-loading-back"
+            style={{ paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, borderWidth: 1, borderColor: "#00E676" }}
+            onPress={() => router.replace("/driver/home")}
+          >
+            <Text style={{ color: "#00E676", fontWeight: "900", fontSize: 13 }}>
+              {lang === "en" ? "← Home" : "← Panel"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
