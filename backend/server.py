@@ -62,11 +62,13 @@ class RideCreate(BaseModel):
     dest_lng: float
     distance_km: float
     price_pln: float
+    passenger_phone: str = Field(min_length=6, max_length=30)
 
 class Ride(BaseModel):
     ride_id: str
     passenger_id: str
     passenger_name: str
+    passenger_phone: Optional[str] = None
     driver_id: Optional[str] = None
     driver_name: Optional[str] = None
     driver_car: Optional[str] = None

@@ -86,6 +86,7 @@ def accepted_ride(users):
         "dest_address": "TEST Dest Lotnisko",
         "dest_lat": 52.1657, "dest_lng": 20.9671,
         "distance_km": 12.5, "price_pln": 45.0,
+        "passenger_phone": "+48500999888",
     }
     r = requests.post(f"{BASE_URL}/api/rides", headers=H(users["pass_tok"]), json=payload, timeout=15)
     assert r.status_code == 200, f"create ride failed: {r.status_code} {r.text}"

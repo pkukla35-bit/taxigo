@@ -53,6 +53,19 @@ export default function PassengerHome() {
   const [resvNotes, setResvNotes] = useState("");
   const [resvSaving, setResvSaving] = useState(false);
 
+  // Phone modal state — required before ordering an immediate ride
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [orderPhone, setOrderPhone] = useState("");
+  const [phoneSaving, setPhoneSaving] = useState(false);
+
+  // Load stored phone from previous order
+  useEffect(() => {
+    (async () => {
+      const p = await AsyncStorage.getItem("passenger_phone");
+      if (p) setOrderPhone(p);
+    })();
+  }, []);
+
   // Auto-fill pickup with current GPS location (only once on first GPS fix)
   useEffect(() => {
     if (autoPickupDone || pickup || !myLoc) return;
@@ -133,6 +146,16 @@ export default function PassengerHome() {
 
   const order = async () => {
     if (!pickup || !dest || !route) return Alert.alert(t("passenger.err_missing_data"), t("passenger.err_missing_data_msg"));
+    // Require phone number — open modal if we don't have a valid one yet
+    if (!orderPhone || orderPhone.replace(/\D/g, "").length < 6) {
+      setPhoneModalOpen(true);
+      return;
+    }
+    await submitOrder(orderPhone);
+  };
+
+  const submitOrder = async (phone: string) => {
+    if (!pickup || !dest || !route) return;
     setLoading(true);
     const r = await authFetch("/api/rides", {
       method: "POST",
@@ -145,14 +168,35 @@ export default function PassengerHome() {
         dest_lng: dest.lng,
         distance_km: Math.round(distance * 10) / 10,
         price_pln: Math.round(price * 100) / 100,
+        passenger_phone: phone.trim(),
       }),
     });
     setLoading(false);
     if (r.ok) {
       const data = await r.json();
+      // Persist phone for next order
+      try { await AsyncStorage.setItem("passenger_phone", phone.trim()); } catch {}
       router.replace({ pathname: "/passenger/tracking", params: { ride_id: data.ride_id } });
     } else {
       Alert.alert(t("common.error"), t("passenger.err_order_failed"));
+    }
+  };
+
+  const confirmPhoneAndOrder = async () => {
+    const cleaned = orderPhone.trim();
+    if (cleaned.replace(/\D/g, "").length < 6) {
+      Alert.alert(
+        lang === "en" ? "Invalid phone" : "Nieprawidłowy numer",
+        lang === "en" ? "Please enter a valid phone number (at least 6 digits)." : "Podaj prawidłowy numer telefonu (min. 6 cyfr).",
+      );
+      return;
+    }
+    setPhoneSaving(true);
+    setPhoneModalOpen(false);
+    try {
+      await submitOrder(cleaned);
+    } finally {
+      setPhoneSaving(false);
     }
   };
 
@@ -379,6 +423,57 @@ export default function PassengerHome() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Phone-required Modal — asks for phone before immediate ride order */}
+      <Modal visible={phoneModalOpen} transparent animationType="fade" onRequestClose={() => setPhoneModalOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, { maxWidth: 400 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{lang === "en" ? "Your phone number" : "Twój numer telefonu"}</Text>
+              <TouchableOpacity onPress={() => setPhoneModalOpen(false)} disabled={phoneSaving}>
+                <Ionicons name="close" size={26} color="#0F0F0F" />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ color: "#525252", fontSize: 13, marginBottom: 14, lineHeight: 18 }}>
+              {lang === "en"
+                ? "The driver needs to be able to reach you when arriving at the pickup point. Your number stays private."
+                : "Kierowca musi mieć jak się z Tobą skontaktować gdy dojedzie na miejsce odbioru. Twój numer jest prywatny."}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Ionicons name="call" size={22} color="#0F0F0F" />
+              <TextInput
+                testID="order-phone-input"
+                style={[styles.resvInput, { flex: 1, fontSize: 18, fontWeight: "700" }]}
+                value={orderPhone}
+                onChangeText={setOrderPhone}
+                placeholder="+48 500 100 200"
+                placeholderTextColor="#A3A3A3"
+                keyboardType="phone-pad"
+                autoFocus
+                editable={!phoneSaving}
+              />
+            </View>
+            <TouchableOpacity
+              testID="phone-confirm-order-btn"
+              style={{ backgroundColor: "#FFD600", borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 20, flexDirection: "row", justifyContent: "center", gap: 8 }}
+              onPress={confirmPhoneAndOrder}
+              disabled={phoneSaving}
+              activeOpacity={0.85}
+            >
+              {phoneSaving ? (
+                <ActivityIndicator color="#0F0F0F" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle" size={22} color="#0F0F0F" />
+                  <Text style={{ color: "#0F0F0F", fontWeight: "900", fontSize: 15 }}>
+                    {lang === "en" ? "Save & order ride" : "Zapisz i zamów"}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Reservation Modal */}
       <Modal visible={resvOpen} transparent animationType="slide" onRequestClose={() => setResvOpen(false)}>
