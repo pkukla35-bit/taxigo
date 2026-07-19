@@ -28,8 +28,12 @@ export default function DriverRide() {
   const driverLoc = useLiveLocation(true);
 
   // Route: during pickup phase go from driver→pickup, during in_progress phase from pickup→destination
+  // Fallback: if driver GPS is unavailable during pickup phase, use pickup→destination
+  // so at least SOME route is visible on the map.
   const isAccepted = ride?.status === "accepted";
-  const routeStart = isAccepted ? driverLoc : (ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null);
+  const routeStart = isAccepted
+    ? (driverLoc || (ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null))
+    : (ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null);
   const routeEnd = ride
     ? isAccepted
       ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
@@ -233,25 +237,30 @@ export default function DriverRide() {
             <Text style={styles.statusPillText}>{LABEL[ride.status] || ride.status}</Text>
           </View>
         </View>
-        {/* ETA + Navigate overlay above panel */}
-        {etaMinutes ? (
-          <View style={styles.etaOverlay} testID="driver-eta">
+        {/* Navigate button — always visible when we have a ride (works with or without GPS/route data) */}
+        <View style={styles.etaOverlay} testID="driver-eta">
+          {etaMinutes ? (
             <View style={styles.etaBox}>
               <Text style={styles.etaLabel}>{isAccepted ? (lang === "en" ? "TO PICKUP" : "DO PASAŻERA") : (lang === "en" ? "TO DEST" : "DO CELU")}</Text>
               <Text style={styles.etaTime}>{etaMinutes} min</Text>
               <Text style={styles.etaKm}>{etaKm} km</Text>
             </View>
-            <TouchableOpacity
-              testID="navigate-btn"
-              style={styles.navBtn}
-              onPress={() => openNativeNavigation(goalPoint, goalPoint.label)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="navigate" size={20} color="#0A0A0A" />
-              <Text style={styles.navBtnText}>{lang === "en" ? "Navigate" : "Nawiguj"}</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+          ) : (
+            <View style={styles.etaBox}>
+              <Text style={styles.etaLabel}>{isAccepted ? (lang === "en" ? "PICKUP" : "PASAŻER") : (lang === "en" ? "DEST" : "CEL")}</Text>
+              <Text style={[styles.etaTime, { fontSize: 14 }]} numberOfLines={2}>{isAccepted ? ride.pickup_address?.split(",")[0] : ride.dest_address?.split(",")[0]}</Text>
+            </View>
+          )}
+          <TouchableOpacity
+            testID="navigate-btn"
+            style={styles.navBtn}
+            onPress={() => openNativeNavigation(goalPoint, goalPoint.label)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="navigate" size={20} color="#0A0A0A" />
+            <Text style={styles.navBtnText}>{lang === "en" ? "Navigate" : "Nawiguj"}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.panel}>

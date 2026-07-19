@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { useLiveLocation } from "../../hooks/useLiveLocation";
+import { openNativeNavigation } from "../../hooks/useMapboxRoute";
 
 const DEFAULT_LOC = { lat: 50.0617, lng: 19.9373 };
 
@@ -294,52 +295,84 @@ export default function DriverHome() {
               </View>
             ) : null}
 
-            {/* 3 Uber-style quick action buttons — only during pickup phase */}
+            {/* Uber-style quick actions — during pickup phase */}
             {active.status === "accepted" ? (
+              <>
+                <View style={styles.quickRow}>
+                  <TouchableOpacity
+                    testID="home-navigate-btn"
+                    style={[styles.quickBtn, styles.quickBtnNav, { flex: 2 }]}
+                    onPress={() => openNativeNavigation(
+                      { lat: active.pickup_lat, lng: active.pickup_lng },
+                      active.pickup_address
+                    )}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="navigate" size={18} color="#FFFFFF" />
+                    <Text style={styles.quickBtnTextNav} numberOfLines={1}>{lang === "en" ? "Navigate to passenger" : "Nawiguj do pasażera"}</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.quickRow}>
+                  <TouchableOpacity
+                    testID="home-arrived-btn"
+                    style={[styles.quickBtn, styles.quickBtnPrimary, (arrivalBusy === "arrived" || arrivedSent) && { opacity: 0.7 }]}
+                    onPress={notifyArrived}
+                    disabled={arrivalBusy !== null}
+                    activeOpacity={0.85}
+                  >
+                    {arrivalBusy === "arrived" ? (
+                      <ActivityIndicator color="#0A0A0A" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name={arrivedSent ? "checkmark-done" : "location"} size={18} color="#0A0A0A" />
+                        <Text style={styles.quickBtnTextPrimary} numberOfLines={1}>{arrivedSent ? (lang === "en" ? "Sent ✓" : "Wysłano ✓") : (lang === "en" ? "Arrived" : "Na miejscu")}</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    testID="home-cant-find-btn"
+                    style={[styles.quickBtn, styles.quickBtnSecondary, arrivalBusy === "cant_find" && { opacity: 0.7 }]}
+                    onPress={notifyCannotFind}
+                    disabled={arrivalBusy !== null}
+                    activeOpacity={0.85}
+                  >
+                    {arrivalBusy === "cant_find" ? (
+                      <ActivityIndicator color="#0A0A0A" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="eye" size={18} color="#0A0A0A" />
+                        <Text style={styles.quickBtnTextSecondary} numberOfLines={1}>{lang === "en" ? "Can't see" : "Nie widzę"}</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    testID="home-call-btn"
+                    style={[styles.quickBtn, styles.quickBtnSecondary]}
+                    onPress={callPassenger}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="call" size={18} color="#0A0A0A" />
+                    <Text style={styles.quickBtnTextSecondary} numberOfLines={1}>{lang === "en" ? "Call" : "Zadzwoń"}</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              // in_progress — show Navigate to destination
               <View style={styles.quickRow}>
                 <TouchableOpacity
-                  testID="home-arrived-btn"
-                  style={[styles.quickBtn, styles.quickBtnPrimary, (arrivalBusy === "arrived" || arrivedSent) && { opacity: 0.7 }]}
-                  onPress={notifyArrived}
-                  disabled={arrivalBusy !== null}
-                  activeOpacity={0.85}
-                >
-                  {arrivalBusy === "arrived" ? (
-                    <ActivityIndicator color="#0A0A0A" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name={arrivedSent ? "checkmark-done" : "location"} size={18} color="#0A0A0A" />
-                      <Text style={styles.quickBtnTextPrimary} numberOfLines={1}>{arrivedSent ? (lang === "en" ? "Sent ✓" : "Wysłano ✓") : (lang === "en" ? "Arrived" : "Na miejscu")}</Text>
-                    </>
+                  testID="home-navigate-dest-btn"
+                  style={[styles.quickBtn, styles.quickBtnNav, { flex: 2 }]}
+                  onPress={() => openNativeNavigation(
+                    { lat: active.dest_lat, lng: active.dest_lng },
+                    active.dest_address
                   )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  testID="home-cant-find-btn"
-                  style={[styles.quickBtn, styles.quickBtnSecondary, arrivalBusy === "cant_find" && { opacity: 0.7 }]}
-                  onPress={notifyCannotFind}
-                  disabled={arrivalBusy !== null}
                   activeOpacity={0.85}
                 >
-                  {arrivalBusy === "cant_find" ? (
-                    <ActivityIndicator color="#0A0A0A" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="eye" size={18} color="#0A0A0A" />
-                      <Text style={styles.quickBtnTextSecondary} numberOfLines={1}>{lang === "en" ? "Can't see" : "Nie widzę"}</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  testID="home-call-btn"
-                  style={[styles.quickBtn, styles.quickBtnSecondary]}
-                  onPress={callPassenger}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="call" size={18} color="#0A0A0A" />
-                  <Text style={styles.quickBtnTextSecondary} numberOfLines={1}>{lang === "en" ? "Call" : "Zadzwoń"}</Text>
+                  <Ionicons name="navigate" size={18} color="#FFFFFF" />
+                  <Text style={styles.quickBtnTextNav} numberOfLines={1}>{lang === "en" ? "Navigate to destination" : "Nawiguj do celu"}</Text>
                 </TouchableOpacity>
               </View>
-            ) : null}
+            )}
           </View>
         ) : null}
 
@@ -627,11 +660,13 @@ const styles = StyleSheet.create({
   activeBannerTitle: { color: "#0A0A0A", fontSize: 14, fontWeight: "900" },
   activeBannerSub: { color: "#0A0A0A", fontSize: 11, fontWeight: "600", marginTop: 2 },
   quickRow: { flexDirection: "row", gap: 6 },
-  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 10 },
+  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 12, paddingHorizontal: 6, borderRadius: 10 },
   quickBtnPrimary: { backgroundColor: "#0F0F0F" },
   quickBtnSecondary: { backgroundColor: "rgba(15,15,15,0.08)", borderWidth: 1, borderColor: "rgba(15,15,15,0.2)" },
+  quickBtnNav: { backgroundColor: "#0F0F0F" },
   quickBtnTextPrimary: { color: "#FFD600", fontSize: 12, fontWeight: "900" },
   quickBtnTextSecondary: { color: "#0F0F0F", fontSize: 12, fontWeight: "800" },
+  quickBtnTextNav: { color: "#FFFFFF", fontSize: 13, fontWeight: "900" },
   replyLine: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FFFFFF", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   replyLineText: { flex: 1, color: "#0F0F0F", fontSize: 12, fontWeight: "700" },
 });
