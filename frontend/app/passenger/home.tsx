@@ -157,28 +157,48 @@ export default function PassengerHome() {
   const submitOrder = async (phone: string) => {
     if (!pickup || !dest || !route) return;
     setLoading(true);
-    const r = await authFetch("/api/rides", {
-      method: "POST",
-      body: JSON.stringify({
-        pickup_address: pickup.name,
-        pickup_lat: pickup.lat,
-        pickup_lng: pickup.lng,
-        dest_address: dest.name,
-        dest_lat: dest.lat,
-        dest_lng: dest.lng,
-        distance_km: Math.round(distance * 10) / 10,
-        price_pln: Math.round(price * 100) / 100,
-        passenger_phone: phone.trim(),
-      }),
-    });
-    setLoading(false);
-    if (r.ok) {
-      const data = await r.json();
-      // Persist phone for next order
-      try { await AsyncStorage.setItem("passenger_phone", phone.trim()); } catch {}
-      router.replace({ pathname: "/passenger/tracking", params: { ride_id: data.ride_id } });
-    } else {
-      Alert.alert(t("common.error"), t("passenger.err_order_failed"));
+    try {
+      const r = await authFetch("/api/rides", {
+        method: "POST",
+        body: JSON.stringify({
+          pickup_address: pickup.name,
+          pickup_lat: pickup.lat,
+          pickup_lng: pickup.lng,
+          dest_address: dest.name,
+          dest_lat: dest.lat,
+          dest_lng: dest.lng,
+          distance_km: Math.round(distance * 10) / 10,
+          price_pln: Math.round(price * 100) / 100,
+          passenger_phone: phone.trim(),
+        }),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        // Persist phone for next order
+        try { await AsyncStorage.setItem("passenger_phone", phone.trim()); } catch {}
+        router.replace({ pathname: "/passenger/tracking", params: { ride_id: data.ride_id } });
+      } else {
+        let detail = "";
+        try {
+          const body = await r.json();
+          detail = typeof body?.detail === "string" ? body.detail : JSON.stringify(body?.detail || body);
+        } catch {}
+        const msg = `${t("passenger.err_order_failed")} (${r.status})${detail ? "\n" + detail.slice(0, 200) : ""}`;
+        if (Platform.OS === "web" && typeof window !== "undefined") {
+          window.alert(msg);
+        } else {
+          Alert.alert(t("common.error"), msg);
+        }
+      }
+    } catch (e: any) {
+      const msg = `${t("passenger.err_order_failed")}\n${e?.message || "network error"}`;
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.alert(msg);
+      } else {
+        Alert.alert(t("common.error"), msg);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 

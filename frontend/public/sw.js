@@ -1,10 +1,15 @@
 // Minimal service worker — required so Chrome treats TAXIGO as installable PWA.
-const CACHE = 'taxigo-v2';
+const CACHE = 'taxigo-v3';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil((async () => {
+    // Purge old cache versions so we don't keep serving stale JS bundles
+    const names = await caches.keys();
+    await Promise.all(names.filter((n) => n !== CACHE).map((n) => caches.delete(n)));
+    await self.clients.claim();
+  })());
 });
 self.addEventListener('fetch', (event) => {
   // network-first, fall back to cache for offline
