@@ -34,16 +34,26 @@ export default function DriverRide() {
   };
 
   const load = useCallback(async () => {
-    const r = await authFetch("/api/rides/active");
-    if (r.ok) {
-      const data = await r.json();
-      if (!data) {
-        router.replace("/driver/home");
+    try {
+      const r = await authFetch("/api/rides/active");
+      if (r.ok) {
+        const data = await r.json();
+        if (!data) {
+          router.replace("/driver/home");
+        } else {
+          setRide(data);
+          // Reset arrival flag when ride transitions to in_progress
+          if (data.status === "in_progress") setArrivedSent(false);
+        }
+      } else if (r.status === 401 || r.status === 403) {
+        // Session expired or not authenticated — go back to login
+        console.warn("[driver/ride] auth failed", r.status);
+        router.replace("/");
       } else {
-        setRide(data);
-        // Reset arrival flag when ride transitions to in_progress
-        if (data.status === "in_progress") setArrivedSent(false);
+        console.warn("[driver/ride] active fetch failed with status", r.status);
       }
+    } catch (e) {
+      console.warn("[driver/ride] active ride fetch error", e);
     }
   }, [authFetch, router]);
 
