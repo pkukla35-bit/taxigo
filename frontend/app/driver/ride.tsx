@@ -90,6 +90,17 @@ export default function DriverRide() {
     return () => clearInterval(i);
   }, [load]);
 
+  // Safety net: if we can't load a ride in 8 seconds, bail back to the driver home
+  // (prevents infinite black-screen spinner when session/network is broken)
+  useEffect(() => {
+    if (ride) return;
+    const t = setTimeout(() => {
+      console.warn("[driver/ride] no ride after 8s — bailing to /driver/home");
+      router.replace("/driver/home");
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [ride, router]);
+
   const start = async () => {
     await authFetch(`/api/rides/${ride.ride_id}/start`, { method: "POST" });
     load();
@@ -155,7 +166,23 @@ export default function DriverRide() {
   };
 
   if (!ride) {
-    return <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}><ActivityIndicator color="#00E676" /></View>;
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center", gap: 16 }]}>
+        <ActivityIndicator color="#00E676" size="large" />
+        <Text style={{ color: "#A3A3A3", fontSize: 13, fontWeight: "600" }}>
+          {lang === "en" ? "Loading ride…" : "Wczytuję przejazd…"}
+        </Text>
+        <TouchableOpacity
+          testID="ride-loading-back"
+          style={{ marginTop: 16, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12, borderWidth: 1, borderColor: "#00E676" }}
+          onPress={() => router.replace("/driver/home")}
+        >
+          <Text style={{ color: "#00E676", fontWeight: "900", fontSize: 14 }}>
+            {lang === "en" ? "← Back to Home" : "← Wróć do panelu"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   const goalPoint = isAccepted
