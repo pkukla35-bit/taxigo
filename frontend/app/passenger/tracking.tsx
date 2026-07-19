@@ -7,6 +7,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { useLiveLocation } from "../../hooks/useLiveLocation";
 import { ensureSilentSubscription } from "../../src/utils/webpush";
+import { useMapboxRoute } from "../../hooks/useMapboxRoute";
 
 function haversine(a: any, b: any) {
   if (!a || !b) return 0;
@@ -94,6 +95,16 @@ export default function Tracking() {
     }
   };
 
+  // Compute route inputs (safe when ride is null — hook always called at top level)
+  const driverPos = ride && ride.driver_lat && ride.driver_lng ? { lat: ride.driver_lat, lng: ride.driver_lng, label: t("passenger.driver") } : null;
+  const routeStart = driverPos ? { lat: driverPos.lat, lng: driverPos.lng } : null;
+  const routeEnd = ride
+    ? (ride.status === "accepted"
+        ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
+        : { lat: ride.dest_lat, lng: ride.dest_lng })
+    : null;
+  const mbRoute = useMapboxRoute(routeStart, routeEnd);
+
   if (!ride) {
     return (
       <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
@@ -101,8 +112,6 @@ export default function Tracking() {
       </View>
     );
   }
-
-  const driverPos = ride.driver_lat && ride.driver_lng ? { lat: ride.driver_lat, lng: ride.driver_lng, label: t("passenger.driver") } : null;
 
   const minutesLabel = (min: number) => {
     if (lang === "en") return `${min} min`;
@@ -112,7 +121,12 @@ export default function Tracking() {
   };
 
   let etaText = "—";
-  if (driverPos) {
+  if (mbRoute) {
+    const min = Math.max(1, Math.round(mbRoute.duration_s / 60));
+    etaText = ride.status === "accepted"
+      ? `${t("tracking.eta_in")} ${minutesLabel(min)}`
+      : `${t("tracking.eta_to_dest")}${min} min`;
+  } else if (driverPos) {
     if (ride.status === "accepted") {
       const km = haversine(driverPos, { lat: ride.pickup_lat, lng: ride.pickup_lng });
       const min = Math.max(1, Math.round(km / 0.5));
@@ -142,6 +156,7 @@ export default function Tracking() {
             ...(driverPos ? [driverPos] : []),
             ...(passengerLoc ? [{ lat: passengerLoc.lat, lng: passengerLoc.lng, label: t("tracking.you") }] : []),
           ]}
+          routeCoords={mbRoute?.coords || null}
         />
         <View style={styles.topBar}>
           <TouchableOpacity testID="back-home-btn" style={styles.iconBtn} onPress={() => router.replace("/passenger/home")}>

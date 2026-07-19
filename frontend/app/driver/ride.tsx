@@ -6,6 +6,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import MapView from "../../components/MapView";
 import { ensureSilentSubscription } from "../../src/utils/webpush";
+import { useLiveLocation } from "../../hooks/useLiveLocation";
+import { useMapboxRoute, openNativeNavigation } from "../../hooks/useMapboxRoute";
 
 // Passenger reply codes we listen for
 const REPLY_LABEL: Record<string, { pl: string; en: string; color: string; icon: any }> = {
@@ -21,12 +23,37 @@ export default function DriverRide() {
   const [ride, setRide] = useState<any>(null);
   const [arrivalBusy, setArrivalBusy] = useState<string | null>(null);
   const [arrivedSent, setArrivedSent] = useState(false);
+  const driverLoc = useLiveLocation(true);
+
+  // Route: during pickup phase go from driver→pickup, during in_progress phase from pickup→destination
+  const isAccepted = ride?.status === "accepted";
+  const routeStart = isAccepted ? driverLoc : (ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null);
+  const routeEnd = ride
+    ? isAccepted
+      ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
+      : { lat: ride.dest_lat, lng: ride.dest_lng }
+    : null;
+  const route = useMapboxRoute(routeStart, routeEnd);
 
   // Silently link this browser's push subscription to the driver's user_id
   useEffect(() => {
     if (Platform.OS !== "web" || !user?.user_id) return;
     ensureSilentSubscription("driver", user.user_id, user.name || "");
   }, [user]);
+
+  // Periodically push driver location to backend so passenger can see live position on map
+  useEffect(() => {
+    if (!ride || !driverLoc) return;
+    const send = () => {
+      authFetch("/api/driver/online", {
+        method: "POST",
+        body: JSON.stringify({ is_online: true, lat: driverLoc.lat, lng: driverLoc.lng }),
+      }).catch(() => {});
+    };
+    send();
+    const i = setInterval(send, 8000);
+    return () => clearInterval(i);
+  }, [ride?.ride_id, driverLoc?.lat, driverLoc?.lng, authFetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const LABEL: Record<string, string> = {
     accepted: lang === "en" ? "Pick up passenger" : "Jedź po pasażera",
@@ -131,7 +158,11 @@ export default function DriverRide() {
     return <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}><ActivityIndicator color="#00E676" /></View>;
   }
 
-  const isAccepted = ride.status === "accepted";
+  const goalPoint = isAccepted
+    ? { lat: ride.pickup_lat, lng: ride.pickup_lng, label: t("tracking.pickup_label") }
+    : { lat: ride.dest_lat, lng: ride.dest_lng, label: t("tracking.dest_label") };
+  const etaMinutes = route ? Math.max(1, Math.round(route.duration_s / 60)) : null;
+  const etaKm = route ? (route.distance_m / 1000).toFixed(1) : null;
 
   return (
     <View style={styles.container}>
@@ -140,6 +171,8 @@ export default function DriverRide() {
           dark
           pickup={{ lat: ride.pickup_lat, lng: ride.pickup_lng, label: t("tracking.pickup_label") }}
           destination={{ lat: ride.dest_lat, lng: ride.dest_lng, label: t("tracking.dest_label") }}
+          drivers={driverLoc ? [{ lat: driverLoc.lat, lng: driverLoc.lng, label: lang === "en" ? "You" : "Ty" }] : []}
+          routeCoords={route?.coords || null}
         />
         <View style={styles.topBar}>
           <View style={styles.brandPill}>
@@ -150,6 +183,25 @@ export default function DriverRide() {
             <Text style={styles.statusPillText}>{LABEL[ride.status] || ride.status}</Text>
           </View>
         </View>
+        {/* ETA + Navigate overlay above panel */}
+        {etaMinutes ? (
+          <View style={styles.etaOverlay} testID="driver-eta">
+            <View style={styles.etaBox}>
+              <Text style={styles.etaLabel}>{isAccepted ? (lang === "en" ? "TO PICKUP" : "DO PASAŻERA") : (lang === "en" ? "TO DEST" : "DO CELU")}</Text>
+              <Text style={styles.etaTime}>{etaMinutes} min</Text>
+              <Text style={styles.etaKm}>{etaKm} km</Text>
+            </View>
+            <TouchableOpacity
+              testID="navigate-btn"
+              style={styles.navBtn}
+              onPress={() => openNativeNavigation(goalPoint, goalPoint.label)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="navigate" size={20} color="#0A0A0A" />
+              <Text style={styles.navBtnText}>{lang === "en" ? "Navigate" : "Nawiguj"}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.panel}>
@@ -286,4 +338,11 @@ const styles = StyleSheet.create({
   arrivalBtnTextSecondary: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
   replyBanner: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 12, backgroundColor: "#171717", borderWidth: 1, borderColor: "#262626", borderLeftWidth: 4, marginBottom: 12 },
   replyText: { flex: 1, color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
+  etaOverlay: { position: "absolute", bottom: 16, left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 10 },
+  etaBox: { backgroundColor: "rgba(10,10,10,0.92)", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
+  etaLabel: { color: "#A3A3A3", fontSize: 9, letterSpacing: 1.6, fontWeight: "700" },
+  etaTime: { color: "#FFFFFF", fontSize: 20, fontWeight: "900", marginTop: 2 },
+  etaKm: { color: "#A3A3A3", fontSize: 11, fontWeight: "700", marginTop: 1 },
+  navBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#FFD600", paddingVertical: 14, paddingHorizontal: 12, borderRadius: 14 },
+  navBtnText: { color: "#0A0A0A", fontSize: 15, fontWeight: "900" },
 });
