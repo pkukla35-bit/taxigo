@@ -193,6 +193,22 @@ async def get_current_user(request: Request) -> User:
         auth = request.headers.get("Authorization", "")
         if auth.startswith("Bearer "):
             token = auth.split(" ", 1)[1]
+    # Support guest tokens (format: "guest:guest_xxx") — auto-provision guest user
+    if token and token.startswith("guest:"):
+        guest_id = token.split(":", 1)[1]
+        if guest_id:
+            existing = await db.users.find_one({"user_id": guest_id}, {"_id": 0})
+            if not existing:
+                await db.users.insert_one({
+                    "user_id": guest_id,
+                    "email": f"{guest_id}@guest.taxigo.pl",
+                    "name": "Gość",
+                    "role": "passenger",  # guests default to passenger
+                    "created_at": datetime.now(timezone.utc),
+                    "is_guest": True,
+                })
+                existing = await db.users.find_one({"user_id": guest_id}, {"_id": 0})
+            return User(**existing)
     user = await get_user_from_token(token)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
