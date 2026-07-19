@@ -400,8 +400,11 @@ async def driver_login(payload: DriverLoginPayload):
         raise generic_err
     # Simple lockout — 5 wrong attempts → 15 min block
     locked_until = user.get("locked_until")
-    if locked_until and isinstance(locked_until, datetime) and locked_until > datetime.now(timezone.utc):
-        raise HTTPException(status_code=423, detail="Account temporarily locked. Try again in a few minutes.")
+    if locked_until and isinstance(locked_until, datetime):
+        if locked_until.tzinfo is None:
+            locked_until = locked_until.replace(tzinfo=timezone.utc)
+        if locked_until > datetime.now(timezone.utc):
+            raise HTTPException(status_code=423, detail="Account temporarily locked. Try again in a few minutes.")
     if not _verify_password(payload.password or "", user.get("password_hash", "")):
         fail_count = int(user.get("failed_login_count", 0)) + 1
         update = {"failed_login_count": fail_count, "last_failed_login_at": datetime.now(timezone.utc)}
