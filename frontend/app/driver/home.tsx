@@ -178,9 +178,9 @@ export default function DriverHome() {
   };
 
   useEffect(() => {
-    if (active && (active.status === "accepted" || active.status === "in_progress")) {
-      router.replace("/driver/ride");
-    }
+    // If the driver has an accepted/in-progress ride, offer to go back — but do NOT auto-redirect.
+    // Auto-redirect caused an infinite loop when /driver/ride bailed out on load errors.
+    // Handled via a visible banner instead (rendered below).
   }, [active, router]);
 
   return (
@@ -206,6 +206,29 @@ export default function DriverHome() {
       </View>
 
       <View style={styles.panel}>
+        {/* Active ride banner — visible whenever driver has an accepted/in_progress ride */}
+        {active && (active.status === "accepted" || active.status === "in_progress") ? (
+          <TouchableOpacity
+            testID="active-ride-banner"
+            style={styles.activeBanner}
+            onPress={() => router.push("/driver/ride")}
+            activeOpacity={0.85}
+          >
+            <View style={styles.activeBannerIcon}>
+              <Ionicons name="car-sport" size={22} color="#0A0A0A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.activeBannerTitle}>
+                {lang === "en" ? "You have an active ride" : "Masz aktywny przejazd"}
+              </Text>
+              <Text style={styles.activeBannerSub} numberOfLines={1}>
+                {active.pickup_address} → {active.dest_address}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="#0A0A0A" />
+          </TouchableOpacity>
+        ) : null}
+
         <View style={styles.toggleRow}>
           <View>
             <Text style={styles.eyebrow}>{t("driver.status")}</Text>
@@ -483,4 +506,8 @@ const styles = StyleSheet.create({
   resvRejectText: { color: "#FF3B30", fontWeight: "900", fontSize: 13 },
   resvConfirmBtn: { backgroundColor: "#00E676" },
   resvConfirmText: { color: "#0A0A0A", fontWeight: "900", fontSize: 13 },
+  activeBanner: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFD600", paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, marginBottom: 12 },
+  activeBannerIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
+  activeBannerTitle: { color: "#0A0A0A", fontSize: 14, fontWeight: "900" },
+  activeBannerSub: { color: "#0A0A0A", fontSize: 11, fontWeight: "600", marginTop: 2 },
 });
