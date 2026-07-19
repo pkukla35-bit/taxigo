@@ -323,18 +323,18 @@ class DriverLoginPayload(BaseModel):
 
 @api_router.post("/admin/drivers", status_code=201)
 async def admin_create_driver(payload: AdminDriverCreatePayload, x_admin_passcode: Optional[str] = Header(default=None, alias="X-Admin-Passcode")):
-    """Admin creates a driver account with email+password."""
+    """Admin creates a driver account with email+password.
+
+    If a user with this email already exists (e.g. previous Google login), the
+    endpoint UPGRADES that user to a driver — setting the password hash, phone,
+    car, and role. This lets the same person log in with password as a driver.
+    """
     check_admin(x_admin_passcode)
     email = payload.email.strip().lower()
-    # Basic email format check (relaxed — full email-validator kept out to avoid deps)
     if "@" not in email or "." not in email.split("@")[-1]:
         raise HTTPException(status_code=400, detail="Invalid email format")
     existing = await db.users.find_one({"email": email})
-    if existing:
-        raise HTTPException(status_code=409, detail="A user with this email already exists")
-    user_doc = {
-        "user_id": f"drv_{_secrets.token_hex(8)}",
-        "email": email,
+    driver_fields = {
         "name": payload.name.strip(),
         "role": "driver",
         "phone": payload.phone.strip(),
@@ -342,8 +342,24 @@ async def admin_create_driver(payload: AdminDriverCreatePayload, x_admin_passcod
         "plate": payload.plate.strip().upper(),
         "password_hash": _hash_password(payload.password),
         "auth_provider": "password",
+        "updated_at": datetime.now(timezone.utc),
+        "failed_login_count": 0,
+        "locked_until": None,
+    }
+    if existing:
+        # Upgrade existing user to a driver with password login
+        await db.users.update_one({"user_id": existing["user_id"]}, {"$set": driver_fields})
+        # Revoke any active Google sessions so the new password becomes canonical
+        await db.user_sessions.delete_many({"user_id": existing["user_id"]})
+        updated = await db.users.find_one({"user_id": existing["user_id"]}, {"_id": 0, "password_hash": 0})
+        return {"user": updated, "upgraded": True}
+    # Create fresh driver account
+    user_doc = {
+        "user_id": f"drv_{_secrets.token_hex(8)}",
+        "email": email,
         "created_at": datetime.now(timezone.utc),
         "is_online": False,
+        **driver_fields,
     }
     await db.users.insert_one(user_doc)
     user_doc.pop("password_hash", None)
