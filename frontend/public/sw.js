@@ -1,5 +1,5 @@
 // Minimal service worker — required so Chrome treats TAXIGO as installable PWA.
-const CACHE = 'taxigo-v3';
+const CACHE = 'taxigo-v4';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
