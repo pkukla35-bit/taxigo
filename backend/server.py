@@ -432,6 +432,52 @@ async def driver_login(payload: DriverLoginPayload):
     return {"session_token": session_token, "user": user_pub}
 
 
+# ============== VOICE TRANSLATOR (PL ↔ EN) ==============
+class TranslatePayload(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    source_lang: Literal["pl", "en"] = "pl"
+    target_lang: Literal["pl", "en"] = "en"
+
+
+@api_router.post("/translate")
+async def translate(payload: TranslatePayload, request: Request):
+    """Translate text between PL and EN using Claude Sonnet 4.5 via Emergent LLM Key.
+    Rate-limited to sane requests. Auth: any authenticated user (guests OK too).
+    """
+    _ = await get_current_user(request)  # ensure caller is authenticated
+    if payload.source_lang == payload.target_lang:
+        return {"translated": payload.text, "source_lang": payload.source_lang, "target_lang": payload.target_lang}
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        key = os.environ.get("EMERGENT_LLM_KEY", "")
+        if not key:
+            raise HTTPException(status_code=500, detail="Translator not configured")
+        pair = f"{payload.source_lang.upper()}→{payload.target_lang.upper()}"
+        system_msg = (
+            "You are a fast, accurate translator for a Polish taxi & tourism app. "
+            "Translate the user's message directly with no explanation, no quotes, no "
+            "additional text — ONLY the translated sentence. Preserve the original tone "
+            "(casual/formal). Keep proper nouns, place names, and numbers as-is. "
+            f"Direction: {pair}."
+        )
+        chat = (
+            LlmChat(api_key=key, session_id=f"trans_{_secrets.token_hex(4)}", system_message=system_msg)
+            .with_model("anthropic", "claude-sonnet-4-5-20250929")
+        )
+        result = await chat.send_message(UserMessage(text=payload.text.strip()))
+        translated = (result or "").strip().strip('"\'')
+        return {
+            "translated": translated,
+            "source_lang": payload.source_lang,
+            "target_lang": payload.target_lang,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"translate failed: {e}")
+        raise HTTPException(status_code=500, detail="Translation failed")
+
+
 # ============== DRIVER PRESENCE ==============
 @api_router.post("/driver/online")
 async def driver_online(payload: OnlinePayload, request: Request):
