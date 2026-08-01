@@ -12,6 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 
+const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || "";
+
 // TypeScript shims for browser SpeechRecognition
 declare global {
   interface Window {
@@ -49,7 +51,7 @@ function speak(text: string, lang: Lang) {
 }
 
 export default function VoiceTranslator() {
-  const { authFetch } = useAuth();
+  const { authFetch, token } = useAuth();
   const [open, setOpen] = useState(false);
   const [busyLang, setBusyLang] = useState<Lang | null>(null); // which side is recording
   const [translating, setTranslating] = useState(false);
@@ -69,10 +71,14 @@ export default function VoiceTranslator() {
     setTranslating(true);
     setError(null);
     try {
-      const r = await authFetch("/api/translate", {
-        method: "POST",
-        body: JSON.stringify({ text, source_lang: from, target_lang: to }),
-      });
+      // Endpoint is public — works with or without auth. If user is logged in
+      // send their token (may be useful for future analytics/limits).
+      const url = `${BACKEND}/api/translate`;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const r = token
+        ? await authFetch("/api/translate", { method: "POST", body: JSON.stringify({ text, source_lang: from, target_lang: to }) })
+        : await fetch(url, { method: "POST", headers, body: JSON.stringify({ text, source_lang: from, target_lang: to }) });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
       const turn: Turn = {

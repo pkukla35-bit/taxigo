@@ -463,10 +463,10 @@ EMERGENT_LLM_URL = "https://integrations.emergentagent.com/llm/chat/completions"
 async def translate(payload: TranslatePayload, request: Request):
     """Translate text between PL and EN using Claude Sonnet 4.5 via Emergent LLM Gateway.
 
-    Uses a direct httpx call (no emergentintegrations dependency) so the Railway
-    build stays lightweight. Cached in-memory for repeated phrases.
+    PUBLIC endpoint — no auth required. Foreign tourists browsing /wycieczki
+    should be able to translate the page immediately without signing up.
+    Cache + max_length=2000 + LLM budget guard protect us from abuse.
     """
-    _ = await get_current_user(request)  # require auth
     text = payload.text.strip()
     if payload.source_lang == payload.target_lang:
         return {"translated": text, "source_lang": payload.source_lang, "target_lang": payload.target_lang, "cached": False}
