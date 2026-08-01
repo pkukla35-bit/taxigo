@@ -449,9 +449,16 @@ async def translate(payload: TranslatePayload, request: Request):
         return {"translated": payload.text, "source_lang": payload.source_lang, "target_lang": payload.target_lang}
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
-        key = os.environ.get("EMERGENT_LLM_KEY", "")
+        # Strip whitespace/quotes — Railway Raw Editor sometimes adds them accidentally
+        key = (os.environ.get("EMERGENT_LLM_KEY") or "").strip().strip('"').strip("'")
         if not key:
-            raise HTTPException(status_code=500, detail="Translator not configured")
+            logger.error(
+                f"EMERGENT_LLM_KEY missing. Available env keys: {[k for k in os.environ.keys() if 'EMERGENT' in k or 'LLM' in k]}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Translator not configured: EMERGENT_LLM_KEY missing on server. Add it in Railway Variables and redeploy the backend service.",
+            )
         pair = f"{payload.source_lang.upper()}→{payload.target_lang.upper()}"
         system_msg = (
             "You are a fast, accurate translator for a Polish taxi & tourism app. "
