@@ -439,49 +439,89 @@ class TranslatePayload(BaseModel):
     target_lang: Literal["pl", "en"] = "en"
 
 
+# Simple in-memory LRU cache (key: (text, src, tgt) → translated) — protects Claude budget
+_TRANSLATE_CACHE: dict = {}
+_TRANSLATE_CACHE_MAX = 500
+
+
+def _cache_get(key: tuple) -> Optional[str]:
+    return _TRANSLATE_CACHE.get(key)
+
+
+def _cache_put(key: tuple, value: str):
+    if len(_TRANSLATE_CACHE) >= _TRANSLATE_CACHE_MAX:
+        # Drop oldest ~20% (rough LRU — Python dicts keep insertion order)
+        for k in list(_TRANSLATE_CACHE.keys())[: _TRANSLATE_CACHE_MAX // 5]:
+            _TRANSLATE_CACHE.pop(k, None)
+    _TRANSLATE_CACHE[key] = value
+
+
+EMERGENT_LLM_URL = "https://integrations.emergentagent.com/llm/chat/completions"
+
+
 @api_router.post("/translate")
 async def translate(payload: TranslatePayload, request: Request):
-    """Translate text between PL and EN using Claude Sonnet 4.5 via Emergent LLM Key.
-    Rate-limited to sane requests. Auth: any authenticated user (guests OK too).
+    """Translate text between PL and EN using Claude Sonnet 4.5 via Emergent LLM Gateway.
+
+    Uses a direct httpx call (no emergentintegrations dependency) so the Railway
+    build stays lightweight. Cached in-memory for repeated phrases.
     """
-    _ = await get_current_user(request)  # ensure caller is authenticated
+    _ = await get_current_user(request)  # require auth
+    text = payload.text.strip()
     if payload.source_lang == payload.target_lang:
-        return {"translated": payload.text, "source_lang": payload.source_lang, "target_lang": payload.target_lang}
+        return {"translated": text, "source_lang": payload.source_lang, "target_lang": payload.target_lang, "cached": False}
+
+    cache_key = (text.lower(), payload.source_lang, payload.target_lang)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return {"translated": cached, "source_lang": payload.source_lang, "target_lang": payload.target_lang, "cached": True}
+
+    key = (os.environ.get("EMERGENT_LLM_KEY") or "").strip().strip('"').strip("'")
+    if not key:
+        logger.error(
+            f"EMERGENT_LLM_KEY missing. Env keys present: {[k for k in os.environ.keys() if 'EMERGENT' in k or 'LLM' in k]}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Translator not configured: EMERGENT_LLM_KEY missing on server. Add it in Railway Variables and redeploy the backend service.",
+        )
+
+    pair = f"{payload.source_lang.upper()}→{payload.target_lang.upper()}"
+    system_msg = (
+        "You are a fast, accurate translator for a Polish taxi & tourism app. "
+        "Translate the user's message directly with no explanation, no quotes, no "
+        "additional text — ONLY the translated sentence. Preserve the original tone "
+        "(casual/formal). Keep proper nouns, place names, and numbers as-is. "
+        f"Direction: {pair}."
+    )
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        # Strip whitespace/quotes — Railway Raw Editor sometimes adds them accidentally
-        key = (os.environ.get("EMERGENT_LLM_KEY") or "").strip().strip('"').strip("'")
-        if not key:
-            logger.error(
-                f"EMERGENT_LLM_KEY missing. Available env keys: {[k for k in os.environ.keys() if 'EMERGENT' in k or 'LLM' in k]}"
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.post(
+                EMERGENT_LLM_URL,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                json={
+                    "model": "claude-sonnet-4-5-20250929",
+                    "messages": [
+                        {"role": "system", "content": system_msg},
+                        {"role": "user", "content": text},
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500,
+                },
             )
-            raise HTTPException(
-                status_code=500,
-                detail="Translator not configured: EMERGENT_LLM_KEY missing on server. Add it in Railway Variables and redeploy the backend service.",
-            )
-        pair = f"{payload.source_lang.upper()}→{payload.target_lang.upper()}"
-        system_msg = (
-            "You are a fast, accurate translator for a Polish taxi & tourism app. "
-            "Translate the user's message directly with no explanation, no quotes, no "
-            "additional text — ONLY the translated sentence. Preserve the original tone "
-            "(casual/formal). Keep proper nouns, place names, and numbers as-is. "
-            f"Direction: {pair}."
-        )
-        chat = (
-            LlmChat(api_key=key, session_id=f"trans_{_secrets.token_hex(4)}", system_message=system_msg)
-            .with_model("anthropic", "claude-sonnet-4-5-20250929")
-        )
-        result = await chat.send_message(UserMessage(text=payload.text.strip()))
-        translated = (result or "").strip().strip('"\'')
-        return {
-            "translated": translated,
-            "source_lang": payload.source_lang,
-            "target_lang": payload.target_lang,
-        }
+        if r.status_code != 200:
+            logger.error(f"translate LLM gateway {r.status_code}: {r.text[:300]}")
+            raise HTTPException(status_code=502, detail="Translator gateway error")
+        data = r.json()
+        translated = (data.get("choices", [{}])[0].get("message", {}).get("content") or "").strip().strip('"\'')
+        if not translated:
+            raise HTTPException(status_code=502, detail="Empty translation")
+        _cache_put(cache_key, translated)
+        return {"translated": translated, "source_lang": payload.source_lang, "target_lang": payload.target_lang, "cached": False}
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"translate failed: {e}")
+        logger.error(f"translate failed: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail="Translation failed")
 
 
